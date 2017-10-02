@@ -1,0 +1,4 @@
+[gui_scripts]
+jslSearch = SearchStrategyAnalysis.__main__:main
+jslssa = SearchStrategyAnalysis.__main__:main
+
