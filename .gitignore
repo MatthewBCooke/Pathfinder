@@ -1,0 +1,9 @@
+.git/
+.idea/
+
+*.pickle
+*.log
+*.csv
+*.xlsx
+
+__pycache__/
