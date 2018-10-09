@@ -46,8 +46,8 @@ from matplotlib import cm as CM
 
 
 __author__ = "Matthew Cooke"
-__copyright__ = "Copyright 2017, Jason Snyder Lab, The University of British Columbia"
-__credits__ = ["Matthew Cooke", "Tim O'Leary"]
+__copyright__ = "Copyright 2018, Jason Snyder Lab, The University of British Columbia"
+__credits__ = ["Matthew Cooke", "Tim O'Leary", "Phelan Harris"]
 __email__ = "mbcooke@mail.ubc.ca"
 
 logfilename = "logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
