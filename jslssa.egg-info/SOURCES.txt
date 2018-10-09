@@ -1,4 +1,3 @@
-README.md
 setup.py
 SearchStrategyAnalysis/__init__.py
 SearchStrategyAnalysis/__main__.py
