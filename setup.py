@@ -2,7 +2,7 @@ from setuptools import *
 
 setup(
     name='jslssa',
-    version='1.5.0',
+    version='1.5.3',
     description='Morris Water Maze Search Strategy Analysis',
     url='https://github.com/Norton50/JSL',
     author='Matthew Cooke',
