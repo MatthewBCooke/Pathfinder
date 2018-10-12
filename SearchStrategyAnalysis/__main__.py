@@ -24,6 +24,7 @@ import pickle
 import datetime
 import scipy.ndimage as sp
 from appTrial import Trial, Experiment, Parameters
+import heatmap
 
 
 if sys.version_info<(3,0,0):  # tkinter names for python 2
@@ -267,7 +268,7 @@ class mainClass:
                                   command=self.openFile)  # add buttons in the menus
         self.fileMenu.add_command(label="Open Directory...", accelerator=accelD, command=self.openDir)
         self.fileMenu.add_separator()  # adds a seperator
-        self.fileMenu.add_command(label="Generate Heatmap", command=self.guiHeatmap)
+        self.fileMenu.add_command(label="Generate Heatmap", command=heatmap.guiHeatmap(root))
         self.fileMenu.add_separator()  # adds a seperator
         self.fileMenu.add_command(label="Exit", command=self.tryQuit)  # exit button quits
 
@@ -1294,106 +1295,106 @@ class mainClass:
         except:
             pass
 
-    def guiHeatmap(self):
-
-        self.top3 = Toplevel(root)  # create a new toplevel window
-        self.top3.configure(bg="white")
-        self.top3.geometry('{}x{}'.format( 500, 1000 ))
-        Label(self.top3, text="Heatmap Parameters", bg="white", fg="black", width=15).pack()  # add a title
-
-        self.gridSizeL = Label(self.top3, text="Grid Size:", bg="white")
-        self.gridSizeL.pack(side=TOP)
-        self.gridSizeE = Entry(self.top3, textvariable=gridSizeStringVar)
-        self.gridSizeE.pack(side=TOP)
-
-
-        self.maxValL = Label(self.top3, text="Maximum Value:", bg="white")
-        self.maxValL.pack(side=TOP)
-        self.maxValE = Entry(self.top3, textvariable=maxValStringVar)
-        self.maxValE.pack(side=TOP)
-
-        self.heatmapSettings(self.top3)
-
-        Button(self.top3, text="Generate", command=self.heatmap, fg="black", bg="white").pack()
-
-    def heatmapSettings(self, top3):
-        global softwareStringVar
-        software = softwareStringVar.get()
-        if software != "ethovision":
-            return
-        global canvas
-        global xscrollbar
-        global vsb
-        global frame
-        global fileDirectory
-        global heatValues
-        global flags
-        global labels
-
-        heatValues = []
-        flags = []
-        labels = []
-
-        extensionType = r"*.xlsx"
-        try:  # we try to delete a canvas (if one exists this will execute)
-            deleteCanvas()
-            logging.info("Canvas destroyed")
-        except:
-            logging.debug("Didn't kill canvas, could be first call")
-
-        logging.debug("heatmapSettings")
-
-        try:
-
-            canvas = Canvas(top3, borderwidth=0, width=350, height=800, bg="white")  # we create the canvas
-            frame = Frame(canvas)  # we place a frame in the canvas
-            frame.configure(bg="white")
-            xscrollbar = Scrollbar(top3, orient=HORIZONTAL, command=canvas.xview)  # we add a horizontal scroll bar
-            xscrollbar.pack(side=BOTTOM, fill=X)  # we put the horizontal scroll bar on the bottom
-            vsb = Scrollbar(top3, orient="vertical", command=canvas.yview)  # vertical scroll bar
-            vsb.pack(side="right", fill="y")  # put on right
-
-            canvas.pack(side="left", fill="both", expand=True)  # we pack in the canvas
-            canvas.create_window((4, 4), window=frame, anchor="nw")  # we create the window for the results
-
-            canvas.configure(yscrollcommand=vsb.set)  # we set the commands for the scroll bars
-            canvas.configure(xscrollcommand=xscrollbar.set)
-            frame.bind("<Configure>", lambda event, canvas=canvas: self.onFrameConfigure(canvas))   # we bind on frame configure
-        except:
-            logging.critical("Couldn't create the CSV canvas")
-
-        try:  # we try and fill the canvas
-            logging.debug("Populating the canvas")
-            for aFile in self.find_files(fileDirectory, extensionType):
-                try:
-                    wb = open_workbook(aFile)
-                    logging.debug("Opened" + aFile)
-                except:
-                    logging.error("Could not open excel file: " + aFile)
-                    continue
-
-                for sheet in wb.sheets():  # for all sheets in the workbook
-                    for row in range(38):  # GET CONDITION TREATMENT AND DAY VALUES
-                        for col in range(2):
-                            if str(sheet.cell(row, 0).value) != "":
-                                if col == 0:
-                                    labels.append(str(sheet.cell(row, 0).value))
-                                    heatmapValueFlag = BooleanVar()
-                                    heatmapValueFlag.set(False)
-                                    button = Checkbutton(frame, width=30, height=1, \
-                                                    text=str(sheet.cell(row, col).value), relief=RAISED, bg="white", variable=heatmapValueFlag)
-                                    button.grid(row=row, column=col)
-                                    flags.append(heatmapValueFlag)
-                                else:
-                                    value = StringVar()
-                                    value.set(str(sheet.cell(row, col).value))
-                                    label = Entry(frame, width=30, textvariable=value)
-                                    label.grid(row=row, column=col)
-                                    heatValues.append(value)
-                return
-
-        except Exception:  # if we can't fill
-            logging.critical("Fatal error in populate")
+    # def guiHeatmap(self):
+    #
+    #     self.top3 = Toplevel(root)  # create a new toplevel window
+    #     self.top3.configure(bg="white")
+    #     self.top3.geometry('{}x{}'.format( 500, 1000 ))
+    #     Label(self.top3, text="Heatmap Parameters", bg="white", fg="black", width=15).pack()  # add a title
+    #
+    #     self.gridSizeL = Label(self.top3, text="Grid Size:", bg="white")
+    #     self.gridSizeL.pack(side=TOP)
+    #     self.gridSizeE = Entry(self.top3, textvariable=gridSizeStringVar)
+    #     self.gridSizeE.pack(side=TOP)
+    #
+    #
+    #     self.maxValL = Label(self.top3, text="Maximum Value:", bg="white")
+    #     self.maxValL.pack(side=TOP)
+    #     self.maxValE = Entry(self.top3, textvariable=maxValStringVar)
+    #     self.maxValE.pack(side=TOP)
+    #
+    #     self.heatmapSettings(self.top3)
+    #
+    #     Button(self.top3, text="Generate", command=self.heatmap, fg="black", bg="white").pack()
+    #
+    # def heatmapSettings(self, top3):
+    #     global softwareStringVar
+    #     software = softwareStringVar.get()
+    #     if software != "ethovision":
+    #         return
+    #     global canvas
+    #     global xscrollbar
+    #     global vsb
+    #     global frame
+    #     global fileDirectory
+    #     global heatValues
+    #     global flags
+    #     global labels
+    #
+    #     heatValues = []
+    #     flags = []
+    #     labels = []
+    #
+    #     extensionType = r"*.xlsx"
+    #     try:  # we try to delete a canvas (if one exists this will execute)
+    #         deleteCanvas()
+    #         logging.info("Canvas destroyed")
+    #     except:
+    #         logging.debug("Didn't kill canvas, could be first call")
+    #
+    #     logging.debug("heatmapSettings")
+    #
+    #     try:
+    #
+    #         canvas = Canvas(top3, borderwidth=0, width=350, height=800, bg="white")  # we create the canvas
+    #         frame = Frame(canvas)  # we place a frame in the canvas
+    #         frame.configure(bg="white")
+    #         xscrollbar = Scrollbar(top3, orient=HORIZONTAL, command=canvas.xview)  # we add a horizontal scroll bar
+    #         xscrollbar.pack(side=BOTTOM, fill=X)  # we put the horizontal scroll bar on the bottom
+    #         vsb = Scrollbar(top3, orient="vertical", command=canvas.yview)  # vertical scroll bar
+    #         vsb.pack(side="right", fill="y")  # put on right
+    #
+    #         canvas.pack(side="left", fill="both", expand=True)  # we pack in the canvas
+    #         canvas.create_window((4, 4), window=frame, anchor="nw")  # we create the window for the results
+    #
+    #         canvas.configure(yscrollcommand=vsb.set)  # we set the commands for the scroll bars
+    #         canvas.configure(xscrollcommand=xscrollbar.set)
+    #         frame.bind("<Configure>", lambda event, canvas=canvas: self.onFrameConfigure(canvas))   # we bind on frame configure
+    #     except:
+    #         logging.critical("Couldn't create the CSV canvas")
+    #
+    #     try:  # we try and fill the canvas
+    #         logging.debug("Populating the canvas")
+    #         for aFile in self.find_files(fileDirectory, extensionType):
+    #             try:
+    #                 wb = open_workbook(aFile)
+    #                 logging.debug("Opened" + aFile)
+    #             except:
+    #                 logging.error("Could not open excel file: " + aFile)
+    #                 continue
+    #
+    #             for sheet in wb.sheets():  # for all sheets in the workbook
+    #                 for row in range(38):  # GET CONDITION TREATMENT AND DAY VALUES
+    #                     for col in range(2):
+    #                         if str(sheet.cell(row, 0).value) != "":
+    #                             if col == 0:
+    #                                 labels.append(str(sheet.cell(row, 0).value))
+    #                                 heatmapValueFlag = BooleanVar()
+    #                                 heatmapValueFlag.set(False)
+    #                                 button = Checkbutton(frame, width=30, height=1, \
+    #                                                 text=str(sheet.cell(row, col).value), relief=RAISED, bg="white", variable=heatmapValueFlag)
+    #                                 button.grid(row=row, column=col)
+    #                                 flags.append(heatmapValueFlag)
+    #                             else:
+    #                                 value = StringVar()
+    #                                 value.set(str(sheet.cell(row, col).value))
+    #                                 label = Entry(frame, width=30, textvariable=value)
+    #                                 label.grid(row=row, column=col)
+    #                                 heatValues.append(value)
+    #             return
+    #
+    #     except Exception:  # if we can't fill
+    #         logging.critical("Fatal error in populate")
 
     def updateTasks(self):  # called when we want to push an update to the GUI
         try:
@@ -1423,276 +1424,279 @@ class mainClass:
         except:
             logging.debug("Couldn't remove CSV display")
 
-    def heatmap(self):
-        global values
-        global flags
+    def callHeatmap(self):
+        heatmap.guiHeatmap(root, experiment)
 
-
-        if fileDirectory == "":  # if we didnt select a directory
-            messagebox.showwarning('No file or directory selected', 'Please select a directory or file under the File menu')
-            logging.error("Unable to find trials")
-            return  # stop
-        software = softwareStringVar.get()
-        if software == "ethovision":
-            logging.info("Extension set to xlsx")
-            extensionType = r'*.xlsx'
-        elif software == "anymaze":
-            extensionType = r'*.csv'
-            logging.info("Extension set to csv")
-        elif software == "watermaze":
-            extensionType = r'*.csv'
-            logging.info("Extension set to csv")
-        logging.debug("Heatmap Called")
-        theStatus.set("Generating Heatmap...")
-        self.updateTasks()
-
-        n = 0
-        condition = ""
-        genotype = ""
-        n += 1
-        x = []
-        y = []
-        i = 0
-        xMin = 0.0
-        yMin = 0.0
-        xMax = 0.0
-        yMax = 0.0
-        finalTemp = ""
-        finalGeno = ""
-
-
-
-        for aFile in self.find_files(fileDirectory, extensionType):  # for all the files we find
-            theStatus.set("Running " + aFile)
-            if software == "ethovision":
-                i = 0.0
-                try:
-                    wb = open_workbook(aFile)
-                    logging.debug("Opened" + aFile)
-                except:
-                    logging.error("Could not open excel file: " + aFile)
-                    continue
-
-                for sheet in wb.sheets():  # for all sheets in the workbook
-                    arrayX = []
-                    arrayY = []
-                    number_of_rows = sheet.nrows
-                    headerLines = int(sheet.cell(0, 1).value)  # gets number of header lines in the spreadsheet
-                    numOfRows = sheet.nrows - headerLines
-                    number_of_columns = sheet.ncols
-                    fullTrial = []
-                    rows = []
-                    k = 0
-
-                    continueVar=False
-
-                    variableFlagsCounter = 0
-                    for flag in flags:
-                        if flags[variableFlagsCounter].get():
-                            for row in range(headerLines):
-                                if labels[variableFlagsCounter] == str(sheet.cell(row, 0).value):
-                                    if heatValues[variableFlagsCounter].get() != str(sheet.cell(row, 1).value):
-                                        continueVar = True
-                        variableFlagsCounter += 1
-
-                    if continueVar:
-                        continue
-
-                    for row in range(headerLines, number_of_rows):  # for each row
-
-                        values = []
-
-                        for col in range(1, 4):  # for columns 1 through 4, get all the values
-                            value = sheet.cell(row, col).value
-                            try:
-                                value = float(value)
-                            except ValueError:
-                                pass
-                            finally:
-                                values.append(value)
-
-                        item = Trial(*values)
-                        fullTrial.append(item)
-
-
-            elif software == "anymaze":
-                columns = defaultdict(list)  # each value in each column is appended to a list
-                arrayX = []
-                arrayY = []
-                oldItemX = 0.0
-                oldItemY = 0.0
-                try:
-                    f = open(aFile)
-                    logging.debug("Opened" + aFile)
-                except:
-                    logging.info("Could not open " + aFile)
-                    continue
-                reader = csv.reader(f, delimiter=",")
-                next(reader)
-                number_of_columns = 3
-                number_of_rows = 0
-                for row in reader:
-                    number_of_rows += 1
-                    for (i, v) in enumerate(row):
-                        columns[i].append(v)
-
-                headerLines = 0  # gets number of header lines in the spreadsheet
-                numOfRows = number_of_rows
-
-                fullTrial = []
-                rows = []
-                k = 0
-                for a, b, c in zip(columns[0], columns[1], columns[2]):
-                    values = []
-                    a = a.replace(":", "")
-                    values.append(float(a))
-                    try:
-                        values.append(float(b))
-                    except:
-                        values.append(b)
-                    try:
-                        values.append(float(c))
-                    except:
-                        values.append(c)
-                    item = Trial(*values)
-                    fullTrial.append(item)
-                cTrName = aFile
-
-
-            elif software == "watermaze":
-                columns = defaultdict(list)  # each value in each column is appended to a list
-
-                oldItemX = 0.0
-                oldItemY = 0.0
-                number_of_columns = 0
-                number_of_rows = 0
-                try:
-                    f = open(aFile)
-                except:
-                    logging.info("Could not open " + aFile)
-                    continue
-                reader = csv.reader(f, delimiter=",")
-                for row in reader:
-                    number_of_rows += 1
-                    for (i, v) in enumerate(row):
-                        columns[i].append(v)
-                        number_of_columns = i
-
-                headerLines = 0  # gets number of header lines in the spreadsheet
-                numOfRows = number_of_rows
-                rows = []
-                k = 0
-                firstFlag = True
-                secondFlag = False
-                for i in range(0, math.floor(number_of_columns / 3)):
-                    firstFlag = True
-                    secondFlag = False
-                    arrayX = []
-                    arrayY = []
-                    fullTrial = []
-                    for a, b, c in zip(columns[i * 3], columns[1 + i * 3], columns[2 + i * 3]):
-                        values = []
-                        if firstFlag == True:
-                            if a == "" or b == "" or c == "":
-                                continue
-                            cTr = a
-                            cTrID = b
-                            cTrName = c  # round((math.floor(cTrName) + (((cTrName) % math.floor(cTrName)) * 60) / 100), 2)
-                            firstFlag = False
-                            secondFlag = True
-                        elif secondFlag == True:
-                            secondFlag = False
-                            continue
-                        else:
-                            if a == "" or b == "" or c == "":
-                                continue
-                            values.append(float(c))
-                            values.append(float(a))
-                            values.append(float(b))
-                            item = Trial(*values)
-                            fullTrial.append(item)
-
-                    for item in fullTrial:
-                        # Create data
-                        if item.x == "-" or item.y == "-":
-                            continue
-                        if item.time > 60.0:
-                            continue
-                        x.append(float(item.x))
-                        y.append(float(item.y))
-
-                        if item.x < xMin:
-                            xMin = item.x
-                        if item.y < yMin:
-                            yMin = item.y
-                        if item.x > xMax:
-                            xMax = item.x
-                        if item.y > yMax:
-                            yMax = item.y
-
-            for item in fullTrial:
-                # Create data
-                if item.x == "-" or item.y == "-":
-                    continue
-                if item.time > 60.0:
-                    continue
-                x.append(float(item.x))
-                y.append(float(item.y))
-
-                if item.x < xMin:
-                    xMin = item.x
-                if item.y < yMin:
-                    yMin = item.y
-                if item.x > xMax:
-                    xMax = item.x
-                if item.y > yMax:
-                    yMax = item.y
-
-
-
-        aFileName = "heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
-        aTitle = fileDirectory
-
-        try:
-            gridSize = int(math.floor(float(gridSizeStringVar.get())))
-        except:
-            logging.error("Couldn't read grid size for heatmap")
-            theStatus.set("Waiting for user input...")
-            return
-
-        X = sp.filters.gaussian_filter(x, sigma=2, order=0)
-        Y = sp.filters.gaussian_filter(y, sigma=2, order=0)
-        heatmap, xedges, yedges = np.histogram2d(X, Y, bins=(30, 30))
-        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-
-        # Plot heatmap
-        maxVal = maxValStringVar.get()
-        if maxVal == "Auto" or maxVal == "auto" or maxVal == "automatic" or maxVal == "Automatic" or maxVal == "":
-            hb = plt.hexbin(X, Y, gridsize=gridSize, cmap=CM.jet, vmin=0, bins=None)
-        else:
-            try:
-                maxVal = int(math.floor(float(maxValStringVar.get())))
-                hb = plt.hexbin(X, Y, gridsize=gridSize, cmap=CM.jet, vmin=0, vmax=maxVal, bins=None, linewidths=0.25)
-            except:
-                logging.error("Couldn't read Max Value")
-                theStatus.set("Waiting for user input...")
-                return
-
-
-        plt.axis([xMin, xMax, yMin, yMax])
-        try:
-            plt.gca().set_aspect('equal')
-        except:
-            pass
-        logging.debug("Heatmap generated")
-        theStatus.set("Waiting for user input...")
-        self.updateTasks()
-
-        plt.title(aTitle)
-        cb = plt.colorbar()
-        photoName = aFileName + ".png"  # image name the same as plotname
-        plt.savefig(photoName, dpi=300, figsize=(3,3))  # save the file
-        plt.show()
+    # def heatmap(self):
+    #     global values
+    #     global flags
+    #
+    #
+    #     if fileDirectory == "":  # if we didnt select a directory
+    #         messagebox.showwarning('No file or directory selected', 'Please select a directory or file under the File menu')
+    #         logging.error("Unable to find trials")
+    #         return  # stop
+    #     software = softwareStringVar.get()
+    #     if software == "ethovision":
+    #         logging.info("Extension set to xlsx")
+    #         extensionType = r'*.xlsx'
+    #     elif software == "anymaze":
+    #         extensionType = r'*.csv'
+    #         logging.info("Extension set to csv")
+    #     elif software == "watermaze":
+    #         extensionType = r'*.csv'
+    #         logging.info("Extension set to csv")
+    #     logging.debug("Heatmap Called")
+    #     theStatus.set("Generating Heatmap...")
+    #     self.updateTasks()
+    #
+    #     n = 0
+    #     condition = ""
+    #     genotype = ""
+    #     n += 1
+    #     x = []
+    #     y = []
+    #     i = 0
+    #     xMin = 0.0
+    #     yMin = 0.0
+    #     xMax = 0.0
+    #     yMax = 0.0
+    #     finalTemp = ""
+    #     finalGeno = ""
+    #
+    #
+    #
+    #     for aFile in self.find_files(fileDirectory, extensionType):  # for all the files we find
+    #         theStatus.set("Running " + aFile)
+    #         if software == "ethovision":
+    #             i = 0.0
+    #             try:
+    #                 wb = open_workbook(aFile)
+    #                 logging.debug("Opened" + aFile)
+    #             except:
+    #                 logging.error("Could not open excel file: " + aFile)
+    #                 continue
+    #
+    #             for sheet in wb.sheets():  # for all sheets in the workbook
+    #                 arrayX = []
+    #                 arrayY = []
+    #                 number_of_rows = sheet.nrows
+    #                 headerLines = int(sheet.cell(0, 1).value)  # gets number of header lines in the spreadsheet
+    #                 numOfRows = sheet.nrows - headerLines
+    #                 number_of_columns = sheet.ncols
+    #                 fullTrial = []
+    #                 rows = []
+    #                 k = 0
+    #
+    #                 continueVar=False
+    #
+    #                 variableFlagsCounter = 0
+    #                 for flag in flags:
+    #                     if flags[variableFlagsCounter].get():
+    #                         for row in range(headerLines):
+    #                             if labels[variableFlagsCounter] == str(sheet.cell(row, 0).value):
+    #                                 if heatValues[variableFlagsCounter].get() != str(sheet.cell(row, 1).value):
+    #                                     continueVar = True
+    #                     variableFlagsCounter += 1
+    #
+    #                 if continueVar:
+    #                     continue
+    #
+    #                 for row in range(headerLines, number_of_rows):  # for each row
+    #
+    #                     values = []
+    #
+    #                     for col in range(1, 4):  # for columns 1 through 4, get all the values
+    #                         value = sheet.cell(row, col).value
+    #                         try:
+    #                             value = float(value)
+    #                         except ValueError:
+    #                             pass
+    #                         finally:
+    #                             values.append(value)
+    #
+    #                     item = Trial(*values)
+    #                     fullTrial.append(item)
+    #
+    #
+    #         elif software == "anymaze":
+    #             columns = defaultdict(list)  # each value in each column is appended to a list
+    #             arrayX = []
+    #             arrayY = []
+    #             oldItemX = 0.0
+    #             oldItemY = 0.0
+    #             try:
+    #                 f = open(aFile)
+    #                 logging.debug("Opened" + aFile)
+    #             except:
+    #                 logging.info("Could not open " + aFile)
+    #                 continue
+    #             reader = csv.reader(f, delimiter=",")
+    #             next(reader)
+    #             number_of_columns = 3
+    #             number_of_rows = 0
+    #             for row in reader:
+    #                 number_of_rows += 1
+    #                 for (i, v) in enumerate(row):
+    #                     columns[i].append(v)
+    #
+    #             headerLines = 0  # gets number of header lines in the spreadsheet
+    #             numOfRows = number_of_rows
+    #
+    #             fullTrial = []
+    #             rows = []
+    #             k = 0
+    #             for a, b, c in zip(columns[0], columns[1], columns[2]):
+    #                 values = []
+    #                 a = a.replace(":", "")
+    #                 values.append(float(a))
+    #                 try:
+    #                     values.append(float(b))
+    #                 except:
+    #                     values.append(b)
+    #                 try:
+    #                     values.append(float(c))
+    #                 except:
+    #                     values.append(c)
+    #                 item = Trial(*values)
+    #                 fullTrial.append(item)
+    #             cTrName = aFile
+    #
+    #
+    #         elif software == "watermaze":
+    #             columns = defaultdict(list)  # each value in each column is appended to a list
+    #
+    #             oldItemX = 0.0
+    #             oldItemY = 0.0
+    #             number_of_columns = 0
+    #             number_of_rows = 0
+    #             try:
+    #                 f = open(aFile)
+    #             except:
+    #                 logging.info("Could not open " + aFile)
+    #                 continue
+    #             reader = csv.reader(f, delimiter=",")
+    #             for row in reader:
+    #                 number_of_rows += 1
+    #                 for (i, v) in enumerate(row):
+    #                     columns[i].append(v)
+    #                     number_of_columns = i
+    #
+    #             headerLines = 0  # gets number of header lines in the spreadsheet
+    #             numOfRows = number_of_rows
+    #             rows = []
+    #             k = 0
+    #             firstFlag = True
+    #             secondFlag = False
+    #             for i in range(0, math.floor(number_of_columns / 3)):
+    #                 firstFlag = True
+    #                 secondFlag = False
+    #                 arrayX = []
+    #                 arrayY = []
+    #                 fullTrial = []
+    #                 for a, b, c in zip(columns[i * 3], columns[1 + i * 3], columns[2 + i * 3]):
+    #                     values = []
+    #                     if firstFlag == True:
+    #                         if a == "" or b == "" or c == "":
+    #                             continue
+    #                         cTr = a
+    #                         cTrID = b
+    #                         cTrName = c  # round((math.floor(cTrName) + (((cTrName) % math.floor(cTrName)) * 60) / 100), 2)
+    #                         firstFlag = False
+    #                         secondFlag = True
+    #                     elif secondFlag == True:
+    #                         secondFlag = False
+    #                         continue
+    #                     else:
+    #                         if a == "" or b == "" or c == "":
+    #                             continue
+    #                         values.append(float(c))
+    #                         values.append(float(a))
+    #                         values.append(float(b))
+    #                         item = Trial(*values)
+    #                         fullTrial.append(item)
+    #
+    #                 for item in fullTrial:
+    #                     # Create data
+    #                     if item.x == "-" or item.y == "-":
+    #                         continue
+    #                     if item.time > 60.0:
+    #                         continue
+    #                     x.append(float(item.x))
+    #                     y.append(float(item.y))
+    #
+    #                     if item.x < xMin:
+    #                         xMin = item.x
+    #                     if item.y < yMin:
+    #                         yMin = item.y
+    #                     if item.x > xMax:
+    #                         xMax = item.x
+    #                     if item.y > yMax:
+    #                         yMax = item.y
+    #
+    #         for item in fullTrial:
+    #             # Create data
+    #             if item.x == "-" or item.y == "-":
+    #                 continue
+    #             if item.time > 60.0:
+    #                 continue
+    #             x.append(float(item.x))
+    #             y.append(float(item.y))
+    #
+    #             if item.x < xMin:
+    #                 xMin = item.x
+    #             if item.y < yMin:
+    #                 yMin = item.y
+    #             if item.x > xMax:
+    #                 xMax = item.x
+    #             if item.y > yMax:
+    #                 yMax = item.y
+    #
+    #
+    #
+    #     aFileName = "heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
+    #     aTitle = fileDirectory
+    #
+    #     try:
+    #         gridSize = int(math.floor(float(gridSizeStringVar.get())))
+    #     except:
+    #         logging.error("Couldn't read grid size for heatmap")
+    #         theStatus.set("Waiting for user input...")
+    #         return
+    #
+    #     X = sp.filters.gaussian_filter(x, sigma=2, order=0)
+    #     Y = sp.filters.gaussian_filter(y, sigma=2, order=0)
+    #     heatmap, xedges, yedges = np.histogram2d(X, Y, bins=(30, 30))
+    #     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+    #
+    #     # Plot heatmap
+    #     maxVal = maxValStringVar.get()
+    #     if maxVal == "Auto" or maxVal == "auto" or maxVal == "automatic" or maxVal == "Automatic" or maxVal == "":
+    #         hb = plt.hexbin(X, Y, gridsize=gridSize, cmap=CM.jet, vmin=0, bins=None)
+    #     else:
+    #         try:
+    #             maxVal = int(math.floor(float(maxValStringVar.get())))
+    #             hb = plt.hexbin(X, Y, gridsize=gridSize, cmap=CM.jet, vmin=0, vmax=maxVal, bins=None, linewidths=0.25)
+    #         except:
+    #             logging.error("Couldn't read Max Value")
+    #             theStatus.set("Waiting for user input...")
+    #             return
+    #
+    #
+    #     plt.axis([xMin, xMax, yMin, yMax])
+    #     try:
+    #         plt.gca().set_aspect('equal')
+    #     except:
+    #         pass
+    #     logging.debug("Heatmap generated")
+    #     theStatus.set("Waiting for user input...")
+    #     self.updateTasks()
+    #
+    #     plt.title(aTitle)
+    #     cb = plt.colorbar()
+    #     photoName = aFileName + ".png"  # image name the same as plotname
+    #     plt.savefig(photoName, dpi=300, figsize=(3,3))  # save the file
+    #     plt.show()
 
     def getAutoLocations(self, software, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, fileDirectory, extensionType, theFile):
         platEstX = 0.0

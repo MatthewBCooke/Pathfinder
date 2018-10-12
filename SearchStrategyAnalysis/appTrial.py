@@ -26,8 +26,9 @@ class Experiment(object):
     def __str__(self):
         return self.name
 
-    def append(self, aTrial):
-        self.trialList.append(aTrial)
+    def append(self, atrial):
+        self.trialList.append(atrial)
+
 
 class Parameters:
     def __init__(self, name, cseMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal,
@@ -51,5 +52,6 @@ class Parameters:
         self.outerWallMaxVal = outerWallMaxVal
         self.cseIndirectMaxVal = cseIndirectMaxVal
         self.percentTraversedRandomMaxVal = percentTraversedRandomMaxVal
+
     def __str__(self):
         return self.name
