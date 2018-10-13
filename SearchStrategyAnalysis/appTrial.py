@@ -140,7 +140,7 @@ def saveFileAsExperiment(software, fileName):
         except:
             logging.info("Could not open " + fileName)
             return
-            
+
         reader = csv.reader(f, delimiter=",")
         for row in reader:
             for (i, v) in enumerate(row):
@@ -172,5 +172,6 @@ def saveFileAsExperiment(software, fileName):
                     trialList.append(item)
     else:
         logging.critical("Could not determine trial, saveFileAsTrial")
+        return
 
     return Experiment(fileName, trialList)
