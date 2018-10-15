@@ -268,7 +268,7 @@ class mainClass:
                                   command=self.openFile)  # add buttons in the menus
         self.fileMenu.add_command(label="Open Directory...", accelerator=accelD, command=self.openDir)
         self.fileMenu.add_separator()  # adds a seperator
-        self.fileMenu.add_command(label="Generate Heatmap", command=heatmap.guiHeatmap(root))
+        self.fileMenu.add_command(label="Generate Heatmap", command=lambda: heatmap.guiHeatmap(root))
         self.fileMenu.add_separator()  # adds a seperator
         self.fileMenu.add_command(label="Exit", command=self.tryQuit)  # exit button quits
 
