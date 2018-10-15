@@ -23,7 +23,7 @@ import numpy as np
 import pickle
 import datetime
 import scipy.ndimage as sp
-from appTrial import Trial, Experiment, Parameters
+from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment
 import heatmap
 
 
@@ -68,22 +68,22 @@ outputFile = csvfilename
 fileFlag = 0
 
 snyderParams = Parameters(name="snyder", cseMaxVal=300/24, headingMaxVal=25, distanceToSwimMaxVal=0.45,
-                  distanceToPlatMaxVal=0.35, corridorAverageMinVal=0.5, corridorCseMaxVal=100000,
-                  annulusCounterMaxVal=0.70, quadrantTotalMaxVal=3, percentTraversedMaxVal=60,
-                  percentTraversedMinVal=10, distanceToCentreMaxVal=0.7, innerWallMaxVal=0.65,
-                  outerWallMaxVal=0.3, cseIndirectMaxVal=7000/24, percentTraversedRandomMaxVal=30)
+                          distanceToPlatMaxVal=0.35, corridorAverageMinVal=0.5, corridorCseMaxVal=100000,
+                          annulusCounterMaxVal=0.70, quadrantTotalMaxVal=3, percentTraversedMaxVal=60,
+                          percentTraversedMinVal=10, distanceToCentreMaxVal=0.7, innerWallMaxVal=0.65,
+                          outerWallMaxVal=0.3, cseIndirectMaxVal=7000/24, percentTraversedRandomMaxVal=30)
 
 ruedigerParams = Parameters(name="ruediger", cseMaxVal=300/24, headingMaxVal=35, distanceToSwimMaxVal=0.45,
-                  distanceToPlatMaxVal=0.5, corridorAverageMinVal=0.8, corridorCseMaxVal=999999999,
-                  annulusCounterMaxVal=0.65, quadrantTotalMaxVal=0, percentTraversedMaxVal=70,
-                  percentTraversedMinVal=15, distanceToCentreMaxVal=0.7, innerWallMaxVal=0.65,
-                  outerWallMaxVal=0.35, cseIndirectMaxVal=0, percentTraversedRandomMaxVal=70)
+                            distanceToPlatMaxVal=0.5, corridorAverageMinVal=0.8, corridorCseMaxVal=999999999,
+                            annulusCounterMaxVal=0.65, quadrantTotalMaxVal=0, percentTraversedMaxVal=70,
+                            percentTraversedMinVal=15, distanceToCentreMaxVal=0.7, innerWallMaxVal=0.65,
+                            outerWallMaxVal=0.35, cseIndirectMaxVal=0, percentTraversedRandomMaxVal=70)
 
 gartheParams = Parameters(name="garthe", cseMaxVal=300/24, headingMaxVal=20, distanceToSwimMaxVal=0.35,
-                  distanceToPlatMaxVal=0.3, corridorAverageMinVal=0.8, corridorCseMaxVal=999999999,
-                  annulusCounterMaxVal=0.8, quadrantTotalMaxVal=0, percentTraversedMaxVal=60,
-                  percentTraversedMinVal=10, distanceToCentreMaxVal=0.7, innerWallMaxVal=0.65,
-                  outerWallMaxVal=0.35, cseIndirectMaxVal=0, percentTraversedRandomMaxVal=60)
+                          distanceToPlatMaxVal=0.3, corridorAverageMinVal=0.8, corridorCseMaxVal=999999999,
+                          annulusCounterMaxVal=0.8, quadrantTotalMaxVal=0, percentTraversedMaxVal=60,
+                          percentTraversedMinVal=10, distanceToCentreMaxVal=0.7, innerWallMaxVal=0.65,
+                          outerWallMaxVal=0.35, cseIndirectMaxVal=0, percentTraversedRandomMaxVal=60)
 
 params = snyderParams
 
@@ -603,38 +603,6 @@ class mainClass:
         self.gartheButton.configure(style='default.TButton')  # and non-selected buttons
         self.ruedigerButton.configure(style='default.TButton')
         self.customButton.configure(style='default.TButton')
-        # global cseMaxVal
-        # global headingMaxVal
-        # global distanceToSwimMaxVal
-        # global distanceToPlatMaxVal
-        # global corridorAverageMinVal
-        # global annulusCounterMaxVal
-        # global quadrantTotalMaxVal
-        # global corridorCseMaxVal
-        # global percentTraversedMaxVal
-        # global percentTraversedMinVal
-        # global distanceToCentreMaxVal
-        # global innerWallMaxVal
-        # global outerWallMaxVal
-        # global cseIndirectMaxVal
-        # global percentTraversedRandomMaxVal
-        # # values we need access to
-        # # what these values should be
-        # cseMaxVal = snyderCseMaxVal
-        # headingMaxVal = snyderHeadingMaxVal
-        # distanceToSwimMaxVal = snyderDistanceToSwimMaxVal
-        # distanceToPlatMaxVal = snyderDistanceToPlatMaxVal
-        # corridorAverageMinVal = snyderCorridorAverageMinVal
-        # corridorCseMaxVal = snyderCorridorCseMaxVal
-        # annulusCounterMaxVal = snyderAnnulusCounterMaxVal
-        # quadrantTotalMaxVal = snyderQuadrantTotalMaxVal
-        # percentTraversedMaxVal = snyderPercentTraversedMaxVal
-        # percentTraversedMinVal = snyderPercentTraversedMinVal
-        # distanceToCentreMaxVal = snyderDistanceToCentreMaxVal
-        # innerWallMaxVal = snyderInnerWallMaxVal
-        # outerWallMaxVal = snyderOuterWallMaxVal
-        # cseIndirectMaxVal = snyderCseIndirectMaxVal
-        # percentTraversedRandomMaxVal = snyderPercentTraversedRandomMaxVal
         params = snyderParams
 
     def ruediger(self):  # see snyder
@@ -643,40 +611,6 @@ class mainClass:
         self.gartheButton.configure(style='default.TButton')
         self.ruedigerButton.configure(style='selected.TButton')
         self.customButton.configure(style='default.TButton')
-
-        # global cseMaxVal
-        # global headingMaxVal
-        # global distanceToSwimMaxVal
-        # global distanceToPlatMaxVal
-        # global corridorAverageMinVal
-        # global annulusCounterMaxVal
-        # global quadrantTotalMaxVal
-        # global corridorCseMaxVal
-        # global percentTraversedMaxVal
-        # global percentTraversedMinVal
-        # global distanceToCentreMaxVal
-        # global innerWallMaxVal
-        # global outerWallMaxVal
-        # global cseIndirectMaxVal
-        # global percentTraversedRandomMaxVal
-        # global isRuediger
-        #
-        # cseMaxVal = 300/24
-        # headingMaxVal = 35
-        # distanceToSwimMaxVal = 0.45
-        # distanceToPlatMaxVal = 0.5
-        # corridorAverageMinVal = 0.8
-        # corridorCseMaxVal = 999999999  # inf
-        # annulusCounterMaxVal = 0.65
-        # quadrantTotalMaxVal = 0
-        # percentTraversedMaxVal = 70
-        # percentTraversedMinVal = 15
-        # distanceToCentreMaxVal = 0.7
-        # innerWallMaxVal = 0.65
-        # outerWallMaxVal = 0.35
-        # cseIndirectMaxVal = 0
-        # percentTraversedRandomMaxVal = 70
-        # isRuediger = True
         params = ruedigerParams
 
     def garthe(self):  # see snyder
@@ -685,39 +619,6 @@ class mainClass:
         self.gartheButton.configure(style='selected.TButton')
         self.ruedigerButton.configure(style='default.TButton')
         self.customButton.configure(style='default.TButton')
-
-
-        # global cseMaxVal
-        # global headingMaxVal
-        # global distanceToSwimMaxVal
-        # global distanceToPlatMaxVal
-        # global corridorAverageMinVal
-        # global annulusCounterMaxVal
-        # global quadrantTotalMaxVal
-        # global corridorCseMaxVal
-        # global percentTraversedMaxVal
-        # global percentTraversedMinVal
-        # global distanceToCentreMaxVal
-        # global innerWallMaxVal
-        # global outerWallMaxVal
-        # global cseIndirectMaxVal
-        # global percentTraversedRandomMaxVal
-
-        # cseMaxVal = 300/24
-        # headingMaxVal = 20
-        # distanceToSwimMaxVal = 0.35
-        # distanceToPlatMaxVal = 0.3
-        # corridorAverageMinVal = 0.8
-        # corridorCseMaxVal = 999999999  # inf
-        # annulusCounterMaxVal = 0.8
-        # quadrantTotalMaxVal = 0
-        # percentTraversedMaxVal = 60
-        # percentTraversedMinVal = 10
-        # distanceToCentreMaxVal = 0.7
-        # innerWallMaxVal = 0.65
-        # outerWallMaxVal = 0.35
-        # cseIndirectMaxVal = 0
-        # percentTraversedRandomMaxVal = 60
         params = gartheParams
 
     def custom(self):
@@ -1026,10 +927,10 @@ class mainClass:
         percentTraversedRandomMaxVal = float(self.percentTraversedRandomCustom.get())
 
         params = Parameters(name="custom", cseMaxVal=float(self.jslsMaxCustom.get()), headingMaxVal=float(self.headingErrorCustom.get()), distanceToSwimMaxVal=float(self.distanceToSwimCustom.get())/100,
-                          distanceToPlatMaxVal=float(self.distanceToPlatCustom.get())/100, corridorAverageMinVal=float(self.corridorAverageCustom.get()) / 100, corridorCseMaxVal=float(self.corridorJslsCustom.get()),
-                          annulusCounterMaxVal=float(self.annulusCustom.get())/100, quadrantTotalMaxVal=float(self.quadrantTotalCustom.get()), percentTraversedMaxVal=float(self.percentTraversedCustom.get()),
-                          percentTraversedMinVal=float(self.percentTraversedMinCustom.get()), distanceToCentreMaxVal=float(self.distanceToCentreCustom.get())/100, innerWallMaxVal=float(self.innerWallCustom.get())/100,
-                          outerWallMaxVal=float(self.outerWallCustom.get())/100, cseIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get()))
+                            distanceToPlatMaxVal=float(self.distanceToPlatCustom.get())/100, corridorAverageMinVal=float(self.corridorAverageCustom.get()) / 100, corridorCseMaxVal=float(self.corridorJslsCustom.get()),
+                            annulusCounterMaxVal=float(self.annulusCustom.get())/100, quadrantTotalMaxVal=float(self.quadrantTotalCustom.get()), percentTraversedMaxVal=float(self.percentTraversedCustom.get()),
+                            percentTraversedMinVal=float(self.percentTraversedMinCustom.get()), distanceToCentreMaxVal=float(self.distanceToCentreCustom.get())/100, innerWallMaxVal=float(self.innerWallCustom.get())/100,
+                            outerWallMaxVal=float(self.outerWallCustom.get())/100, cseIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get()))
 
         useDirectSwimV = self.useDirectSwim.get()
         useFocalSearchV = self.useFocalSearch.get()
@@ -1049,103 +950,6 @@ class mainClass:
             self.top.destroy()
         except:
             pass
-
-    def saveFileAsTrial(self,software,aFile,fileDirectory,theFile):
-        trialList = []
-        if fileDirectory == "":  # if we didnt select a directory
-            if theFile == "":  # or a file
-                experimentName= theFile
-                messagebox.showwarning('No file or directory selected', 'Please select a directory or file under the File menu')
-                self.killBar()
-                logging.error("Unable to find trials")
-                return  # stop
-        else:
-            experimentName = fileDirectory
-
-        if software == "ethovision":
-            logging.info("Extension set to xlsx")
-            extensionType = r'*.xlsx'
-            softwareScalingFactorVar = 1.0
-            logging.info("Reading file ethovision")
-            i = 0.0
-            try:
-                wb = open_workbook(aFile)
-                logging.debug("Opened" + aFile)
-            except:
-                # print("Corrupted excel file", aFile)
-                logging.error("Unable to open excel file" + aFile)
-                try:
-                    show_error("Corrupted Excel File " + aFile)
-                except:
-                    pass
-                return
-
-            for sheet in wb.sheets():  # for all sheets in the workbook
-                number_of_rows = sheet.nrows
-                headerLines = int(sheet.cell(0, 1).value)  # gets number of header lines in the spreadsheet
-                numOfRows = sheet.nrows - headerLines
-                number_of_columns = sheet.ncols
-                fullTrial = []
-                rows = []
-                k = 0
-                cCondition = ""
-                cTreatment = ""
-                cDay = ""
-                cTemp = ""
-                cGen = ""
-                cAnimalID = ""
-                cTrName = ""
-                cTrID = ""
-                cTr = ""
-
-                for k in range(0, 39):  # GET CONDITION TREATMENT AND DAY VALUES
-                    if str(sheet.cell(k, 0).value) == "Condition" or str(sheet.cell(k, 0).value) == "Restraint":
-                        cCondition = str(sheet.cell(k, 1).value)
-                    elif str(sheet.cell(k, 0).value) == "Treatment":
-                        cTreatment = str(sheet.cell(k, 1).value)
-                    elif str(sheet.cell(k, 0).value) == "Day":
-                        cDay = str(sheet.cell(k, 1).value)
-                    elif str(sheet.cell(k, 0).value) == "Temperature":
-                        cTemp = str(sheet.cell(k, 1).value)
-                    elif str(sheet.cell(k, 0).value) == "Genotype":
-                        cGen = str(sheet.cell(k, 1).value)
-                    elif str(sheet.cell(k, 0).value) == "Animal ID":
-                        cAnimalID = str(sheet.cell(k, 1).value)
-                    elif str(sheet.cell(k, 0).value) == "Trial name":
-                        cTrName = str(sheet.cell(k, 1).value)
-                    elif str(sheet.cell(k, 0).value) == "Trial ID":
-                        cTrID = str(sheet.cell(k, 1).value)
-                    elif str(sheet.cell(k, 0).value) == "Trial":
-                        cTr = str(sheet.cell(k, 1).value)
-
-
-                for row in range(headerLines, number_of_rows):  # for each row
-
-                    values = []
-                    values.append(aFile)
-                    for col in range(1, 4):  # for columns 1 through 4, get all the values
-                        value = sheet.cell(row, col).value
-                        try:
-                            value = float(value)
-                        except ValueError:
-                            pass
-                        finally:
-                            values.append(value)
-
-                    trialList.append(Trial(*values))
-
-        elif software == "anymaze":
-            extensionType = r'*.csv'
-            logging.info("Extension set to csv")
-            softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
-        elif software == "watermaze":
-            extensionType = r'*.csv'
-            logging.info("Extension set to csv")
-            softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
-        else:
-            logging.critical("Could not determine trial, saveFileAsTrial")
-
-        return Experiment(experimentName, trialList)
 
     def mainThreader(self):  # start the threaded execution
         logging.debug("Threading")
@@ -1295,107 +1099,6 @@ class mainClass:
         except:
             pass
 
-    # def guiHeatmap(self):
-    #
-    #     self.top3 = Toplevel(root)  # create a new toplevel window
-    #     self.top3.configure(bg="white")
-    #     self.top3.geometry('{}x{}'.format( 500, 1000 ))
-    #     Label(self.top3, text="Heatmap Parameters", bg="white", fg="black", width=15).pack()  # add a title
-    #
-    #     self.gridSizeL = Label(self.top3, text="Grid Size:", bg="white")
-    #     self.gridSizeL.pack(side=TOP)
-    #     self.gridSizeE = Entry(self.top3, textvariable=gridSizeStringVar)
-    #     self.gridSizeE.pack(side=TOP)
-    #
-    #
-    #     self.maxValL = Label(self.top3, text="Maximum Value:", bg="white")
-    #     self.maxValL.pack(side=TOP)
-    #     self.maxValE = Entry(self.top3, textvariable=maxValStringVar)
-    #     self.maxValE.pack(side=TOP)
-    #
-    #     self.heatmapSettings(self.top3)
-    #
-    #     Button(self.top3, text="Generate", command=self.heatmap, fg="black", bg="white").pack()
-    #
-    # def heatmapSettings(self, top3):
-    #     global softwareStringVar
-    #     software = softwareStringVar.get()
-    #     if software != "ethovision":
-    #         return
-    #     global canvas
-    #     global xscrollbar
-    #     global vsb
-    #     global frame
-    #     global fileDirectory
-    #     global heatValues
-    #     global flags
-    #     global labels
-    #
-    #     heatValues = []
-    #     flags = []
-    #     labels = []
-    #
-    #     extensionType = r"*.xlsx"
-    #     try:  # we try to delete a canvas (if one exists this will execute)
-    #         deleteCanvas()
-    #         logging.info("Canvas destroyed")
-    #     except:
-    #         logging.debug("Didn't kill canvas, could be first call")
-    #
-    #     logging.debug("heatmapSettings")
-    #
-    #     try:
-    #
-    #         canvas = Canvas(top3, borderwidth=0, width=350, height=800, bg="white")  # we create the canvas
-    #         frame = Frame(canvas)  # we place a frame in the canvas
-    #         frame.configure(bg="white")
-    #         xscrollbar = Scrollbar(top3, orient=HORIZONTAL, command=canvas.xview)  # we add a horizontal scroll bar
-    #         xscrollbar.pack(side=BOTTOM, fill=X)  # we put the horizontal scroll bar on the bottom
-    #         vsb = Scrollbar(top3, orient="vertical", command=canvas.yview)  # vertical scroll bar
-    #         vsb.pack(side="right", fill="y")  # put on right
-    #
-    #         canvas.pack(side="left", fill="both", expand=True)  # we pack in the canvas
-    #         canvas.create_window((4, 4), window=frame, anchor="nw")  # we create the window for the results
-    #
-    #         canvas.configure(yscrollcommand=vsb.set)  # we set the commands for the scroll bars
-    #         canvas.configure(xscrollcommand=xscrollbar.set)
-    #         frame.bind("<Configure>", lambda event, canvas=canvas: self.onFrameConfigure(canvas))   # we bind on frame configure
-    #     except:
-    #         logging.critical("Couldn't create the CSV canvas")
-    #
-    #     try:  # we try and fill the canvas
-    #         logging.debug("Populating the canvas")
-    #         for aFile in self.find_files(fileDirectory, extensionType):
-    #             try:
-    #                 wb = open_workbook(aFile)
-    #                 logging.debug("Opened" + aFile)
-    #             except:
-    #                 logging.error("Could not open excel file: " + aFile)
-    #                 continue
-    #
-    #             for sheet in wb.sheets():  # for all sheets in the workbook
-    #                 for row in range(38):  # GET CONDITION TREATMENT AND DAY VALUES
-    #                     for col in range(2):
-    #                         if str(sheet.cell(row, 0).value) != "":
-    #                             if col == 0:
-    #                                 labels.append(str(sheet.cell(row, 0).value))
-    #                                 heatmapValueFlag = BooleanVar()
-    #                                 heatmapValueFlag.set(False)
-    #                                 button = Checkbutton(frame, width=30, height=1, \
-    #                                                 text=str(sheet.cell(row, col).value), relief=RAISED, bg="white", variable=heatmapValueFlag)
-    #                                 button.grid(row=row, column=col)
-    #                                 flags.append(heatmapValueFlag)
-    #                             else:
-    #                                 value = StringVar()
-    #                                 value.set(str(sheet.cell(row, col).value))
-    #                                 label = Entry(frame, width=30, textvariable=value)
-    #                                 label.grid(row=row, column=col)
-    #                                 heatValues.append(value)
-    #             return
-    #
-    #     except Exception:  # if we can't fill
-    #         logging.critical("Fatal error in populate")
-
     def updateTasks(self):  # called when we want to push an update to the GUI
         try:
             root.update_idletasks()
@@ -1425,280 +1128,10 @@ class mainClass:
             logging.debug("Couldn't remove CSV display")
 
     def callHeatmap(self):
+        global root
         heatmap.guiHeatmap(root, experiment)
 
-    # def heatmap(self):
-    #     global values
-    #     global flags
-    #
-    #
-    #     if fileDirectory == "":  # if we didnt select a directory
-    #         messagebox.showwarning('No file or directory selected', 'Please select a directory or file under the File menu')
-    #         logging.error("Unable to find trials")
-    #         return  # stop
-    #     software = softwareStringVar.get()
-    #     if software == "ethovision":
-    #         logging.info("Extension set to xlsx")
-    #         extensionType = r'*.xlsx'
-    #     elif software == "anymaze":
-    #         extensionType = r'*.csv'
-    #         logging.info("Extension set to csv")
-    #     elif software == "watermaze":
-    #         extensionType = r'*.csv'
-    #         logging.info("Extension set to csv")
-    #     logging.debug("Heatmap Called")
-    #     theStatus.set("Generating Heatmap...")
-    #     self.updateTasks()
-    #
-    #     n = 0
-    #     condition = ""
-    #     genotype = ""
-    #     n += 1
-    #     x = []
-    #     y = []
-    #     i = 0
-    #     xMin = 0.0
-    #     yMin = 0.0
-    #     xMax = 0.0
-    #     yMax = 0.0
-    #     finalTemp = ""
-    #     finalGeno = ""
-    #
-    #
-    #
-    #     for aFile in self.find_files(fileDirectory, extensionType):  # for all the files we find
-    #         theStatus.set("Running " + aFile)
-    #         if software == "ethovision":
-    #             i = 0.0
-    #             try:
-    #                 wb = open_workbook(aFile)
-    #                 logging.debug("Opened" + aFile)
-    #             except:
-    #                 logging.error("Could not open excel file: " + aFile)
-    #                 continue
-    #
-    #             for sheet in wb.sheets():  # for all sheets in the workbook
-    #                 arrayX = []
-    #                 arrayY = []
-    #                 number_of_rows = sheet.nrows
-    #                 headerLines = int(sheet.cell(0, 1).value)  # gets number of header lines in the spreadsheet
-    #                 numOfRows = sheet.nrows - headerLines
-    #                 number_of_columns = sheet.ncols
-    #                 fullTrial = []
-    #                 rows = []
-    #                 k = 0
-    #
-    #                 continueVar=False
-    #
-    #                 variableFlagsCounter = 0
-    #                 for flag in flags:
-    #                     if flags[variableFlagsCounter].get():
-    #                         for row in range(headerLines):
-    #                             if labels[variableFlagsCounter] == str(sheet.cell(row, 0).value):
-    #                                 if heatValues[variableFlagsCounter].get() != str(sheet.cell(row, 1).value):
-    #                                     continueVar = True
-    #                     variableFlagsCounter += 1
-    #
-    #                 if continueVar:
-    #                     continue
-    #
-    #                 for row in range(headerLines, number_of_rows):  # for each row
-    #
-    #                     values = []
-    #
-    #                     for col in range(1, 4):  # for columns 1 through 4, get all the values
-    #                         value = sheet.cell(row, col).value
-    #                         try:
-    #                             value = float(value)
-    #                         except ValueError:
-    #                             pass
-    #                         finally:
-    #                             values.append(value)
-    #
-    #                     item = Trial(*values)
-    #                     fullTrial.append(item)
-    #
-    #
-    #         elif software == "anymaze":
-    #             columns = defaultdict(list)  # each value in each column is appended to a list
-    #             arrayX = []
-    #             arrayY = []
-    #             oldItemX = 0.0
-    #             oldItemY = 0.0
-    #             try:
-    #                 f = open(aFile)
-    #                 logging.debug("Opened" + aFile)
-    #             except:
-    #                 logging.info("Could not open " + aFile)
-    #                 continue
-    #             reader = csv.reader(f, delimiter=",")
-    #             next(reader)
-    #             number_of_columns = 3
-    #             number_of_rows = 0
-    #             for row in reader:
-    #                 number_of_rows += 1
-    #                 for (i, v) in enumerate(row):
-    #                     columns[i].append(v)
-    #
-    #             headerLines = 0  # gets number of header lines in the spreadsheet
-    #             numOfRows = number_of_rows
-    #
-    #             fullTrial = []
-    #             rows = []
-    #             k = 0
-    #             for a, b, c in zip(columns[0], columns[1], columns[2]):
-    #                 values = []
-    #                 a = a.replace(":", "")
-    #                 values.append(float(a))
-    #                 try:
-    #                     values.append(float(b))
-    #                 except:
-    #                     values.append(b)
-    #                 try:
-    #                     values.append(float(c))
-    #                 except:
-    #                     values.append(c)
-    #                 item = Trial(*values)
-    #                 fullTrial.append(item)
-    #             cTrName = aFile
-    #
-    #
-    #         elif software == "watermaze":
-    #             columns = defaultdict(list)  # each value in each column is appended to a list
-    #
-    #             oldItemX = 0.0
-    #             oldItemY = 0.0
-    #             number_of_columns = 0
-    #             number_of_rows = 0
-    #             try:
-    #                 f = open(aFile)
-    #             except:
-    #                 logging.info("Could not open " + aFile)
-    #                 continue
-    #             reader = csv.reader(f, delimiter=",")
-    #             for row in reader:
-    #                 number_of_rows += 1
-    #                 for (i, v) in enumerate(row):
-    #                     columns[i].append(v)
-    #                     number_of_columns = i
-    #
-    #             headerLines = 0  # gets number of header lines in the spreadsheet
-    #             numOfRows = number_of_rows
-    #             rows = []
-    #             k = 0
-    #             firstFlag = True
-    #             secondFlag = False
-    #             for i in range(0, math.floor(number_of_columns / 3)):
-    #                 firstFlag = True
-    #                 secondFlag = False
-    #                 arrayX = []
-    #                 arrayY = []
-    #                 fullTrial = []
-    #                 for a, b, c in zip(columns[i * 3], columns[1 + i * 3], columns[2 + i * 3]):
-    #                     values = []
-    #                     if firstFlag == True:
-    #                         if a == "" or b == "" or c == "":
-    #                             continue
-    #                         cTr = a
-    #                         cTrID = b
-    #                         cTrName = c  # round((math.floor(cTrName) + (((cTrName) % math.floor(cTrName)) * 60) / 100), 2)
-    #                         firstFlag = False
-    #                         secondFlag = True
-    #                     elif secondFlag == True:
-    #                         secondFlag = False
-    #                         continue
-    #                     else:
-    #                         if a == "" or b == "" or c == "":
-    #                             continue
-    #                         values.append(float(c))
-    #                         values.append(float(a))
-    #                         values.append(float(b))
-    #                         item = Trial(*values)
-    #                         fullTrial.append(item)
-    #
-    #                 for item in fullTrial:
-    #                     # Create data
-    #                     if item.x == "-" or item.y == "-":
-    #                         continue
-    #                     if item.time > 60.0:
-    #                         continue
-    #                     x.append(float(item.x))
-    #                     y.append(float(item.y))
-    #
-    #                     if item.x < xMin:
-    #                         xMin = item.x
-    #                     if item.y < yMin:
-    #                         yMin = item.y
-    #                     if item.x > xMax:
-    #                         xMax = item.x
-    #                     if item.y > yMax:
-    #                         yMax = item.y
-    #
-    #         for item in fullTrial:
-    #             # Create data
-    #             if item.x == "-" or item.y == "-":
-    #                 continue
-    #             if item.time > 60.0:
-    #                 continue
-    #             x.append(float(item.x))
-    #             y.append(float(item.y))
-    #
-    #             if item.x < xMin:
-    #                 xMin = item.x
-    #             if item.y < yMin:
-    #                 yMin = item.y
-    #             if item.x > xMax:
-    #                 xMax = item.x
-    #             if item.y > yMax:
-    #                 yMax = item.y
-    #
-    #
-    #
-    #     aFileName = "heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
-    #     aTitle = fileDirectory
-    #
-    #     try:
-    #         gridSize = int(math.floor(float(gridSizeStringVar.get())))
-    #     except:
-    #         logging.error("Couldn't read grid size for heatmap")
-    #         theStatus.set("Waiting for user input...")
-    #         return
-    #
-    #     X = sp.filters.gaussian_filter(x, sigma=2, order=0)
-    #     Y = sp.filters.gaussian_filter(y, sigma=2, order=0)
-    #     heatmap, xedges, yedges = np.histogram2d(X, Y, bins=(30, 30))
-    #     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-    #
-    #     # Plot heatmap
-    #     maxVal = maxValStringVar.get()
-    #     if maxVal == "Auto" or maxVal == "auto" or maxVal == "automatic" or maxVal == "Automatic" or maxVal == "":
-    #         hb = plt.hexbin(X, Y, gridsize=gridSize, cmap=CM.jet, vmin=0, bins=None)
-    #     else:
-    #         try:
-    #             maxVal = int(math.floor(float(maxValStringVar.get())))
-    #             hb = plt.hexbin(X, Y, gridsize=gridSize, cmap=CM.jet, vmin=0, vmax=maxVal, bins=None, linewidths=0.25)
-    #         except:
-    #             logging.error("Couldn't read Max Value")
-    #             theStatus.set("Waiting for user input...")
-    #             return
-    #
-    #
-    #     plt.axis([xMin, xMax, yMin, yMax])
-    #     try:
-    #         plt.gca().set_aspect('equal')
-    #     except:
-    #         pass
-    #     logging.debug("Heatmap generated")
-    #     theStatus.set("Waiting for user input...")
-    #     self.updateTasks()
-    #
-    #     plt.title(aTitle)
-    #     cb = plt.colorbar()
-    #     photoName = aFileName + ".png"  # image name the same as plotname
-    #     plt.savefig(photoName, dpi=300, figsize=(3,3))  # save the file
-    #     plt.show()
-
-    def getAutoLocations(self, software, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, fileDirectory, extensionType, theFile):
+    def getAutoLocations(self, theExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar):
         platEstX = 0.0
         platEstY = 0.0
         maxX = 0.0
@@ -1725,6 +1158,7 @@ class mainClass:
         platMaxY = -100.0
         platMinY = 100.0
         platEstDiam = 0.0
+        maxLengthOfTrial = 50.0
         centreFlag = False
         platFlag = False
         diamFlag = False
@@ -1741,7 +1175,7 @@ class mainClass:
             theStatus.set('Waiting for user input...')
             self.updateTasks()
             messagebox.showwarning('File Error',
-                                   'You must enter concrete positions for a single trial')
+                                   'You must enter values for a single trial')
             return
         else:  # automatic platform calculation
             platFlag = True
@@ -1757,7 +1191,7 @@ class mainClass:
             theStatus.set('Waiting for user input...')
             self.updateTasks()
             messagebox.showwarning('File Error',
-                                   'You must enter concrete positions for a single trial')
+                                   'You must enter values for a single trial')
             return
         else:  # automatic pool centre
             centreFlag = True
@@ -1771,19 +1205,12 @@ class mainClass:
             theStatus.set('Waiting for user input...')
             self.updateTasks()
             messagebox.showwarning('File Error',
-                                   'You must enter concrete positions for a single trial')
+                                   'You must enter values for a single trial')
             return
         else:  # automatic diameter
             diamFlag = True
 
         if platFlag == True or centreFlag == True or diamFlag == True:  # update the status bar depending on choice
-            #           if software == "watermaze":
-            #               self.killBar()
-            #               theStatus.set('Waiting for user input...')
-            #               self.updateTasks()
-            #               messagebox.showwarning('Watermaze Error',
-            #                                      'You cannot use any Auto Calculations for Watermaze')
-            #               return
 
             if platFlag == True and diamFlag == False:
                 theStatus.set('Getting platform position...')
@@ -1808,393 +1235,48 @@ class mainClass:
                 theStatus.set('Getting pool centre position...')
             logging.debug(loggingText)
             self.updateTasks()
-            if software == "watermaze" and theFile != "":
-                for aFile in self.find_files(fileDirectory, extensionType):
-                    columns = defaultdict(list)  # each value in each column is appended to a list
 
-                    oldItemX = 0.0
-                    oldItemY = 0.0
-                    number_of_columns = 0
-                    number_of_rows = 0
-                    try:
+            for aTrial in theExperiment:
+                if aTrial.x == "-" or aTrial.x == "":  # throw out missing data
+                    continue
+                if aTrial.y == "-" or aTrial.y == "":
+                    continue
+                if aTrial.time < maxLengthOfTrial:
+                    lastX = aTrial.x
+                    lastY = aTrial.y
+                    skipFlag = False
+                else:
+                    skipFlag = True
 
-                        f = open(aFile)
-                    except:
-                        logging.info("Could not open " + aFile)
-                        return
-                    reader = csv.reader(f, delimiter=",")
-                    for row in reader:
-                        number_of_rows += 1
-                        for (i, v) in enumerate(row):
-                            columns[i].append(v)
-                            number_of_columns = i
+                if aTrial.x > maxX:
+                    maxX = aTrial.x
+                if aTrial.x < minX:
+                    minX = aTrial.x
+                if aTrial.y > maxY:
+                    maxY = aTrial.y
+                if aTrial.y < minY:
+                    minY = aTrial.y
 
-                    headerLines = 0  # gets number of header lines in the spreadsheet
-                    numOfRows = number_of_rows
-                    rows = []
-                    k = 0
-                    firstFlag = True
-                    secondFlag = False
-                    for i in range(0, math.floor(number_of_columns / 3)):
-                        firstFlag = True
-                        secondFlag = False
-                        arrayX = []
-                        arrayY = []
-                        fullTrial = []
-                        for a, b, c in zip(columns[i * 3], columns[1 + i * 3], columns[2 + i * 3]):
-                            values = []
-                            if firstFlag == True:
-                                if a == "" or b == "" or c == "":
-                                    continue
-                                cTr = a
-                                cTrID = b
-                                cTrName = c  # round((math.floor(cTrName) + (((cTrName) % math.floor(cTrName)) * 60) / 100), 2)
-                                firstFlag = False
-                                secondFlag = True
-                            elif secondFlag == True:
-                                secondFlag = False
-                                continue
-                            else:
-                                if a == "" or b == "" or c == "":
-                                    continue
-                                values.append(float(c))
-                                values.append(float(a))
-                                values.append(float(b))
-                                item = Trial(*values)
-                                fullTrial.append(item)
+                if maxX > absMaxX:
+                    absMaxX = maxX
+                if minX < absMinX:
+                    absMinX = minX
+                if maxY > absMaxY:
+                    absMaxY = maxY
+                if minY < absMinY:
+                    absMinY = minY
 
-                        for item0 in fullTrial:  # for each row in our sheet
-                            if item0.x == "-" or item0.x == "":  # throw out missing data
-                                continue
-                            if item0.y == "-" or item0.y == "":
-                                continue
-                            if item0.time < 1.0:
-                                continue
-                            if item0.time > (((number_of_rows - 39) * 0.04) - 1):
-                                continue
-                            if item0.time < 50.0:
-                                lastX = item0.x
-                                lastY = item0.y
-                                skipFlag = False
-                            else:
-                                skipFlag = True
+                avMaxX += maxX
+                avMaxY += maxY
+                avMinX += minX
+                avMinY += minY
+                centreCount += 1.0
 
-                            if item0.x > maxX:
-                                maxX = item0.x
-                            if item0.x < minX:
-                                minX = item0.x
-                            if item0.y > maxY:
-                                maxY = item0.y
-                            if item0.y < minY:
-                                minY = item0.y
+                if skipFlag == False:
+                    count += 1.0
+                    platEstX += lastX
+                    platEstY += lastY
 
-                        if maxX > absMaxX:
-                            absMaxX = maxX
-                        if minX < absMinX:
-                            absMinX = minX
-                        if maxY > absMaxY:
-                            absMaxY = maxY
-                        if minY < absMinY:
-                            absMinY = minY
-
-                        avMaxX += maxX
-                        avMaxY += maxY
-                        avMinX += minX
-                        avMinY += minY
-                        centreCount += 1.0
-
-                        if skipFlag == False:
-                            count += 1.0
-                            platEstX += lastX
-                            platEstY += lastY
-
-            else:
-                for aFile in self.find_files(fileDirectory, extensionType):
-                    i = 0.0
-                    if software == "ethovision":
-                        try:
-                            wb = open_workbook(aFile)
-                        except:
-                            continue
-                        for sheet in wb.sheets():  # for all sheets in the workbook
-                            number_of_rows = sheet.nrows
-                            headerLines = int(sheet.cell(0, 1).value)  # gets number of header lines in the spreadsheet
-                            numOfRows = sheet.nrows - headerLines
-                            number_of_columns = sheet.ncols
-                            fullTrial = []
-                            rows = []
-                            k = 0
-                            for row in range(headerLines, number_of_rows):  # for each row
-
-                                values = []
-
-                                for col in range(1, 4):  # for columns 1 through 4, get all the values
-                                    value = sheet.cell(row, col).value
-                                    try:
-                                        value = float(value)
-                                    except ValueError:
-                                        pass
-                                    finally:
-                                        values.append(value)
-
-                                item = Trial(*values)
-                                fullTrial.append(item)
-
-                        for item0 in fullTrial:  # for each row in our sheet
-                            if item0.x == "-" or item0.x == "":  # throw out missing data
-                                continue
-                            if item0.y == "-" or item0.y == "":
-                                continue
-                            if item0.time < 1.0:
-                                continue
-                            if item0.time > (((number_of_rows - 39) * 0.04) - 1):
-                                continue
-                            if item0.time < 50.0:
-                                lastX = item0.x
-                                lastY = item0.y
-                                skipFlag = False
-                            else:
-                                skipFlag = True
-
-
-
-                            if item0.x > maxX:
-                                maxX = item0.x
-                            if item0.x < minX:
-                                minX = item0.x
-                            if item0.y > maxY:
-                                maxY = item0.y
-                            if item0.y < minY:
-                                minY = item0.y
-                        if maxX > absMaxX:
-                            absMaxX = maxX
-                        if minX < absMinX:
-                            absMinX = minX
-                        if maxY > absMaxY:
-                            absMaxY = maxY
-                        if minY < absMinY:
-                            absMinY = minY
-
-                        avMaxX += maxX
-                        avMaxY += maxY
-                        avMinX += minX
-                        avMinY += minY
-                        centreCount += 1.0
-
-                        if skipFlag == False:
-                            count += 1.0
-                            if lastX > platMaxX:
-                                platMaxX = lastX
-                            if lastX < platMinX:
-                                platMinX = lastX
-                            if lastY > platMaxY:
-                                platMaxY = lastY
-                            if lastY < platMinY:
-                                platMinY = lastY
-                            platEstX += lastX
-                            platEstY += lastY
-
-                    elif software == "anymaze":
-                        columns = defaultdict(list)  # each value in each column is appended to a list
-                        try:
-                            f = open(aFile)
-                            logging.debug("Opened" +aFile)
-                        except:
-                            logging.info("Could not open " + aFile)
-                            continue
-                        reader = csv.reader(f, delimiter=",")
-                        next(reader)
-                        number_of_columns = 3
-                        number_of_rows = 0
-                        for row in reader:
-                            number_of_rows += 1
-                            for (i, v) in enumerate(row):
-                                if i == 0 or i == 1 or i == 2:
-                                    columns[i].append(v)
-
-                        headerLines = 0  # gets number of header lines in the spreadsheet
-                        numOfRows = number_of_rows
-
-                        fullTrial = []
-                        rows = []
-                        k = 0
-                        cTrName = ""
-
-
-                        for a, b, c in zip(columns[0], columns[1], columns[2]):
-                            values = []
-                            a = a.replace(":", "")
-                            values.append(float(a))
-                            try:
-                                values.append(float(b))
-                            except:
-                                values.append(b)
-                            try:
-                                values.append(float(c))
-                            except:
-                                values.append(c)
-                            item = Trial(*values)
-                            fullTrial.append(item)
-                        cTrName = aFile
-
-                        for item0 in fullTrial:  # for each row in our sheet
-                            if item0.x == "-" or item0.x == "":  # throw out missing data
-                                continue
-                            if item0.y == "-" or item0.y == "":
-                                continue
-                            if item0.time < 1.0:
-                                continue
-                            if item0.time > (((number_of_rows - 39) * 0.04) - 1):
-                                continue
-                            if item0.time < 50.0:
-                                lastX = item0.x
-                                lastY = item0.y
-                                skipFlag = False
-                            else:
-                                skipFlag = True
-
-                            if item0.x > maxX:
-                                maxX = item0.x
-                            if item0.x < minX:
-                                minX = item0.x
-                            if item0.y > maxY:
-                                maxY = item0.y
-                            if item0.y < minY:
-                                minY = item0.y
-
-                        if maxX > absMaxX:
-                            absMaxX = maxX
-                        if minX < absMinX:
-                            absMinX = minX
-                        if maxY > absMaxY:
-                            absMaxY = maxY
-                        if minY < absMinY:
-                            absMinY = minY
-
-                        avMaxX += maxX
-                        avMaxY += maxY
-                        avMinX += minX
-                        avMinY += minY
-                        centreCount += 1.0
-
-                        if skipFlag == False:
-                            count += 1.0
-                            if lastX > maxX:
-                                platMaxX = lastX
-                            if lastX < minX:
-                                platMinX = lastX
-                            if lastY > maxY:
-                                platMaxY = lastY
-                            if lastY < minY:
-                                platMinY = lastY
-                            platEstX += lastX
-                            platEstY += lastY
-
-                    elif software == "watermaze":
-                        columns = defaultdict(list)  # each value in each column is appended to a list
-
-                        oldItemX = 0.0
-                        oldItemY = 0.0
-                        number_of_columns = 0
-                        number_of_rows = 0
-                        try:
-                            f = open(aFile)
-                        except:
-                            logging.info("Could not open " + aFile)
-                            continue
-                        reader = csv.reader(f, delimiter=",")
-                        for row in reader:
-                            number_of_rows += 1
-                            for (i, v) in enumerate(row):
-                                columns[i].append(v)
-                                number_of_columns = i
-
-                        headerLines = 0  # gets number of header lines in the spreadsheet
-                        numOfRows = number_of_rows
-                        rows = []
-                        k = 0
-                        firstFlag = True
-                        secondFlag = False
-                        for i in range(0, math.floor(number_of_columns / 3)):
-                            firstFlag = True
-                            secondFlag = False
-                            arrayX = []
-                            arrayY = []
-                            fullTrial = []
-                            for a, b, c in zip(columns[i * 3], columns[1 + i * 3], columns[2 + i * 3]):
-                                values = []
-                                if firstFlag == True:
-                                    if a == "" or b == "" or c == "":
-                                        continue
-                                    cTr = a
-                                    cTrID = b
-                                    cTrName = c  # round((math.floor(cTrName) + (((cTrName) % math.floor(cTrName)) * 60) / 100), 2)
-                                    firstFlag = False
-                                    secondFlag = True
-                                elif secondFlag == True:
-                                    secondFlag = False
-                                    continue
-                                else:
-                                    if a == "" or b == "" or c == "":
-                                        continue
-                                    values.append(float(c))
-                                    values.append(float(a))
-                                    values.append(float(b))
-                                    item = Trial(*values)
-                                    fullTrial.append(item)
-
-                            for item0 in fullTrial:  # for each row in our sheet
-                                if item0.x == "-" or item0.x == "":  # throw out missing data
-                                    continue
-                                if item0.y == "-" or item0.y == "":
-                                    continue
-                                if item0.time < 1.0:
-                                    continue
-                                if item0.time > (((number_of_rows - 39) * 0.04) - 1):
-                                    continue
-                                if item0.time < 50.0:
-                                    lastX = item0.x
-                                    lastY = item0.y
-                                    skipFlag = False
-                                else:
-                                    skipFlag = True
-
-                                if item0.x > maxX:
-                                    maxX = item0.x
-                                if item0.x < minX:
-                                    minX = item0.x
-                                if item0.y > maxY:
-                                    maxY = item0.y
-                                if item0.y < minY:
-                                    minY = item0.y
-
-                            if maxX > absMaxX:
-                                absMaxX = maxX
-                            if minX < absMinX:
-                                absMinX = minX
-                            if maxY > absMaxY:
-                                absMaxY = maxY
-                            if minY < absMinY:
-                                absMinY = minY
-
-                            avMaxX += maxX
-                            avMaxY += maxY
-                            avMinX += minX
-                            avMinY += minY
-                            centreCount += 1.0
-
-                            if skipFlag == False:
-                                count += 1.0
-                                if lastX > maxX:
-                                    platMaxX = lastX
-                                if lastX < minX:
-                                    platMinX = lastX
-                                if lastY > maxY:
-                                    platMaxY = lastY
-                                if lastY < minY:
-                                    platMinY = lastY
-                                platEstX += lastX
-                                platEstY += lastY
 
 
             if centreCount < 1:  # we couldnt get the position
@@ -2216,60 +1298,493 @@ class mainClass:
                 self.killBar()
                 return
 
-            if count < 1 and platFlag:
-                logging.error("Unable to determine a platform posititon. Compatible trials: " + str(count))
-                messagebox.showwarning('Platform Error',
-                                       'We were unable to determine a platform position from the trials')
-                theStatus.set('Waiting for user input...')
-                self.updateTasks()
-                self.killBar()
-                return
+        if count < 1 and platFlag:
+            logging.error("Unable to determine a platform posititon. Compatible trials: " + str(count))
+            messagebox.showwarning('Platform Error',
+                                   'We were unable to determine a platform position from the trials')
+            theStatus.set('Waiting for user input...')
+            self.updateTasks()
+            self.killBar()
+            return
 
-            if centreFlag:  # if we want an automatic centre position
-                avMaxX = avMaxX / centreCount  # get the average of the max X
-                avMaxY = avMaxY / centreCount  # max Y
-                avMinX = avMinX / centreCount  # min X
-                avMinY = avMinY / centreCount  # min Y
-                poolCentreEstX = (avMaxX + avMinX) / 2  # estmiate the centre
-                poolCentreEstY = (avMaxY + avMinY) / 2
-                poolCentreX = poolCentreEstX
-                poolCentreY = poolCentreEstY
-                logging.info("Automatic pool centre calculated as: " + str(poolCentreEstX) + ", " + str(poolCentreEstY))
-            if platFlag:  # automatic platform
-                platEstX = platEstX / count
-                platEstY = platEstY / count
-                platformX = platEstX
-                platformY = platEstY
-                platEstDiam = ((platMaxX-platMinX) + (platMaxY-platMinY))/2
-                logging.info("Automatic platform position calculated as: " + str(platEstX) + ", " + str(platEstY))
-                logging.info("Automatic platform diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
-            if diamFlag:  # automatic diameter
-                poolDiamEst = ((abs(absMaxX) + abs(absMinX)) + (abs(absMaxY) + abs(absMinY))) / 2
-                logging.info("Automatic pool diameter calculated as: " + str(poolDiamEst))
-                poolDiamVar = poolDiamEst
-                poolRadius = float(poolDiamVar) / 2
+        if centreFlag:  # if we want an automatic centre position
+            avMaxX = avMaxX / centreCount  # get the average of the max X
+            avMaxY = avMaxY / centreCount  # max Y
+            avMinX = avMinX / centreCount  # min X
+            avMinY = avMinY / centreCount  # min Y
+            poolCentreEstX = (avMaxX + avMinX) / 2  # estmiate the centre
+            poolCentreEstY = (avMaxY + avMinY) / 2
+            poolCentreX = poolCentreEstX
+            poolCentreY = poolCentreEstY
+            logging.info("Automatic pool centre calculated as: " + str(poolCentreEstX) + ", " + str(poolCentreEstY))
+        if platFlag:  # automatic platform
+            platEstX = platEstX / count
+            platEstY = platEstY / count
+            platformX = platEstX
+            platformY = platEstY
+            platEstDiam = ((platMaxX-platMinX) + (platMaxY-platMinY))/2
+            logging.info("Automatic platform position calculated as: " + str(platEstX) + ", " + str(platEstY))
+            logging.info("Automatic platform diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
+        if diamFlag:  # automatic diameter
+            poolDiamEst = ((abs(absMaxX) + abs(absMinX)) + (abs(absMaxY) + abs(absMinY))) / 2
+            logging.info("Automatic pool diameter calculated as: " + str(poolDiamEst))
+            poolDiamVar = poolDiamEst
+            poolRadius = float(poolDiamVar) / 2
 
-            return (poolCentreX,poolCentreY,platformX,platformY,poolDiamVar,poolRadius, platEstDiam)
+        return (poolCentreX,poolCentreY,platformX,platformY,poolDiamVar,poolRadius, platEstDiam)
 
-    def calculateValues(self, fullTrial, i, number_of_rows, headerLines, Matrix, platformX, platformY, poolCentreX, poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor):
-        global usePerseveranceV
-        global oldPlatformPosVar
-        global poolCentreVar
+
+def calculateValues(self, theExperiment, i, number_of_rows, headerLines, Matrix, platformX, platformY, poolCentreX, poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor):
+    global usePerseveranceV
+    global oldPlatformPosVar
+    global poolCentreVar
+
+    if usePerseveranceV:
+        oldPlatformPosVar = oldPlatformPosVar
+        oldPlatfromX, oldPlatformY = oldPlatformPosVar
+        oldPlatfromX = float(oldPlatfromX)
+        oldPlatformY = float(oldPlatfromY)
+
+    totalDistance = 0.0
+    sampleRate = 0.0
+    latency = 0.0
+    mainLatency = 0.0
+    xSummed = 0.0
+    ySummed = 0.0
+    xAv = 0.0
+    yAv = 0.0
+    currentDistanceFromPlatform = 0.0
+    distanceFromPlatformSummed = 0.0
+    distanceAverage = 0.0
+    aX = 0.0
+    aY = 0.0
+
+    missingData = 0
+
+    distanceToCenterOfPool = 0.0
+    totalDistanceToCenterOfPool = 0.0
+    averageDistanceToCentre = 0.0
+
+    innerWallCounter = 0.0
+    outerWallCounter = 0.0
+    annulusCounter = 0.0
+
+    distanceToSwimPathCentroid = 0.0
+    totalDistanceToSwimPathCentroid = 0.0
+    averageDistanceToSwimPathCentroid = 0.0
+
+    distanceToOldPlatform = 0.0
+    totalDistanceToOldPlatform = 0.0
+    averageDistanceToOldPlatform = 0.0
+
+    jsls = 0.0
+
+    startX = 0.0
+    startY = 0.0
+
+    oldItemX = 0.0
+    oldItemY = 0.0
+    corridorCounter = 0.0
+    quadrantOne = 0
+    quadrantTwo = 0
+    quadrantThree = 0
+    quadrantFour = 0
+    quadrantTotal = 0
+    x = 0
+    oldX = 0.0
+    oldY = 0.0
+    latencyCounter = 0.0
+    arrayX = []
+    arrayY = []
+
+
+    for aTrial in theExperiment:
+        if aTrial.x == "-" or aTrial.x == "":  # throw out missing data
+            continue
+        if aTrial.y == "-" or aTrial.y == "":
+            continue
+        if x == 0:
+            startTime = aTrial.time
+        if x == 1:
+            sampleRate = aTrial.time - startTime
+        x += 1
+
+    for aTrial in theExperiment:  # for each row in our sheet
+        if aTrial.x == "-" or aTrial.x == "":  # throw out missing data
+            missingData += 1  # keep track of how much we throw out
+            continue
+        if aTrial.y == "-" or aTrial.y == "":
+            missingData += 1
+            continue
+        if aTrial.time < 1.0:
+            if ((number_of_rows - headerLines) * (sampleRate)) > 5:
+                continue
+        if i == 0:
+            startX = aTrial.x
+            startY = aTrial.y
+        if aTrial.time > (((number_of_rows - headerLines) * (sampleRate)) - 1):
+            if ((number_of_rows-headerLines) * (sampleRate)) > 5:
+                continue
+        # Swim Path centroid
+        i += 1.0
+        mainLatency += sampleRate
+        xSummed += float(aTrial.x)
+        ySummed += float(aTrial.y)
+        aX = float(aTrial.x)
+        aY = float(aTrial.y)
+        arrayX.append(aX)
+        arrayY.append(aY)
+        # Average Distance
+        currentDistanceFromPlatform = math.sqrt((platformX - aX) ** 2 + (platformY - aY) ** 2)
+
+        #print(currentDistanceFromPlatform)
 
         if usePerseveranceV:
-            oldPlatformPosVar = oldPlatformPosVar
-            oldPlatfromX, oldPlatformY = oldPlatformPosVar
-            oldPlatfromX = float(oldPlatfromX)
-            oldPlatformY = float(oldPlatfromY)
+            distanceToOldPlatform = math.sqrt((oldPlatformX - aX) ** 2 + (oldPlatformY - aY) ** 2)
+            totalDistanceToOldPlatform += distanceToOldPlatform
 
-        totalDistance = 0.0
-        sampleRate = 0.0
-        latency = 0.0
-        mainLatency = 0.0
+        # in zones
+        distanceCenterToPlatform = math.sqrt((poolCentreX - platformX) ** 2 + (poolCentreY - platformY) ** 2)
+        annulusZoneInner = distanceCenterToPlatform - (chainingRadius / 2)
+        annulusZoneOuter = distanceCenterToPlatform + (chainingRadius / 2)
+        distanceToCenterOfPool = math.sqrt((poolCentreX - aX) ** 2 + (poolCentreY - aY) ** 2)
+        totalDistanceToCenterOfPool += distanceToCenterOfPool
+        distanceFromStartToPlatform = math.sqrt((platformX - startX) ** 2 + (platformY - startY) ** 2)
+
+        jsls += -(distanceFromStartToPlatform - distanceFromPlatformSummed) / 1000
+        distance = math.sqrt(abs(oldX - aX) ** 2 + abs(oldY - aY) ** 2)
+        if currentDistanceFromPlatform > 5:
+            latencyCounter += 1.0
+            distanceFromPlatformSummed += currentDistanceFromPlatform
+            if distance < 5:
+                totalDistance += distance
+        oldX = aX
+        oldY = aY
+
+        if distanceToCenterOfPool > biggerWallZone:  # calculate if we are in zones
+            innerWallCounter += 1.0
+        if distanceToCenterOfPool > smallerWallZone:
+            outerWallCounter += 1.0
+        if (distanceToCenterOfPool >= annulusZoneInner) and (distanceToCenterOfPool <= annulusZoneOuter):
+            annulusCounter += 1
+
+        a, b = 0, 0
+        # grid creation
+        # x values
+        # <editor-fold desc="Grid">
+        if aTrial.x >= -100.0 and aTrial.x <= -90:
+            a = -9
+        elif aTrial.x > -90 and aTrial.x <= -80:
+            a = -8
+        elif aTrial.x > -80 and aTrial.x <= -70:
+            a = -7
+        elif aTrial.x > -70 and aTrial.x <= -60:
+            a = -6
+        elif aTrial.x > -60 and aTrial.x <= -50:
+            a = -5
+        elif aTrial.x > -50 and aTrial.x <= -40:
+            a = -4
+        elif aTrial.x > -40 and aTrial.x <= -30:
+            a = -3
+        elif aTrial.x > -30 and aTrial.x <= -20:
+            a = -2
+        elif aTrial.x > -20 and aTrial.x <= -10:
+            a = -1
+        elif aTrial.x > -10 and aTrial.x <= 0:
+            a = 0
+        elif aTrial.x > 0 and aTrial.x <= 10:
+            a = 1
+        elif aTrial.x > 10 and aTrial.x <= 20:
+            a = 2
+        elif aTrial.x > 20 and aTrial.x <= 30:
+            a = 3
+        elif aTrial.x > 30 and aTrial.x <= 40:
+            a = 4
+        elif aTrial.x > 40 and aTrial.x <= 50:
+            a = 5
+        elif aTrial.x > 50 and aTrial.x <= 60:
+            a = 6
+        elif aTrial.x > 60 and aTrial.x <= 70:
+            a = 7
+        elif aTrial.x > 70 and aTrial.x <= 80:
+            a = 8
+        elif aTrial.x > 80 and aTrial.x <= 90:
+            a = 9
+
+        # y value categorization
+        if aTrial.y >= -100.0 and aTrial.y <= -90:
+            b = -9
+        elif aTrial.y > -90 and aTrial.y <= -80:
+            b = -8
+        elif aTrial.y > -80 and aTrial.y <= -70:
+            b = -7
+        elif aTrial.y > -70 and aTrial.y <= -60:
+            b = -6
+        elif aTrial.y > -60 and aTrial.y <= -50:
+            b = -5
+        elif aTrial.y > -50 and aTrial.y <= -40:
+            b = -4
+        elif aTrial.y > -40 and aTrial.y <= -30:
+            b = -3
+        elif aTrial.y > -30 and aTrial.y <= -20:
+            b = -2
+        elif aTrial.y > -20 and aTrial.y <= -10:
+            b = -1
+        elif aTrial.y > -10 and aTrial.y <= 0:
+            b = 0
+        elif aTrial.y > 0 and aTrial.y <= 10:
+            b = 1
+        elif aTrial.y > 10 and aTrial.y <= 20:
+            b = 2
+        elif aTrial.y > 20 and aTrial.y <= 30:
+            b = 3
+        elif aTrial.y > 30 and aTrial.y <= 40:
+            b = 4
+        elif aTrial.y > 40 and aTrial.y <= 50:
+            b = 5
+        elif aTrial.y > 50 and aTrial.y <= 60:
+            b = 6
+        elif aTrial.y > 60 and aTrial.y <= 70:
+            b = 7
+        elif aTrial.y > 70 and aTrial.y <= 80:
+            b = 8
+        elif aTrial.y > 80 and aTrial.y <= 90:
+            b = 9
+        # </editor-fold>
+        Matrix[a][b] = 1  # set matrix cells to 1 if we have visited them
+        if (poolCentreX - aX) != 0:
+            centerArcTangent = math.degrees(math.atan((poolCentreY - aY) / (poolCentreX - aX)))
+
+        # print centerArcTangent
+        if aTrial.x >= 0 and aTrial.y >= 0:
+            quadrantOne = 1
+        elif aTrial.x < 0 and aTrial.y >= 0:
+            quadrantTwo = 1
+        elif aTrial.x >= 0 and aTrial.y < 0:
+            quadrantThree = 1
+        elif aTrial.x < 0 and aTrial.y < 0:
+            quadrantFour = 1
+
+    latency = latencyCounter * sampleRate
+    quadrantTotal = quadrantOne + quadrantTwo + quadrantThree + quadrantFour
+    # <editor-fold desc="Swim Path centroid">
+    if i <= 0:  # make sure we don't divide by 0
+        i = 1
+
+    xAv = xSummed / i  # get our average positions for the centroid
+    yAv = ySummed / i
+    swimPathCentroid = (xAv, yAv)
+
+    if (platformX - startX) == 0:
+        pass
+
+    aArcTangent = math.degrees(math.atan((platformY - startY) / (platformX - startX)))
+    upperCorridor = aArcTangent + corridorWidth
+    lowerCorridor = aArcTangent - corridorWidth
+    corridorWidth = 0.0
+    totalHeadingError = 0.0
+
+    for item2 in theExperiment:  # go back through all values and calculate distance to the centroid
+        if item2.x == "-" or item2.x == "":
+            continue
+        if item2.y == "-" or item2.y == "":
+            continue
+        if item2.time < 1.0:
+            continue
+        if item2.time > (((number_of_rows - headerLines) * (sampleRate)) - 1):
+            continue
+
+        distanceToSwimPathCentroid = math.sqrt((xAv - item2.x) ** 2 + (yAv - item2.y) ** 2)
+        totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
+        distanceFromStartToCurrent = math.sqrt((item2.x - startX) **2 + (item2.y - startY)**2)
+
+        if (item2.x - startX) != 0 and (item2.x - oldItemX) != 0:
+            currentArcTangent = math.degrees(math.atan((item2.y - startY) / (item2.x - startX)))
+            corridorWidth = abs(
+                aArcTangent - abs(math.degrees(math.atan((item2.y - oldItemY) / (item2.x - oldItemX)))))
+            if float(lowerCorridor) <= float(currentArcTangent) <= float(upperCorridor) and distanceFromStartToCurrent < (distanceFromStartToPlatform+5):
+                corridorCounter += 1.0
+
+        oldItemX = item2.x
+        oldItemY = item2.y
+        if item2.time < (((number_of_rows - 39) * sampleRate) - 1):
+            totalHeadingError += corridorWidth
+    # </editor-fold>
+    # <editor-fold desc="Take Averages">
+    corridorAverage = corridorCounter / i
+    distanceAverage = distanceFromPlatformSummed / i  # calculate our average distances to landmarks
+    averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid / i
+    averageDistanceToOldPlatform = totalDistanceToOldPlatform / i
+    averageDistanceToCentre = totalDistanceToCenterOfPool / i
+    averageHeadingError = totalHeadingError / i
+
+    missingDataFlag = 0
+    if missingData > (i / 10):  # if we are missing more than 10% data, notify
+        missingDataFlag = 1
+
+    cellCounter = 0.0  # initialize our cell counter
+
+    for k in range(0, 19):  # count how many cells we have visited
+        for j in range(0, 19):
+            if Matrix[k][j] == 1:
+                cellCounter += 1.0
+
+    # print distanceTotal/(i/25), avHeadingError
+    percentTraversed = (
+                               cellCounter / (
+                               252.0 * scalingFactor)) * 100.0  # turn our count into a percentage over how many cells we can visit
+
+
+    idealDistance = distanceFromStartToPlatform-5
+    if latency != 0:
+        try:
+            velocity = (totalDistance/latency)
+        except:
+            pass
+    else:
+        latency = 0.04
+    cumulativeDistanceError = 0.0
+
+    while idealDistance > 5.0:
+        cumulativeDistanceError += idealDistance
+        idealDistance = (idealDistance - velocity*sampleRate)
+
+    return jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, missingDataFlag, quadrantTotal, totalDistance, mainLatency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY
+
+def mainCalculate(self):
+    global softwareStringVar
+    logging.debug("Calculate Called")
+    self.updateTasks()
+    self.csvDestroy()
+
+    platformPosVar = platformPosStringVar.get()
+    poolDiamVar = poolDiamStringVar.get()
+    poolCentreVar = poolCentreStringVar.get()
+    oldPlatformPosVar = oldPlatformPosStringVar.get()
+    corridorWidthVar = corridorWidthStringVar.get()
+    chainingRadiusVar = chainingRadiusStringVar.get()
+    thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()  # get important values
+    softwareScalingFactorVar = softwareScalingFactorStringVar.get()
+
+    try:
+        with open('mainobjs.pickle', 'wb') as f:
+            pickle.dump([platformPosVar, poolDiamVar, poolCentreVar, oldPlatformPosVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar], f)
+    except:
+        pass
+
+    # basic setup
+
+    cseMaxVal = params.cseMaxVal
+    headingMaxVal = params.headingMaxVal
+    distanceToSwimMaxVal = params.distanceToSwimMaxVal
+    distanceToPlatMaxVal = params.distanceToPlatMaxVal
+    corridorAverageMinVal = params.corridorAverageMinVal
+    corridorCseMaxVal = params.corridorCseMaxVal
+    annulusCounterMaxVal = params.annulusCounterMaxVal
+    quadrantTotalMaxVal = params.quadrantTotalMaxVal
+    percentTraversedMaxVal = params.percentTraversedMaxVal
+    percentTraversedMinVal = params.percentTraversedMinVal
+    distanceToCentreMaxVal = params.distanceToCentreMaxVal
+    innerWallMaxVal = params.innerWallMaxVal
+    outerWallMaxVal = params.outerWallMaxVal
+    cseIndirectMaxVal = params.cseIndirectMaxVal
+    percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
+
+    poolRadius = 0.0
+    thigmotaxisZoneSize = 0.0
+    corridorWidth = 0.0
+    platformX = 0.0
+    platformY = 0.0
+    oldDay = ""
+    oldPlatformX = platformX
+    oldPlatformY = platformY
+    chainingRadius = 0.0
+    poolCentre = (0.0, 0.0)
+    poolRadius = 0.0
+    smallerWallZone = 0.0
+    biggerWallZone = 0.0
+    distanceCenterToPlatform = 0.0
+    totalTrialCount = 0.0
+    thigmotaxisCount = 0.0
+    randomCount = 0.0
+    scanningCount = 0.0
+    chainingCount = 0.0
+    directSearchCount = 0.0
+    focalSearchCount = 0.0
+    directSwimCount = 0.0
+    perseveranceCount = 0.0
+    spatialIndirectCount = 0.0
+    notRecognizedCount = 0.0
+    oldTotalCount = 0.0
+    oldThigmotaxisCount = 0.0
+    oldRandomCount = 0.0
+    oldScanningCount = 0.0
+    oldChainingCount = 0.0
+    oldDirectSearchCount = 0.0
+    oldFocalSearchCount = 0.0
+    oldDirectSwimCount = 0.0
+    oldPerseveranceCount = 0.0
+    oldspatialIndirectCount = 0.0
+    oldNotRecognizedCount = 0.0
+    n = 0
+    numOfRows = 0
+    poolCentreX, poolCentreY = poolCentre
+    flag = False
+    dayFlag = False
+    autoFlag = False
+    skipFlag = False
+    software = softwareStringVar.get()
+
+    aExperiment = saveFileAsExperiment(software, theFile, fileDirectory)
+
+    if software == "ethovision":
+        logging.info("Extension set to xlsx")
+        extensionType = r'*.xlsx'
+        softwareScalingFactorVar = 1.0
+    elif software == "anymaze":
+        extensionType = r'*.csv'
+        logging.info("Extension set to csv")
+        softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
+    elif software == "watermaze":
+        extensionType = r'*.csv'
+        logging.info("Extension set to csv")
+        softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
+
+    poolCentreX, poolCentreY, platformX, platformY, poolDiamVar, poolRadius, platEstDiam = self.getAutoLocations(aExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar)
+    scalingFactor = float(poolDiamVar) / 180.0  # set scaling factor for different pool sizes
+    if scale:
+        scalingFactor = scalingFactor * softwareScalingFactorVar
+    else:
+        scalingFactor = 1.0
+
+    thigmotaxisZoneSize = float(thigmotaxisZoneSizeVar) * scalingFactor # update the thigmotaxis zone
+    chainingRadius = float(chainingRadiusVar) * scalingFactor # update the chaining radius
+    corridorWidth = (int(corridorWidthVar) / 2) * scalingFactor # update the corridor width
+
+    smallerWallZone = poolRadius - math.ceil(thigmotaxisZoneSize / 2)  # update the smaller wall zone
+    biggerWallZone = poolRadius - thigmotaxisZoneSize  # and bigger wall zone
+
+    theStatus.set('Calculating Search Strategies...')  # update status bar
+    self.updateTasks()
+
+    logging.debug("Calculating search strategies")
+    try:  # try to open a csv file for output
+        f = open(outputFile, 'wt')
+        writer = csv.writer(f, delimiter=',', quotechar='"')
+    except:
+        logging.error("Cannot write to " + str(outputFile))
+        self.killBar()
+        return
+
+    writer.writerow(
+        ("Name", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"))  # write to the csv
+
+    for aTrial in aExperiment:
         xSummed = 0.0
         ySummed = 0.0
         xAv = 0.0
         yAv = 0.0
+
         currentDistanceFromPlatform = 0.0
         distanceFromPlatformSummed = 0.0
         distanceAverage = 0.0
@@ -2294,1383 +1809,122 @@ class mainClass:
         totalDistanceToOldPlatform = 0.0
         averageDistanceToOldPlatform = 0.0
 
-        jsls = 0.0
+        cse = 0.0
 
         startX = 0.0
         startY = 0.0
 
-        oldItemX = 0.0
-        oldItemY = 0.0
+        areaCoverageGridSize = 18
+
         corridorCounter = 0.0
         quadrantOne = 0
         quadrantTwo = 0
         quadrantThree = 0
         quadrantFour = 0
         quadrantTotal = 0
-        x = 0
-        oldX = 0.0
-        oldY = 0.0
-        latencyCounter = 0.0
-        arrayX = []
-        arrayY = []
-
-
-        for item in fullTrial:
-            if item.x == "-" or item.x == "":  # throw out missing data
-                continue
-            if item.y == "-" or item.y == "":
-                continue
-            if x == 0:
-                startTime = item.time
-            if x == 1:
-                sampleRate = item.time - startTime
-            x += 1
-
-        for item in fullTrial:  # for each row in our sheet
-            if item.x == "-" or item.x == "":  # throw out missing data
-                missingData += 1  # keep track of how much we throw out
-                continue
-            if item.y == "-" or item.y == "":
-                missingData += 1
-                continue
-            if item.time < 1.0:
-                if ((number_of_rows - headerLines) * (sampleRate)) > 5:
-                    continue
-            if i == 0:
-                startX = item.x
-                startY = item.y
-            if item.time > (((number_of_rows - headerLines) * (sampleRate)) - 1):
-                if ((number_of_rows-headerLines) * (sampleRate)) > 5:
-                    continue
-            # Swim Path centroid
-            i += 1.0
-            mainLatency += sampleRate
-            xSummed += float(item.x)
-            ySummed += float(item.y)
-            aX = float(item.x)
-            aY = float(item.y)
-            arrayX.append(aX)
-            arrayY.append(aY)
-            # Average Distance
-            currentDistanceFromPlatform = math.sqrt((platformX - aX) ** 2 + (platformY - aY) ** 2)
-
-            #print(currentDistanceFromPlatform)
-
-            if usePerseveranceV:
-                distanceToOldPlatform = math.sqrt((oldPlatformX - aX) ** 2 + (oldPlatformY - aY) ** 2)
-                totalDistanceToOldPlatform += distanceToOldPlatform
-
-            # in zones
-            distanceCenterToPlatform = math.sqrt((poolCentreX - platformX) ** 2 + (poolCentreY - platformY) ** 2)
-            annulusZoneInner = distanceCenterToPlatform - (chainingRadius / 2)
-            annulusZoneOuter = distanceCenterToPlatform + (chainingRadius / 2)
-            distanceToCenterOfPool = math.sqrt((poolCentreX - aX) ** 2 + (poolCentreY - aY) ** 2)
-            totalDistanceToCenterOfPool += distanceToCenterOfPool
-            distanceFromStartToPlatform = math.sqrt((platformX - startX) ** 2 + (platformY - startY) ** 2)
-
-            jsls += -(distanceFromStartToPlatform - distanceFromPlatformSummed) / 1000
-            distance = math.sqrt(abs(oldX - aX) ** 2 + abs(oldY - aY) ** 2)
-            if currentDistanceFromPlatform > 5:
-                latencyCounter += 1.0
-                distanceFromPlatformSummed += currentDistanceFromPlatform
-                if distance < 5:
-                    totalDistance += distance
-            oldX = aX
-            oldY = aY
-
-            if distanceToCenterOfPool > biggerWallZone:  # calculate if we are in zones
-                innerWallCounter += 1.0
-            if distanceToCenterOfPool > smallerWallZone:
-                outerWallCounter += 1.0
-            if (distanceToCenterOfPool >= annulusZoneInner) and (distanceToCenterOfPool <= annulusZoneOuter):
-                annulusCounter += 1
-
-            a, b = 0, 0
-            # grid creation
-            # x values
-            # <editor-fold desc="Grid">
-            if item.x >= -100.0 and item.x <= -90:
-                a = -9
-            elif item.x > -90 and item.x <= -80:
-                a = -8
-            elif item.x > -80 and item.x <= -70:
-                a = -7
-            elif item.x > -70 and item.x <= -60:
-                a = -6
-            elif item.x > -60 and item.x <= -50:
-                a = -5
-            elif item.x > -50 and item.x <= -40:
-                a = -4
-            elif item.x > -40 and item.x <= -30:
-                a = -3
-            elif item.x > -30 and item.x <= -20:
-                a = -2
-            elif item.x > -20 and item.x <= -10:
-                a = -1
-            elif item.x > -10 and item.x <= 0:
-                a = 0
-            elif item.x > 0 and item.x <= 10:
-                a = 1
-            elif item.x > 10 and item.x <= 20:
-                a = 2
-            elif item.x > 20 and item.x <= 30:
-                a = 3
-            elif item.x > 30 and item.x <= 40:
-                a = 4
-            elif item.x > 40 and item.x <= 50:
-                a = 5
-            elif item.x > 50 and item.x <= 60:
-                a = 6
-            elif item.x > 60 and item.x <= 70:
-                a = 7
-            elif item.x > 70 and item.x <= 80:
-                a = 8
-            elif item.x > 80 and item.x <= 90:
-                a = 9
-
-            # y value categorization
-            if item.y >= -100.0 and item.y <= -90:
-                b = -9
-            elif item.y > -90 and item.y <= -80:
-                b = -8
-            elif item.y > -80 and item.y <= -70:
-                b = -7
-            elif item.y > -70 and item.y <= -60:
-                b = -6
-            elif item.y > -60 and item.y <= -50:
-                b = -5
-            elif item.y > -50 and item.y <= -40:
-                b = -4
-            elif item.y > -40 and item.y <= -30:
-                b = -3
-            elif item.y > -30 and item.y <= -20:
-                b = -2
-            elif item.y > -20 and item.y <= -10:
-                b = -1
-            elif item.y > -10 and item.y <= 0:
-                b = 0
-            elif item.y > 0 and item.y <= 10:
-                b = 1
-            elif item.y > 10 and item.y <= 20:
-                b = 2
-            elif item.y > 20 and item.y <= 30:
-                b = 3
-            elif item.y > 30 and item.y <= 40:
-                b = 4
-            elif item.y > 40 and item.y <= 50:
-                b = 5
-            elif item.y > 50 and item.y <= 60:
-                b = 6
-            elif item.y > 60 and item.y <= 70:
-                b = 7
-            elif item.y > 70 and item.y <= 80:
-                b = 8
-            elif item.y > 80 and item.y <= 90:
-                b = 9
-            # </editor-fold>
-            Matrix[a][b] = 1  # set matrix cells to 1 if we have visited them
-            if (poolCentreX - aX) != 0:
-                centerArcTangent = math.degrees(math.atan((poolCentreY - aY) / (poolCentreX - aX)))
-
-            # print centerArcTangent
-            if item.x >= 0 and item.y >= 0:
-                quadrantOne = 1
-            elif item.x < 0 and item.y >= 0:
-                quadrantTwo = 1
-            elif item.x >= 0 and item.y < 0:
-                quadrantThree = 1
-            elif item.x < 0 and item.y < 0:
-                quadrantFour = 1
-
-        latency = latencyCounter * sampleRate
-        quadrantTotal = quadrantOne + quadrantTwo + quadrantThree + quadrantFour
-        # <editor-fold desc="Swim Path centroid">
-        if i <= 0:  # make sure we don't divide by 0
-            i = 1
-
-        xAv = xSummed / i  # get our average positions for the centroid
-        yAv = ySummed / i
-        swimPathCentroid = (xAv, yAv)
-
-        if (platformX - startX) == 0:
-            pass
-
-        aArcTangent = math.degrees(math.atan((platformY - startY) / (platformX - startX)))
-        upperCorridor = aArcTangent + corridorWidth
-        lowerCorridor = aArcTangent - corridorWidth
-        corridorWidth = 0.0
-        totalHeadingError = 0.0
-
-        for item2 in fullTrial:  # go back through all values and calculate distance to the centroid
-            if item2.x == "-" or item2.x == "":
-                continue
-            if item2.y == "-" or item2.y == "":
-                continue
-            if item2.time < 1.0:
-                continue
-            if item2.time > (((number_of_rows - headerLines) * (sampleRate)) - 1):
-                continue
-
-            distanceToSwimPathCentroid = math.sqrt((xAv - item2.x) ** 2 + (yAv - item2.y) ** 2)
-            totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
-            distanceFromStartToCurrent = math.sqrt((item2.x - startX) **2 + (item2.y - startY)**2)
-
-            if (item2.x - startX) != 0 and (item2.x - oldItemX) != 0:
-                currentArcTangent = math.degrees(math.atan((item2.y - startY) / (item2.x - startX)))
-                corridorWidth = abs(
-                    aArcTangent - abs(math.degrees(math.atan((item2.y - oldItemY) / (item2.x - oldItemX)))))
-                if float(lowerCorridor) <= float(currentArcTangent) <= float(upperCorridor) and distanceFromStartToCurrent < (distanceFromStartToPlatform+5):
-                    corridorCounter += 1.0
-
-            oldItemX = item2.x
-            oldItemY = item2.y
-            if item2.time < (((number_of_rows - 39) * sampleRate) - 1):
-                totalHeadingError += corridorWidth
         # </editor-fold>
-        # <editor-fold desc="Take Averages">
-        corridorAverage = corridorCounter / i
-        distanceAverage = distanceFromPlatformSummed / i  # calculate our average distances to landmarks
-        averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid / i
-        averageDistanceToOldPlatform = totalDistanceToOldPlatform / i
-        averageDistanceToCentre = totalDistanceToCenterOfPool / i
-        averageHeadingError = totalHeadingError / i
-
-        missingDataFlag = 0
-        if missingData > (i / 10):  # if we are missing more than 10% data, notify
-            missingDataFlag = 1
-
-        cellCounter = 0.0  # initialize our cell counter
-
-        for k in range(0, 19):  # count how many cells we have visited
-            for j in range(0, 19):
-                if Matrix[k][j] == 1:
-                    cellCounter += 1.0
-
-        # print distanceTotal/(i/25), avHeadingError
-        percentTraversed = (
-                               cellCounter / (
-                                   252.0 * scalingFactor)) * 100.0  # turn our count into a percentage over how many cells we can visit
-
-
-        idealDistance = distanceFromStartToPlatform-5
-        if latency != 0:
-            try:
-                velocity = (totalDistance/latency)
-            except:
-                pass
-        else:
-            latency = 0.04
-        cumulativeDistanceError = 0.0
-
-        while idealDistance > 5.0:
-            cumulativeDistanceError += idealDistance
-            idealDistance = (idealDistance - velocity*sampleRate)
-
-        return jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, missingDataFlag, quadrantTotal, totalDistance, mainLatency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY
-
-    def mainCalculate(self):
-        global softwareStringVar
-        logging.debug("Calculate Called")
-        self.updateTasks()
-        self.csvDestroy()
-
-        platformPosVar = platformPosStringVar.get()
-        poolDiamVar = poolDiamStringVar.get()
-        poolCentreVar = poolCentreStringVar.get()
-        oldPlatformPosVar = oldPlatformPosStringVar.get()
-        corridorWidthVar = corridorWidthStringVar.get()
-        chainingRadiusVar = chainingRadiusStringVar.get()
-        thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()  # get important values
-        softwareScalingFactorVar = softwareScalingFactorStringVar.get()
-
-        try:
-            with open('mainobjs.pickle', 'wb') as f:
-                pickle.dump([platformPosVar, poolDiamVar, poolCentreVar, oldPlatformPosVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar], f)
-        except:
-            pass
-
-        # basic setup
-
-        cseMaxVal = params.cseMaxVal
-        headingMaxVal = params.headingMaxVal
-        distanceToSwimMaxVal = params.distanceToSwimMaxVal
-        distanceToPlatMaxVal = params.distanceToPlatMaxVal
-        corridorAverageMinVal = params.corridorAverageMinVal
-        corridorCseMaxVal = params.corridorCseMaxVal
-        annulusCounterMaxVal = params.annulusCounterMaxVal
-        quadrantTotalMaxVal = params.quadrantTotalMaxVal
-        percentTraversedMaxVal = params.percentTraversedMaxVal
-        percentTraversedMinVal = params.percentTraversedMinVal
-        distanceToCentreMaxVal = params.distanceToCentreMaxVal
-        innerWallMaxVal = params.innerWallMaxVal
-        outerWallMaxVal = params.outerWallMaxVal
-        cseIndirectMaxVal = params.cseIndirectMaxVal
-        percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
-
-        poolRadius = 0.0
-        thigmotaxisZoneSize = 0.0
-        corridorWidth = 0.0
-        platformX = 0.0
-        platformY = 0.0
-        oldDay = ""
-        oldPlatformX = platformX
-        oldPlatformY = platformY
-        chainingRadius = 0.0
-        poolCentre = (0.0, 0.0)
-        poolRadius = 0.0
-        smallerWallZone = 0.0
-        biggerWallZone = 0.0
-        distanceCenterToPlatform = 0.0
-        totalTrialCount = 0.0
-        thigmotaxisCount = 0.0
-        randomCount = 0.0
-        scanningCount = 0.0
-        chainingCount = 0.0
-        directSearchCount = 0.0
-        focalSearchCount = 0.0
-        directSwimCount = 0.0
-        perseveranceCount = 0.0
-        spatialIndirectCount = 0.0
-        notRecognizedCount = 0.0
-        oldTotalCount = 0.0
-        oldThigmotaxisCount = 0.0
-        oldRandomCount = 0.0
-        oldScanningCount = 0.0
-        oldChainingCount = 0.0
-        oldDirectSearchCount = 0.0
-        oldFocalSearchCount = 0.0
-        oldDirectSwimCount = 0.0
-        oldPerseveranceCount = 0.0
-        oldspatialIndirectCount = 0.0
-        oldNotRecognizedCount = 0.0
-        n = 0
-        numOfRows = 0
-        poolCentreX, poolCentreY = poolCentre
-        flag = False
-        dayFlag = False
-        autoFlag = False
-        skipFlag = False
-        software = softwareStringVar.get()
-
-        if fileDirectory == "":  # if we didnt select a directory
-            if theFile == "":  # or a file
-                messagebox.showwarning('No file or directory selected', 'Please select a directory or file under the File menu')
-                self.killBar()
-                logging.error("Unable to find trials")
-                return  # stop
-
-        if software == "ethovision":
-            logging.info("Extension set to xlsx")
-            extensionType = r'*.xlsx'
-            softwareScalingFactorVar = 1.0
-        elif software == "anymaze":
-            extensionType = r'*.csv'
-            logging.info("Extension set to csv")
-            softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
-        elif software == "watermaze":
-            extensionType = r'*.csv'
-            logging.info("Extension set to csv")
-            softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
-
-        poolCentreX, poolCentreY, platformX, platformY, poolDiamVar, poolRadius, platEstDiam = self.getAutoLocations(software, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, fileDirectory, extensionType, theFile)
-        scalingFactor = float(poolDiamVar) / 180.0  # set scaling factor for different pool sizes
-        if scale:
-            scalingFactor = scalingFactor * softwareScalingFactorVar
-        else:
-            scalingFactor = 1.0
-
-        thigmotaxisZoneSize = float(thigmotaxisZoneSizeVar) * scalingFactor # update the thigmotaxis zone
-        chainingRadius = float(chainingRadiusVar) * scalingFactor # update the chaining radius
-        corridorWidth = (int(corridorWidthVar) / 2) * scalingFactor # update the corridor width
-
-        smallerWallZone = poolRadius - math.ceil(thigmotaxisZoneSize / 2)  # update the smaller wall zone
-        biggerWallZone = poolRadius - thigmotaxisZoneSize  # and bigger wall zone
-
-        theStatus.set('Calculating Search Strategies...')  # update status bar
-        self.updateTasks()
-
-        logging.debug("Calculating search strategies")
-
-        try:  # try to open a csv file for output
-            f = open(outputFile, 'wt')
-            writer = csv.writer(f, delimiter=',', quotechar='"')
-        except:
-            logging.error("Cannot write to " + str(outputFile))
-            self.killBar()
-            return
-
-        if software == "ethovision":
-            writer.writerow(
-                ("Day", "Trial", "Trial ID", "Trial Name", "Strategy Type", "Animal ID", "Missing Data",
-                 "File", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"))  # write to the csv
-            logging.debug("Using Ethovision")
-
-        elif software == "anymaze":
-            writer.writerow(
-                ("File", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"))  # write to the csv
-            logging.debug("Using Anymaze")
-        elif software == "watermaze":
-            logging.debug("Using Watermaze")
-            writer.writerow(
-                ("Trial", "Date", "Time", "Strategy Type", "File", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"))  # write to the csv
-
-
-        if fileFlag == 1:  # called when 1 file selected
-            logging.debug("Single file selected")
-            aFile = theFile
-            theStatus.set("Running "+aFile)
-            if software == "ethovision":
-                logging.info("Reading file ethovision")
-                i = 0.0
-                try:
-                    wb = open_workbook(aFile)
-                    logging.debug("Opened" + aFile)
-                except:
-                    # print("Corrupted excel file", aFile)
-                    logging.error("Unable to open excel file" + aFile)
-                    try:
-                        show_error("Corrupted Excel File " + aFile)
-                    except:
-                        pass
-                    return
-
-
-                for sheet in wb.sheets():  # for all sheets in the workbook
-                    number_of_rows = sheet.nrows
-                    headerLines = int(sheet.cell(0, 1).value)  # gets number of header lines in the spreadsheet
-                    numOfRows = sheet.nrows - headerLines
-                    number_of_columns = sheet.ncols
-                    fullTrial = []
-                    rows = []
-                    k = 0
-                    cCondition = ""
-                    cTreatment = ""
-                    cDay = ""
-                    cTemp = ""
-                    cGen = ""
-                    cAnimalID = ""
-                    cTrName = ""
-                    cTrID = ""
-                    cTr = ""
-
-                    for k in range(0, 39):  # GET CONDITION TREATMENT AND DAY VALUES
-                        if str(sheet.cell(k, 0).value) == "Condition" or str(sheet.cell(k, 0).value) == "Restraint":
-                            cCondition = str(sheet.cell(k, 1).value)
-                        elif str(sheet.cell(k, 0).value) == "Treatment":
-                            cTreatment = str(sheet.cell(k, 1).value)
-                        elif str(sheet.cell(k, 0).value) == "Day":
-                            cDay = str(sheet.cell(k, 1).value)
-                        elif str(sheet.cell(k, 0).value) == "Temperature":
-                            cTemp = str(sheet.cell(k, 1).value)
-                        elif str(sheet.cell(k, 0).value) == "Genotype":
-                            cGen = str(sheet.cell(k, 1).value)
-                        elif str(sheet.cell(k, 0).value) == "Animal ID":
-                            cAnimalID = str(sheet.cell(k, 1).value)
-                        elif str(sheet.cell(k, 0).value) == "Trial name":
-                            cTrName = str(sheet.cell(k, 1).value)
-                        elif str(sheet.cell(k, 0).value) == "Trial ID":
-                            cTrID = str(sheet.cell(k, 1).value)
-                        elif str(sheet.cell(k, 0).value) == "Trial":
-                            cTr = str(sheet.cell(k, 1).value)
-
-
-                    for row in range(headerLines, number_of_rows):  # for each row
-
-                        values = []
-
-                        for col in range(1, 4):  # for columns 1 through 4, get all the values
-                            value = sheet.cell(row, col).value
-                            try:
-                                value = float(value)
-                            except ValueError:
-                                pass
-                            finally:
-                                values.append(value)
-
-                        item = Trial(*values)
-                        fullTrial.append(item)
-
-            elif software == "anymaze":
-                logging.info("Reading anymaze")
-                i = 0.0
-                columns = defaultdict(list)  # each value in each column is appended to a list
-                try:
-                    f = open(aFile)
-                    logging.debug("Opened" + aFile)
-                except:
-                    logging.info("Could not open " + aFile)
-                    return
-                reader = csv.reader(f, delimiter=",")
-                next(reader)
-                number_of_columns = 3
-                number_of_rows = 0
-                for row in reader:
-                    number_of_rows += 1
-                    for (i, v) in enumerate(row):
-                        columns[i].append(v)
-
-                headerLines = 0  # gets number of header lines in the spreadsheet
-                numOfRows = number_of_rows
-                fullTrial = []
-                rows = []
-                k = 0
-                cCondition = ""
-                cTreatment = ""
-                cDay = ""
-                cTemp = ""
-                cGen = ""
-                cAnimalID = ""
-                cTrName = ""
-                cTrID = ""
-                cTr = ""
-
-                for a, b, c in zip(columns[0], columns[1], columns[2]):
-                    values = []
-                    a = a.replace(":", "")
-                    values.append(float(a))
-                    try:
-                        values.append(float(b))
-                    except:
-                        values.append(b)
-                    try:
-                        values.append(float(c))
-                    except:
-                        values.append(c)
-                    item = Trial(*values)
-                    fullTrial.append(item)
-                cTrName = aFile
-            elif software == "watermaze":
-                logging.info("Reading watermaze")
-                columns = defaultdict(list)  # each value in each column is appended to a list
-
-                oldItemX = 0.0
-                oldItemY = 0.0
-                number_of_columns = 0
-                number_of_rows = 0
-                try:
-                    f = open(aFile)
-                except:
-                    logging.info("Could not open " + aFile)
-                    return
-                reader = csv.reader(f, delimiter=",")
-                for row in reader:
-                    number_of_rows += 1
-                    for (i, v) in enumerate(row):
-                        columns[i].append(v)
-                        number_of_columns = i
-
-                headerLines = 0  # gets number of header lines in the spreadsheet
-                numOfRows = number_of_rows
-
-
-                rows = []
-                k = 0
-
-                for i in range(0, math.floor(number_of_columns / 3)):
-                    i = 0.0
-                    firstFlag = True
-                    secondFlag = False
-                    fullTrial = []
-                    arrayX = []
-                    arrayY = []
-                    for a, b, c in zip(columns[i * 3], columns[1 + i * 3], columns[2 + i * 3]):
-                        logging.debug("Running through columns: " + str(a) + str(b) + str(c))
-                        values = []
-                        if firstFlag == True:
-                            if a == "" or b == "" or c == "":
-                                continue
-                            cTr = a
-                            cTrID = b
-                            cTrName = c  # round((math.floor(cTrName) + (((cTrName) % math.floor(cTrName)) * 60) / 100), 2)
-                            firstFlag = False
-                            secondFlag = True
-                        elif secondFlag == True:
-                            secondFlag = False
-                            continue
-                        else:
-                            if a == "" or b == "" or c == "":
-                                continue
-                            values.append(float(c))
-                            values.append(float(a))
-                            values.append(float(b))
-                            item = Trial(*values)
-                            fullTrial.append(item)
-
-                    xSummed = 0.0
-                    ySummed = 0.0
-                    xAv = 0.0
-                    yAv = 0.0
-
-                    currentDistanceFromPlatform = 0.0
-                    distanceFromPlatformSummed = 0.0
-                    distanceAverage = 0.0
-                    aX = 0.0
-                    aY = 0.0
-
-                    missingData = 0
-
-                    distanceToCenterOfPool = 0.0
-                    totalDistanceToCenterOfPool = 0.0
-                    averageDistanceToCentre = 0.0
-
-                    innerWallCounter = 0.0
-                    outerWallCounter = 0.0
-                    annulusCounter = 0.0
-
-                    distanceToSwimPathCentroid = 0.0
-                    totalDistanceToSwimPathCentroid = 0.0
-                    averageDistanceToSwimPathCentroid = 0.0
-
-                    distanceToOldPlatform = 0.0
-                    totalDistanceToOldPlatform = 0.0
-                    averageDistanceToOldPlatform = 0.0
-
-                    cse = 0.0
-
-                    startX = 0.0
-                    startY = 0.0
-
-                    areaCoverageGridSize = 18
-
-                    corridorCounter = 0.0
-                    quadrantOne = 0
-                    quadrantTwo = 0
-                    quadrantThree = 0
-                    quadrantFour = 0
-                    quadrantTotal = 0
-                    # </editor-fold>
-                    # initialize our cell matrix
-                    Matrix = [[0 for x in range(0, areaCoverageGridSize)] for y in range(0, areaCoverageGridSize)]
-                    # Analyze the data ----------------------------------------------------------------------------------------------
-                    jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, missingDataFlag, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY = self.calculateValues(
-                        fullTrial, i, number_of_rows, headerLines, Matrix, platformX, platformY, poolCentreX,
-                        poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
-                        biggerWallZone, scalingFactor)
-                    velocity = totalDistance / latency
-                    cse = float(distanceFromPlatformSummed - cumulativeDistanceError)*sampleRate
-                    # OLD VALUE cse = float(distanceFromPlatformSummed - cumulativeDistanceError)
-
-
-                    strategyType = ""
-                    # DIRECT SWIM
-                    if cse <= cseMaxVal and averageHeadingError <= headingMaxVal and isRuediger == False and useDirectSwimV:  # direct swim
-                        directSwimCount += 1.0
-                        strategyType = "Direct Swim"
-                    elif isRuediger == True and corridorAverage >= 0.98 and useDirectSwimV:
-                        directSwimCount += 1.0
-                        strategyType = "Direct Swim"
-                    # FOCAL SEARCH
-                    elif averageDistanceToSwimPathCentroid < (
-                                poolRadius * distanceToSwimMaxVal) and distanceAverage < (
-                                distanceToPlatMaxVal * poolRadius) and useFocalSearchV:  # Focal Search
-                        focalSearchCount += 1.0
-                        strategyType = "Focal Search"
-                    # DIRECTED SEARCH
-                    elif corridorAverage >= corridorAverageMinVal and cse <= corridorCseMaxVal and useDirectedSearchV:  # directed search
-                        directSearchCount += 1.0
-                        strategyType = "Directed Search"
-                    # spatial INDIRECT
-                    elif cse < cseIndirectMaxVal and useIndirectV:  # Near miss
-                        strategyType = "Spatial Indirect"
-                        spatialIndirectCount += 1.0
-                    # PERSEVERANCE
-                    elif averageDistanceToSwimPathCentroid < (
-                                distanceToSwimMaxVal * poolRadius) and averageDistanceToOldPlatform < (
-                                distanceToPlatMaxVal * poolRadius) and usePerseveranceV:
-                        perseveranceCount += 1.0
-                        print("Perseverance")
-                    # CHAINING
-                    elif float(
-                                    annulusCounter / i) > annulusCounterMaxVal and quadrantTotal >= quadrantTotalMaxVal and useChainingV:  # or 4 chaining
-                        chainingCount += 1.0
-                        strategyType = "Chaining"
-                    # SCANNING
-                    elif percentTraversedMinVal <= percentTraversed >= percentTraversedMaxVal and averageDistanceToCentre <= (
-                                distanceToCentreMaxVal * poolRadius) and useScanningV:  # scanning
-                        scanningCount += 1.0
-                        strategyType = "Scanning"
-                    # THIGMOTAXIS
-                    elif innerWallCounter >= innerWallMaxVal * i and outerWallCounter >= i * outerWallMaxVal and useThigmoV:  # thigmotaxis
-                        thigmotaxisCount += 1.0
-                        strategyType = "Thigmotaxis"
-                    # RANDOM SEARCH
-                    elif percentTraversed >= percentTraversedRandomMaxVal and useRandomV:  # random search
-                        randomCount += 1.0
-                        strategyType = "Random Search"
-                    # NOT RECOGNIZED
-                    else:  # cannot categorize
-                        strategyType = "Not Recognized"
-                        notRecognizedCount += 1.0
-                        if manualFlag and not useManualForAllFlag:
-                            self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX),
-                                            float(poolCentreY),
-                                            float(platformX), float(platformY), float(scalingFactor),
-                                            str(cAnimalID), float(platEstDiam))  # ask user for answer
-                            root.wait_window(self.top2)  # we wait until the user responds
-                            strategyType = searchStrategyV  # update the strategyType to that of the user
-                            try:  # try and kill the popup window
-                                self.top2.destroy()
-                            except:
-                                pass
-
-                    totalTrialCount += 1.0
-
-                    n += 1
-
-                    if useManualForAllFlag:
-                        self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
-                                        float(platformX), float(platformY), float(scalingFactor),
-                                        str(strategyType), float(platEstDiam))  # ask user for answer
-                        root.wait_window(self.top2)  # we wait until the user responds
-                        strategyType = searchStrategyV  # update the strategyType to that of the user
-
-                    writer.writerow((cTr, cTrID, cTrName, strategyType, aFile), round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))  # writing to csv file
-                    f.flush()
-                theStatus.set('Updating CSV...')
-                self.updateTasks()
-                try:
-                    csvDisplay(root)
-                except:
-                    pass
-                theStatus.set('')
-                self.updateTasks()
-                self.killBar()
-                csvfilename = "results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
-                                                        localtime())) + ".csv"  # update the csv file name for the next run
-                outputFileStringVar.set(csvfilename)
-                return
-
-            xSummed = 0.0
-            ySummed = 0.0
-            xAv = 0.0
-            yAv = 0.0
-
-            currentDistanceFromPlatform = 0.0
-            distanceFromPlatformSummed = 0.0
-            distanceAverage = 0.0
-            aX = 0.0
-            aY = 0.0
-
-            missingData = 0
-
-            distanceToCenterOfPool = 0.0
-            totalDistanceToCenterOfPool = 0.0
-            averageDistanceToCentre = 0.0
-
-            innerWallCounter = 0.0
-            outerWallCounter = 0.0
-            annulusCounter = 0.0
-
-            distanceToSwimPathCentroid = 0.0
-            totalDistanceToSwimPathCentroid = 0.0
-            averageDistanceToSwimPathCentroid = 0.0
-
-            distanceToOldPlatform = 0.0
-            totalDistanceToOldPlatform = 0.0
-            averageDistanceToOldPlatform = 0.0
-
-            cse = 0.0
-
-            startX = 0.0
-            startY = 0.0
-            oldX = 0.0
-            oldY = 0.0
-            areaCoverageGridSize = 18
-
-            corridorCounter = 0.0
-            quadrantOne = 0
-            quadrantTwo = 0
-            quadrantThree = 0
-            quadrantFour = 0
-            quadrantTotal = 0
-            # </editor-fold>
-            # initialize our cell matrix
-            Matrix = [[0 for x in range(0, areaCoverageGridSize)] for y in range(0, areaCoverageGridSize)]
-            # Analyze the data ----------------------------------------------------------------------------------------------
-
-            jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, missingDataFlag, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY = self.calculateValues(
-                fullTrial, i, number_of_rows, headerLines, Matrix, platformX, platformY, poolCentreX, poolCentreY,
-                corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor)
-            velocity = totalDistance / latency
-            cse = float(distanceFromPlatformSummed - cumulativeDistanceError)*sampleRate
-
-            strategyType = ""
-            # DIRECT SWIM
-            if cse <= cseMaxVal and averageHeadingError <= headingMaxVal and isRuediger == False and useDirectSwimV:  # direct swim
-                directSwimCount += 1.0
-                strategyType = "Direct Swim"
-            elif isRuediger == True and corridorAverage >= 0.98 and useDirectSwimV:
-                directSwimCount += 1.0
-                strategyType = "Direct Swim"
-            # FOCAL SEARCH
-            elif averageDistanceToSwimPathCentroid < (poolRadius * distanceToSwimMaxVal) and distanceAverage < (
-                        distanceToPlatMaxVal * poolRadius) and useFocalSearchV:  # Focal Search
-                focalSearchCount += 1.0
-                strategyType = "Focal Search"
-            # DIRECTED SEARCH
-            elif corridorAverage >= corridorAverageMinVal and cse <= corridorCseMaxVal and useDirectedSearchV:  # directed search
-                directSearchCount += 1.0
-                strategyType = "Directed Search"
-            # spatial INDIRECT
-            elif cse < cseIndirectMaxVal and useIndirectV:  # Near miss
-                strategyType = "Spatial Indirect"
-                spatialIndirectCount += 1.0
-            # PERSEVERANCE
-            elif averageDistanceToSwimPathCentroid < (distanceToSwimMaxVal * poolRadius) and averageDistanceToOldPlatform < (distanceToPlatMaxVal * poolRadius) and usePerseveranceV:
-                perseveranceCount += 1.0
-                print("Perseverance")
-            # CHAINING
-            elif float(
-                            annulusCounter / i) > annulusCounterMaxVal and quadrantTotal >= quadrantTotalMaxVal and useChainingV:  # or 4 chaining
-                chainingCount += 1.0
-                strategyType = "Chaining"
-            # SCANNING
-            elif percentTraversedMinVal <= percentTraversed >= percentTraversedMaxVal and averageDistanceToCentre <= (
-                        distanceToCentreMaxVal * poolRadius) and useScanningV:  # scanning
-                scanningCount += 1.0
-                strategyType = "Scanning"
-            # THIGMOTAXIS
-            elif innerWallCounter >= innerWallMaxVal * i and outerWallCounter >= i * outerWallMaxVal and useThigmoV:  # thigmotaxis
-                thigmotaxisCount += 1.0
-                strategyType = "Thigmotaxis"
-            # RANDOM SEARCH
-            elif percentTraversed >= percentTraversedRandomMaxVal and useRandomV:  # random search
-                randomCount += 1.0
-                strategyType = "Random Search"
-            # NOT RECOGNIZED
-            else:  # cannot categorize
-                strategyType = "Not Recognized"
-                notRecognizedCount += 1.0
-                if manualFlag and not useManualForAllFlag:
-                    self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
-                                    float(platformX), float(platformY), float(scalingFactor),
-                                    str(cAnimalID), float(platEstDiam))  # ask user for answer
-                    root.wait_window(self.top2)  # we wait until the user responds
-                    strategyType = searchStrategyV  # update the strategyType to that of the user
-                    try:  # try and kill the popup window
-                        self.top2.destroy()
-                    except:
-                        pass
-
-            totalTrialCount += 1.0
-
-            n += 1
-            if useManualForAllFlag:
-                self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
+        # initialize our cell matrix
+        Matrix = [[0 for x in range(0, areaCoverageGridSize)] for y in range(0, areaCoverageGridSize)]
+        # Analyze the data ----------------------------------------------------------------------------------------------
+        jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, missingDataFlag, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY = self.calculateValues(
+            aExperiment, i, number_of_rows, headerLines, Matrix, platformX, platformY, poolCentreX,
+            poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
+            biggerWallZone, scalingFactor)
+        velocity = totalDistance / latency
+        cse = float(distanceFromPlatformSummed - cumulativeDistanceError)*sampleRate
+
+        strategyType = ""
+        # DIRECT SWIM
+        if cse <= cseMaxVal and averageHeadingError <= headingMaxVal and isRuediger == False and useDirectSwimV:  # direct swim
+            directSwimCount += 1.0
+            strategyType = "Direct Swim"
+        elif isRuediger == True and corridorAverage >= 0.98 and useDirectSwimV:
+            directSwimCount += 1.0
+            strategyType = "Direct Swim"
+        # FOCAL SEARCH
+        elif averageDistanceToSwimPathCentroid < (
+                poolRadius * distanceToSwimMaxVal) and distanceAverage < (
+                distanceToPlatMaxVal * poolRadius) and useFocalSearchV:  # Focal Search
+            focalSearchCount += 1.0
+            strategyType = "Focal Search"
+        # DIRECTED SEARCH
+        elif corridorAverage >= corridorAverageMinVal and cse <= corridorCseMaxVal and useDirectedSearchV:  # directed search
+            directSearchCount += 1.0
+            strategyType = "Directed Search"
+        # spatial INDIRECT
+        elif cse < cseIndirectMaxVal and useIndirectV:  # Near miss
+            strategyType = "Spatial Indirect"
+            spatialIndirectCount += 1.0
+        # PERSEVERANCE
+        elif averageDistanceToSwimPathCentroid < (
+                distanceToSwimMaxVal * poolRadius) and averageDistanceToOldPlatform < (
+                distanceToPlatMaxVal * poolRadius) and usePerseveranceV:
+            perseveranceCount += 1.0
+            print("Perseverance")
+        # CHAINING
+        elif float(
+                annulusCounter / i) > annulusCounterMaxVal and quadrantTotal >= quadrantTotalMaxVal and useChainingV:  # or 4 chaining
+            chainingCount += 1.0
+            strategyType = "Chaining"
+        # SCANNING
+        elif percentTraversedMinVal <= percentTraversed >= percentTraversedMaxVal and averageDistanceToCentre <= (
+                distanceToCentreMaxVal * poolRadius) and useScanningV:  # scanning
+            scanningCount += 1.0
+            strategyType = "Scanning"
+        # THIGMOTAXIS
+        elif innerWallCounter >= innerWallMaxVal * i and outerWallCounter >= i * outerWallMaxVal and useThigmoV:  # thigmotaxis
+            thigmotaxisCount += 1.0
+            strategyType = "Thigmotaxis"
+        # RANDOM SEARCH
+        elif percentTraversed >= percentTraversedRandomMaxVal and useRandomV:  # random search
+            randomCount += 1.0
+            strategyType = "Random Search"
+        # NOT RECOGNIZED
+        else:  # cannot categorize
+            strategyType = "Not Recognized"
+            notRecognizedCount += 1.0
+            if manualFlag and not useManualForAllFlag:
+                self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX),
+                                float(poolCentreY),
                                 float(platformX), float(platformY), float(scalingFactor),
-                                str(strategyType), float(platEstDiam))  # ask user for answer
+                                str(cAnimalID), float(platEstDiam))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
+                try:  # try and kill the popup window
+                    self.top2.destroy()
+                except:
+                    pass
 
-            if software == "ethovision":
-                writer.writerow((cDay, cTr, item.tid, item.name, strategyType, item.animalID, missingDataFlag,
-                                 aFile, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  #   writing to csv file
+        totalTrialCount += 1.0
 
-            elif software == "anymaze":
-                writer.writerow(
-                    ("File", "Strategy Type"))  # write to the csv
+        n += 1
 
-                writer.writerow((aFile, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # , aFile  writing to csv file
-            f.flush()
+        if useManualForAllFlag:
+            self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
+                            float(platformX), float(platformY), float(scalingFactor),
+                            str(strategyType), float(platEstDiam))  # ask user for answer
+            root.wait_window(self.top2)  # we wait until the user responds
+            strategyType = searchStrategyV  # update the strategyType to that of the user
 
-        else:  # called on directory of files
-            logging.debug("Going through directory: " + str(fileDirectory))
-            for aFile in self.find_files(fileDirectory, extensionType):  # for all the files we find
-                theStatus.set("Running " + aFile)
-                if software == "ethovision":
-                    i = 0.0
-                    try:
-                        wb = open_workbook(aFile)
-                        logging.debug("Opened" +aFile)
-                    except:
-                        logging.error("Could not open excel file: "+aFile)
-                        continue
-
-                    for sheet in wb.sheets():  # for all sheets in the workbook
-                        arrayX = []
-                        arrayY = []
-                        number_of_rows = sheet.nrows
-                        headerLines = int(sheet.cell(0, 1).value)  # gets number of header lines in the spreadsheet
-                        numOfRows = sheet.nrows - headerLines
-                        number_of_columns = sheet.ncols
-                        fullTrial = []
-                        rows = []
-                        k = 0
-                        cCondition = ""
-                        cTreatment = ""
-                        cDay = ""
-                        cTemp = ""
-                        cGen = ""
-                        cAnimalID = ""
-                        cTrName = ""
-                        cTrID = ""
-                        cTr = ""
-
-                        for k in range(0, 39):  # GET CONDITION TREATMENT AND DAY VALUES
-                            if str(sheet.cell(k, 0).value) == "Condition" or str(sheet.cell(k, 0).value) == "Restraint":
-                                cCondition = str(sheet.cell(k, 1).value)
-                            elif str(sheet.cell(k, 0).value) == "Treatment":
-                                cTreatment = str(sheet.cell(k, 1).value)
-                            elif str(sheet.cell(k, 0).value) == "Day":
-                                cDay = str(sheet.cell(k, 1).value)
-                                if dayFlag == False:
-                                    oldDay = cDay
-                                    dayFlag = True
-                            elif str(sheet.cell(k, 0).value) == "Temperature":
-                                cTemp = str(sheet.cell(k, 1).value)
-                            elif str(sheet.cell(k, 0).value) == "Genotype":
-                                cGen = str(sheet.cell(k, 1).value)
-                            elif str(sheet.cell(k, 0).value) == "Animal ID":
-                                cAnimalID = str(sheet.cell(k, 1).value)
-                            elif str(sheet.cell(k, 0).value) == "Trial name":
-                                cTrName = str(sheet.cell(k, 1).value)
-                            elif str(sheet.cell(k, 0).value) == "Trial ID":
-                                cTrID = str(sheet.cell(k, 1).value)
-                            elif str(sheet.cell(k, 0).value) == "Trial":
-                                cTr = str(sheet.cell(k, 1).value)
-
-
-                        for row in range(headerLines, number_of_rows):  # for each row
-
-                            values = []
-
-                            for col in range(1, 4):  # for columns 1 through 4, get all the values
-                                value = sheet.cell(row, col).value
-                                try:
-                                    value = float(value)
-                                except ValueError:
-                                    pass
-                                finally:
-                                    values.append(value)
-
-                            item = Trial(*values)
-                            fullTrial.append(item)
-
-
-
-                        if cDay != str(oldDay) and flag:  # this is what we use to output totals for each day in the CSV file
-                            if (totalTrialCount - oldTotalCount) != 0:
-                                writer.writerow(())
-                                writer.writerow(("Summary of day " + str(oldDay), ""))
-                                writer.writerow(("Direct Swim", "Focal Search", "Directed Search", "Spatial Indirect", "Chaining",
-                                                 "Scanning", "Thigmotaxis", "Random Search", "Not Recognized", "Total Categorized",
-                                                 "Spatial Strategy Categorization", "Non-Spatial"))
-                                writer.writerow((directSwimCount - oldDirectSwimCount, focalSearchCount - oldFocalSearchCount,
-                                                 directSearchCount - oldDirectSearchCount,
-                                                 spatialIndirectCount - oldspatialIndirectCount, chainingCount - oldChainingCount,
-                                                 scanningCount - oldScanningCount, thigmotaxisCount - oldThigmotaxisCount,
-                                                 randomCount - oldRandomCount, notRecognizedCount - oldNotRecognizedCount, round((((
-                                                                                                                                       (
-                                                                                                                                           totalTrialCount - oldTotalCount) - (
-                                                                                                                                           notRecognizedCount - oldNotRecognizedCount)) / (
-                                                                                                                                       totalTrialCount - oldTotalCount)) * 100),
-                                                                                                                                 2),
-                                                 directSwimCount - oldDirectSwimCount + directSearchCount - oldDirectSearchCount + focalSearchCount - oldFocalSearchCount + spatialIndirectCount - oldspatialIndirectCount,
-                                                 chainingCount - oldChainingCount + scanningCount - oldScanningCount + thigmotaxisCount - oldThigmotaxisCount + randomCount - oldRandomCount))
-                                writer.writerow(())
-                                oldDay = cDay
-                                oldTotalCount = totalTrialCount
-                                oldThigmotaxisCount = thigmotaxisCount
-                                oldRandomCount = randomCount
-                                oldScanningCount = scanningCount
-                                oldChainingCount = chainingCount
-                                oldDirectSearchCount = directSearchCount
-                                oldFocalSearchCount = focalSearchCount
-                                oldDirectSwimCount = directSwimCount
-                                oldPerseveranceCount = perseveranceCount
-                                oldspatialIndirectCount = spatialIndirectCount
-                                oldNotRecognizedCount = notRecognizedCount
-                                writer.writerow(())
-                                f.flush()
-
-                elif software == "anymaze":
-                    columns = defaultdict(list)  # each value in each column is appended to a list
-                    arrayX = []
-                    arrayY = []
-                    oldItemX = 0.0
-                    oldItemY = 0.0
-                    try:
-                        f = open(aFile)
-                        logging.debug("Opened" +aFile)
-                    except:
-                        logging.info("Could not open " + aFile)
-                        continue
-                    reader = csv.reader(f, delimiter=",")
-                    next(reader)
-                    number_of_columns = 3
-                    number_of_rows = 0
-                    for row in reader:
-                        number_of_rows += 1
-                        for (i, v) in enumerate(row):
-                            columns[i].append(v)
-
-                    headerLines = 0  # gets number of header lines in the spreadsheet
-                    numOfRows = number_of_rows
-
-                    fullTrial = []
-                    rows = []
-                    k = 0
-                    cCondition = ""
-                    cTreatment = ""
-                    cDay = ""
-                    cTemp = ""
-                    cGen = ""
-                    cAnimalID = ""
-                    cTrName = ""
-                    cTrID = ""
-                    cTr = ""
-                    for a, b, c in zip(columns[0], columns[1], columns[2]):
-                        values = []
-                        a = a.replace(":", "")
-                        values.append(float(a))
-                        try:
-                            values.append(float(b))
-                        except:
-                            values.append(b)
-                        try:
-                            values.append(float(c))
-                        except:
-                            values.append(c)
-                        item = Trial(*values)
-                        fullTrial.append(item)
-                    cTrName = aFile
-
-
-                elif software == "watermaze":
-                    columns = defaultdict(list)  # each value in each column is appended to a list
-
-                    oldItemX = 0.0
-                    oldItemY = 0.0
-                    number_of_columns = 0
-                    number_of_rows = 0
-                    try:
-                        f = open(aFile)
-                    except:
-                        logging.info("Could not open " + aFile)
-                        continue
-                    reader = csv.reader(f, delimiter=",")
-                    for row in reader:
-                        number_of_rows += 1
-                        for (i, v) in enumerate(row):
-                            columns[i].append(v)
-                            number_of_columns = i
-
-                    headerLines = 0  # gets number of header lines in the spreadsheet
-                    numOfRows = number_of_rows
-                    rows = []
-                    k = 0
-                    firstFlag = True
-                    secondFlag = False
-                    for i in range(0, math.floor(number_of_columns / 3)):
-                        firstFlag = True
-                        secondFlag = False
-                        arrayX = []
-                        arrayY = []
-                        fullTrial = []
-                        for a, b, c in zip(columns[i * 3], columns[1 + i * 3], columns[2 + i * 3]):
-                            values = []
-                            if firstFlag == True:
-                                if a == "" or b == "" or c == "":
-                                    continue
-                                cTr = a
-                                cTrID = b
-                                cTrName = c  # round((math.floor(cTrName) + (((cTrName) % math.floor(cTrName)) * 60) / 100), 2)
-                                firstFlag = False
-                                secondFlag = True
-                            elif secondFlag == True:
-                                secondFlag = False
-                                continue
-                            else:
-                                if a == "" or b == "" or c == "":
-                                    continue
-                                values.append(float(c))
-                                values.append(float(a))
-                                values.append(float(b))
-                                item = Trial(*values)
-                                fullTrial.append(item)
-
-
-                        xSummed = 0.0
-                        ySummed = 0.0
-                        xAv = 0.0
-                        yAv = 0.0
-
-                        currentDistanceFromPlatform = 0.0
-                        distanceFromPlatformSummed = 0.0
-                        distanceAverage = 0.0
-                        aX = 0.0
-                        aY = 0.0
-
-                        missingData = 0
-
-                        distanceToCenterOfPool = 0.0
-                        totalDistanceToCenterOfPool = 0.0
-                        averageDistanceToCentre = 0.0
-
-                        innerWallCounter = 0.0
-                        outerWallCounter = 0.0
-                        annulusCounter = 0.0
-
-                        distanceToSwimPathCentroid = 0.0
-                        totalDistanceToSwimPathCentroid = 0.0
-                        averageDistanceToSwimPathCentroid = 0.0
-
-                        distanceToOldPlatform = 0.0
-                        totalDistanceToOldPlatform = 0.0
-                        averageDistanceToOldPlatform = 0.0
-
-                        cse = 0.0
-
-                        startX = 0.0
-                        startY = 0.0
-
-                        areaCoverageGridSize = 18
-
-                        corridorCounter = 0.0
-                        quadrantOne = 0
-                        quadrantTwo = 0
-                        quadrantThree = 0
-                        quadrantFour = 0
-                        quadrantTotal = 0
-                        # </editor-fold>
-                        # initialize our cell matrix
-                        Matrix = [[0 for x in range(0, areaCoverageGridSize)] for y in
-                                  range(0, areaCoverageGridSize)]
-                        # Analyze the data ----------------------------------------------------------------------------------------------
-                        jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, missingDataFlag, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY = self.calculateValues(
-                            fullTrial, i, number_of_rows, headerLines, Matrix, platformX, platformY, poolCentreX,
-                            poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
-                            biggerWallZone, scalingFactor)
-                        velocity = totalDistance / latency
-                        cse = float(distanceFromPlatformSummed - cumulativeDistanceError)*sampleRate
-
-                        strategyType = ""
-                        # DIRECT SWIM
-                        if cse <= cseMaxVal and averageHeadingError <= headingMaxVal and isRuediger == False and useDirectSwimV:  # direct swim
-                            directSwimCount += 1.0
-                            strategyType = "Direct Swim"
-                        elif isRuediger == True and corridorAverage >= 0.98 and useDirectSwimV:
-                            directSwimCount += 1.0
-                            strategyType = "Direct Swim"
-                        # FOCAL SEARCH
-                        elif averageDistanceToSwimPathCentroid < (
-                                    poolRadius * distanceToSwimMaxVal) and distanceAverage < (
-                                    distanceToPlatMaxVal * poolRadius) and useFocalSearchV:  # Focal Search
-                            focalSearchCount += 1.0
-                            strategyType = "Focal Search"
-                        # DIRECTED SEARCH
-                        elif corridorAverage >= corridorAverageMinVal and cse <= corridorCseMaxVal and useDirectedSearchV:  # directed search
-                            directSearchCount += 1.0
-                            strategyType = "Directed Search"
-                        # spatial INDIRECT
-                        elif cse < cseIndirectMaxVal and useIndirectV:  # Near miss
-                            strategyType = "Spatial Indirect"
-                            spatialIndirectCount += 1.0
-                        # PERSEVERANCE
-                        elif averageDistanceToSwimPathCentroid < (
-                                    distanceToSwimMaxVal * poolRadius) and averageDistanceToOldPlatform < (
-                                    distanceToPlatMaxVal * poolRadius) and usePerseveranceV:
-                            perseveranceCount += 1.0
-                            print("Perseverance")
-                        # CHAINING
-                        elif float(
-                                        annulusCounter / i) > annulusCounterMaxVal and quadrantTotal >= quadrantTotalMaxVal and useChainingV:  # or 4 chaining
-                            chainingCount += 1.0
-                            strategyType = "Chaining"
-                        # SCANNING
-                        elif percentTraversedMinVal <= percentTraversed >= percentTraversedMaxVal and averageDistanceToCentre <= (
-                                    distanceToCentreMaxVal * poolRadius) and useScanningV:  # scanning
-                            scanningCount += 1.0
-                            strategyType = "Scanning"
-                        # THIGMOTAXIS
-                        elif innerWallCounter >= innerWallMaxVal * i and outerWallCounter >= i * outerWallMaxVal and useThigmoV:  # thigmotaxis
-                            thigmotaxisCount += 1.0
-                            strategyType = "Thigmotaxis"
-                        # RANDOM SEARCH
-                        elif percentTraversed >= percentTraversedRandomMaxVal and useRandomV:  # random search
-                            randomCount += 1.0
-                            strategyType = "Random Search"
-                        # NOT RECOGNIZED
-                        else:  # cannot categorize
-                            strategyType = "Not Recognized"
-                            notRecognizedCount += 1.0
-                            if manualFlag and not useManualForAllFlag:
-                                self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX),
-                                                float(poolCentreY),
-                                                float(platformX), float(platformY), float(scalingFactor),
-                                                str(cAnimalID), float(platEstDiam))  # ask user for answer
-                                root.wait_window(self.top2)  # we wait until the user responds
-                                strategyType = searchStrategyV  # update the strategyType to that of the user
-                                try:  # try and kill the popup window
-                                    self.top2.destroy()
-                                except:
-                                    pass
-
-                        totalTrialCount += 1.0
-
-                        n += 1
-                        if useManualForAllFlag:
-                            self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
-                                            float(platformX), float(platformY), float(scalingFactor),
-                                            str(strategyType), float(platEstDiam))  # ask user for answer
-                            root.wait_window(self.top2)  # we wait until the user responds
-                            strategyType = searchStrategyV  # update the strategyType to that of the user
-
-                        writer.writerow((cTr, cTrID, cTrName, strategyType, aFile, cse, velocity, totalDistance, distanceAverage, averageHeadingError, percentTraversed, latency), corridorAverage)  # writing to csv file
-                        f.flush()
-                    theStatus.set('Updating CSV...')
-                    self.updateTasks()
-                    try:
-                        csvDisplay(root)
-                    except:
-                        pass
-                    theStatus.set('')
-                    self.updateTasks()
-                    self.killBar()
-                    csvfilename = "results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
-                                                            localtime())) + ".csv"  # update the csv file name for the next run
-                    outputFileStringVar.set(csvfilename)
-                    return
-
-                flag = True
-
-                # </editor-fold>
-                # initialize our cell matrix
-
-                areaCoverageGridSize = 18
-
-                Matrix = [[0 for x in range(0, areaCoverageGridSize+1)] for y in range(0, areaCoverageGridSize+1)]
-                # Analyze the data ----------------------------------------------------------------------------------------------
-
-                jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, missingDataFlag, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY = self.calculateValues(fullTrial, i, number_of_rows, headerLines, Matrix, platformX, platformY, poolCentreX, poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor)
-                velocity = totalDistance/latency
-                cse = float(distanceFromPlatformSummed - cumulativeDistanceError)
-
-
-                strategyType = ""
-                # DIRECT SWIM
-                if cse <= cseMaxVal and averageHeadingError <= headingMaxVal and isRuediger == False and useDirectSwimV:  # direct swim
-                    directSwimCount += 1.0
-                    strategyType = "Direct Swim"
-                elif isRuediger == True and corridorAverage >= 0.99 and useDirectSwimV:
-                    directSwimCount += 1.0
-                    strategyType = "Direct Swim"
-                # FOCAL SEARCH
-                elif averageDistanceToSwimPathCentroid < (poolRadius * distanceToSwimMaxVal) and distanceAverage < (
-                            distanceToPlatMaxVal * poolRadius) and useFocalSearchV:  # Focal Search
-                    focalSearchCount += 1.0
-                    strategyType = "Focal Search"
-                # DIRECTED SEARCH
-                elif corridorAverage >= corridorAverageMinVal and cse <= corridorCseMaxVal and useDirectedSearchV:  # directed search
-                    directSearchCount += 1.0
-                    strategyType = "Directed Search"
-                # spatial INDIRECT
-                elif cse < cseIndirectMaxVal and useIndirectV:
-                    strategyType = "Spatial Indirect"
-                    spatialIndirectCount += 1.0
-                #  PERSEVERANCE
-                elif averageDistanceToSwimPathCentroid < (distanceToSwimMaxVal*poolRadius) and averageDistanceToOldPlatform < (distanceToPlatMaxVal*poolRadius) and usePerseveranceV:
-                    perseveranceCount += 1.0
-                    print("Perseverance")
-                # CHAINING
-                elif float(annulusCounter / i) > annulusCounterMaxVal and quadrantTotal >= quadrantTotalMaxVal and useChainingV:  # or 4 chaining
-                    chainingCount += 1.0
-                    strategyType = "Chaining"
-                # SCANNING
-                elif percentTraversedMinVal <= percentTraversed >= percentTraversedMaxVal and averageDistanceToCentre <= (distanceToCentreMaxVal * poolRadius) and useScanningV:  # scanning
-                    scanningCount += 1.0
-                    strategyType = "Scanning"
-                # THIGMOTAXIS
-                elif innerWallCounter >= innerWallMaxVal * i and outerWallCounter >= i * outerWallMaxVal and useThigmoV:  # thigmotaxis
-                    thigmotaxisCount += 1.0
-                    strategyType = "Thigmotaxis"
-                # RANDOM SEARCH
-                elif percentTraversed >= percentTraversedRandomMaxVal and useRandomV:  # random search
-                    randomCount += 1.0
-                    strategyType = "Random Search"
-                # NOT RECOGNIZED
-                else:  # cannot categorize
-                    strategyType = "Not Recognized"
-                    notRecognizedCount += 1.0
-                    if manualFlag and not useManualForAllFlag:
-                        self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY), float(platformX), float(platformY), float(scalingFactor), str(cAnimalID), float(platEstDiam))  # ask user for answer
-                        root.wait_window(self.top2)  # we wait until the user responds
-                        strategyType = searchStrategyV  # update the strategyType to that of the user
-                        try:  # try and kill the popup window
-                            self.top2.destroy()
-                        except:
-                            pass
-
-                totalTrialCount += 1.0
-                n += 1
-
-                if useManualForAllFlag:
-                    self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
-                                    float(platformX), float(platformY), float(scalingFactor),
-                                    str(strategyType), float(platEstDiam))  # ask user for answer
-                    root.wait_window(self.top2)  # we wait until the user responds
-                    strategyType = searchStrategyV  # update the strategyType to that of the user
-
-
-                #round(math.log(cse,math.e),2) <= 5 for direct swim and round(math.log(cse,math.e),2) <= 9
-
-                if software == "ethovision":
-                    writer.writerow((cDay, cTr, cTrID, cTrName, strategyType, cAnimalID, missingDataFlag,
-                                     aFile, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
-
-                elif software == "anymaze":
-                    writer.writerow((aFile, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # , aFile  writing to csv file
-
-                f.flush()
-                logging.info("For " + str(aFile) + "... Day " + str(cDay) + " Trial " + str(cTr)+" ID " + str(cTrID) + " Trial Name " + str(cTrName) + " Strategy type " + str(strategyType) + " Animal ID " + str(cAnimalID) + " Missing Data 1/0? " + str(missingDataFlag))
-
-
-            if (totalTrialCount - oldTotalCount) != 0 and software == "ethovision":
-
-                writer.writerow(())
-                writer.writerow(("Summary of day " + str(oldDay), ""))
-                writer.writerow(("Direct Swim", "Focal Search", "Directed Search", "Spatial Indirect", "Chaining", "Scanning",
-                                 "Thigmotaxis", "Random Search", "Not Recognized", "Total Categorized",
-                                 "Spatial Strategy Categorization", "Non-Spatial"))
-                writer.writerow((directSwimCount - oldDirectSwimCount, focalSearchCount - oldFocalSearchCount,
-                                 directSearchCount - oldDirectSearchCount, spatialIndirectCount - oldspatialIndirectCount,
-                                 chainingCount - oldChainingCount, scanningCount - oldScanningCount,
-                                 thigmotaxisCount - oldThigmotaxisCount, randomCount - oldRandomCount,
-                                 notRecognizedCount - oldNotRecognizedCount, round(((((totalTrialCount - oldTotalCount) - (
-                    notRecognizedCount - oldNotRecognizedCount)) / (totalTrialCount - oldTotalCount)) * 100), 2),
-                                 directSwimCount - oldDirectSwimCount + directSearchCount - oldDirectSearchCount + focalSearchCount - oldFocalSearchCount + spatialIndirectCount - oldspatialIndirectCount,
-                                 chainingCount - oldChainingCount + scanningCount - oldScanningCount + thigmotaxisCount - oldThigmotaxisCount + randomCount - oldRandomCount))
-                writer.writerow(())
-                writer.writerow(("Direct Swim", "Focal Search", "Directed Search", "Spatial Indirect", "Chaining", "Scanning",
-                                 "Thigmotaxis", "Random Search", "Not Recognized", "Total Categorized",
-                                 "Spatial Strategy Categorization", "Non-Spatial"))
-                writer.writerow((directSwimCount, focalSearchCount, directSearchCount, spatialIndirectCount, chainingCount,
-                                 scanningCount, thigmotaxisCount, randomCount, notRecognizedCount,
-                                 round((((totalTrialCount - notRecognizedCount) / totalTrialCount) * 100), 2),
-                                 directSwimCount + directSearchCount + focalSearchCount + spatialIndirectCount,
-                                 chainingCount + scanningCount + thigmotaxisCount + randomCount))
-                f.flush()
-
-                logging.info("Final results: Direct Swim: "+ str(directSwimCount) + "  Focal Search: " + str(focalSearchCount)+ "  Directed Search: "+
-                             str(directSearchCount) + "  spatial Indirect: "+ str(spatialIndirectCount) + "  Chaining: " + str(chainingCount) +
-                             "  Scanning: " + str(scanningCount))
-        theStatus.set('Updating CSV...')
-        self.updateTasks()
-        try:
-            csvDisplay(root)
-        except:
-            logging.error("Failed to display CSV")
-            pass
-        theStatus.set('Waiting for user input...')
-        self.updateTasks()
-        self.killBar()
-        csvfilename = "results " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".csv"  # update the csv file name for the next run
-        outputFileStringVar.set(csvfilename)
-        try:
-            t1.join()
-            t2.join()
-        except:
-            return
+        writer.writerow(aTrial.name, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))  # writing to csv file
+        f.flush()
+    theStatus.set('Updating CSV...')
+    self.updateTasks()
+    try:
+        csvDisplay(root)
+    except:
+        pass
+    theStatus.set('')
+    self.updateTasks()
+    self.killBar()
+    csvfilename = "results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
+                                        localtime())) + ".csv"  # update the csv file name for the next run
+    outputFileStringVar.set(csvfilename)
+    try:
+        t1.join()
+        t2.join()
+    except:
+        return
 
 def main():
     b = mainClass(root)  # start the main class (main program)
