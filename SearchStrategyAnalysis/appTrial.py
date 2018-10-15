@@ -4,8 +4,11 @@
 import csv
 import math
 import logging
+import os
+import fnmatch
 from collections import defaultdict
 from xlrd import open_workbook
+
 
 
 class Trial(object):  # an object for our row values
@@ -63,115 +66,132 @@ class Parameters:
         return self.name
 
 
+def find_files(directory, pattern):  # searches for our files in the directory
+        logging.debug("Finding files in the directory")
+        for root, dirs, files in os.walk(directory):
+            for basename in sorted(files):
+                if fnmatch.fnmatch(basename, pattern):
+                    filename = os.path.join(root, basename)
+                    yield filename
 
-def saveFileAsExperiment(software, fileName):
+def saveFileAsExperiment(software, filename, filedirectory):
     trialList = []
-    if fileName == "":
-        logging.error("fileName is empty")
-        return
-
-    if software == "ethovision":
-        logging.info("Extension set to xlsx")
-        logging.info("Reading file ethovision")
-        try:
-            wb = open_workbook(fileName)
-            logging.debug("Opened" + fileName)
-        except:
-            logging.error("Unable to open excel file " + fileName)
+    filenameList = []
+    if filename == "":
+        if filedirectory == "":
+            logging.error("No files selected")
             return
+        else:
+            if software == "ethovision":
+                extensionType = r"*.xlsx"
+            elif software == "anymaze" or software == "watermaze":
+                extensionType = r"*.csv"
+            for aFile in find_files(filedirectory, extensionType):
+                filenameList.append(aFile)
+    else:
+        filenameList.append(filename)
 
-        for sheet in wb.sheets():  # for all sheets in the workbook
-            number_of_rows = sheet.nrows
-            headerLines = int(sheet.cell(0, 1).value)  # gets number of header lines in the spreadsheet
+    for filename in filenameList:
 
-            for row in range(headerLines, number_of_rows):  # for each row
+        if software == "ethovision":
+            logging.info("Reading file ethovision")
+            try:
+                wb = open_workbook(filename)
+                logging.debug("Opened" + filename)
+            except:
+                logging.error("Unable to open excel file " + filename)
+                return
 
+            for sheet in wb.sheets():  # for all sheets in the workbook
+                number_of_rows = sheet.nrows
+                headerLines = int(sheet.cell(0, 1).value)  # gets number of header lines in the spreadsheet
+
+                for row in range(headerLines, number_of_rows):  # for each row
+
+                    values = []
+                    values.append(filename)
+                    for col in range(1, 4):  # for columns 1 through 4, get all the values
+                        value = sheet.cell(row, col).value
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            pass
+                        finally:
+                            values.append(value)
+
+                    trialList.append(Trial(*values))
+
+        elif software == "anymaze":
+            logging.info("Reading anymaze")
+            columns = defaultdict(list)  # each value in each column is appended to a list
+            try:
+                f = open(filename)
+                logging.debug("Opened " + filename)
+            except:
+                logging.info("Could not open " + filename)
+                return
+            reader = csv.reader(f, delimiter=",")
+            next(reader)
+            for row in reader:
+                for (i, v) in enumerate(row):
+                    columns[i].append(v)
+
+            for a, b, c in zip(columns[0], columns[1], columns[2]):
                 values = []
-                values.append(fileName)
-                for col in range(1, 4):  # for columns 1 through 4, get all the values
-                    value = sheet.cell(row, col).value
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        pass
-                    finally:
-                        values.append(value)
-
+                a = a.replace(":", "")
+                values.append(float(a))
+                try:
+                    values.append(float(b))
+                except:
+                    values.append(b)
+                try:
+                    values.append(float(c))
+                except:
+                    values.append(c)
                 trialList.append(Trial(*values))
 
-    elif software == "anymaze":
-        logging.info("Extension set to csv")
-        logging.info("Reading anymaze")
-        columns = defaultdict(list)  # each value in each column is appended to a list
-        try:
-            f = open(fileName)
-            logging.debug("Opened " + fileName)
-        except:
-            logging.info("Could not open " + fileName)
-            return
-        reader = csv.reader(f, delimiter=",")
-        next(reader)
-        for row in reader:
-            for (i, v) in enumerate(row):
-                columns[i].append(v)
+        elif software == "watermaze":
+            logging.info("Reading watermaze")
+            columns = defaultdict(list)  # each value in each column is appended to a list
 
-        for a, b, c in zip(columns[0], columns[1], columns[2]):
-            values = []
-            a = a.replace(":", "")
-            values.append(float(a))
+            number_of_columns = 0
             try:
-                values.append(float(b))
+                f = open(filename)
             except:
-                values.append(b)
-            try:
-                values.append(float(c))
-            except:
-                values.append(c)
-            trialList.append(Trial(*values))
+                logging.info("Could not open " + filename)
+                return
 
-    elif software == "watermaze":
-        logging.info("Extension set to csv")
-        logging.info("Reading watermaze")
-        columns = defaultdict(list)  # each value in each column is appended to a list
+            reader = csv.reader(f, delimiter=",")
+            for row in reader:
+                for (i, v) in enumerate(row):
+                    columns[i].append(v)
+                    number_of_columns = i
 
-        number_of_columns = 0
-        try:
-            f = open(fileName)
-        except:
-            logging.info("Could not open " + fileName)
+            for i in range(0, math.floor(number_of_columns / 3)):
+                i = 0.0
+                firstFlag = True
+                secondFlag = False
+                for a, b, c in zip(columns[i * 3], columns[1 + i * 3], columns[2 + i * 3]):
+                    logging.debug("Running through columns: " + str(a) + str(b) + str(c))
+                    values = []
+                    if firstFlag == True:
+                        if a == "" or b == "" or c == "":
+                            continue
+                        firstFlag = False
+                        secondFlag = True
+                    elif secondFlag == True:
+                        secondFlag = False
+                        continue
+                    else:
+                        if a == "" or b == "" or c == "":
+                            continue
+                        values.append(float(c))
+                        values.append(float(a))
+                        values.append(float(b))
+                        item = Trial(*values)
+                        trialList.append(item)
+        else:
+            logging.critical("Could not determine trial, saveFileAsTrial")
             return
 
-        reader = csv.reader(f, delimiter=",")
-        for row in reader:
-            for (i, v) in enumerate(row):
-                columns[i].append(v)
-                number_of_columns = i
-
-        for i in range(0, math.floor(number_of_columns / 3)):
-            i = 0.0
-            firstFlag = True
-            secondFlag = False
-            for a, b, c in zip(columns[i * 3], columns[1 + i * 3], columns[2 + i * 3]):
-                logging.debug("Running through columns: " + str(a) + str(b) + str(c))
-                values = []
-                if firstFlag == True:
-                    if a == "" or b == "" or c == "":
-                        continue
-                    firstFlag = False
-                    secondFlag = True
-                elif secondFlag == True:
-                    secondFlag = False
-                    continue
-                else:
-                    if a == "" or b == "" or c == "":
-                        continue
-                    values.append(float(c))
-                    values.append(float(a))
-                    values.append(float(b))
-                    item = Trial(*values)
-                    trialList.append(item)
-    else:
-        logging.critical("Could not determine trial, saveFileAsTrial")
-        return
-
-    return Experiment(fileName, trialList)
+    return Experiment(filename, trialList)
