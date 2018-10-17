@@ -52,7 +52,7 @@ __credits__ = ["Matthew Cooke", "Tim O'Leary", "Phelan Harris"]
 __email__ = "mbcooke@mail.ubc.ca"
 
 logfilename = "logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
-logging.basicConfig(filename=logfilename,level=logging.DEBUG)  # set the default log type to INFO, can be set to DEBUG for more detailed information
+logging.basicConfig(filename=logfilename,level=logging.INFO)  # set the default log type to INFO, can be set to DEBUG for more detailed information
 csvfilename = "results " + str(
     strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".csv"  # name of the default results file
 theFile = ""
@@ -1331,7 +1331,6 @@ class mainClass:
             logging.info("Automatic pool diameter calculated as: " + str(poolDiamEst))
             poolDiamVar = poolDiamEst
             poolRadius = float(poolDiamVar) / 2
-
         return (poolCentreX,poolCentreY,platformX,platformY,poolDiamVar,poolRadius, platEstDiam)
 
 
@@ -1339,7 +1338,7 @@ class mainClass:
         global usePerseveranceV
         global oldPlatformPosVar
         global poolCentreVar
-        theStatus.set("Calculating Search Strategies")
+        theStatus.set("Calculating Search Strategies: " + str(theTrial))
         if usePerseveranceV:
             oldPlatformPosVar = oldPlatformPosVar
             oldPlatfromX, oldPlatformY = oldPlatformPosVar
@@ -1399,12 +1398,6 @@ class mainClass:
         arrayY = []
 
         for aDatapoint in theTrial:  # for each row in our sheet
-            if aDatapoint.getx() == "-" or aDatapoint.getx() == "":  # throw out missing data
-                missingData += 1  # keep track of how much we throw out
-                continue
-            if aDatapoint.gety() == "-" or aDatapoint.gety() == "":
-                missingData += 1
-                continue
             if i == 0:
                 startX = aDatapoint.getx()
                 startY = aDatapoint.gety()
@@ -1597,10 +1590,6 @@ class mainClass:
         averageDistanceToCentre = totalDistanceToCenterOfPool / i
         averageHeadingError = totalHeadingError / i
 
-        missingDataFlag = 0
-        if missingData > (i / 10):  # if we are missing more than 10% data, notify
-            missingDataFlag = 1
-
         cellCounter = 0.0  # initialize our cell counter
 
         for k in range(0, 18):  # count how many cells we have visited
@@ -1612,9 +1601,7 @@ class mainClass:
                     continue
 
         # print distanceTotal/(i/25), avHeadingError
-        percentTraversed = (
-                                   cellCounter / (
-                                   252.0 * scalingFactor)) * 100.0  # turn our count into a percentage over how many cells we can visit
+        percentTraversed = (cellCounter / (252.0 * scalingFactor)) * 100.0  # turn our count into a percentage over how many cells we can visit
 
 
         idealDistance = distanceFromStartToPlatform
@@ -1625,11 +1612,13 @@ class mainClass:
                 pass
         cumulativeDistanceError = 0.0
 
-        while idealDistance > 5.0:
+        while idealDistance > 10.0:
             cumulativeDistanceError += idealDistance
             idealDistance = (idealDistance - velocity*sampleRate)
+            if(cumulativeDistanceError > 10000):
+                break
 
-        return jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, missingDataFlag, quadrantTotal, totalDistance, mainLatency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY
+        return jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, mainLatency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY
 
     def mainCalculate(self):
         global softwareStringVar
@@ -1707,9 +1696,11 @@ class mainClass:
 
 
         sampleRate = 0.04 #CALCULATE THIS
-
-        aExperiment = saveFileAsExperiment(software, theFile, fileDirectory)
-
+        try:
+            aExperiment = saveFileAsExperiment(software, theFile, fileDirectory)
+        except:
+            show_error("No Input")
+            return
         if software == "ethovision":
             logging.info("Extension set to xlsx")
             extensionType = r'*.xlsx'
@@ -1753,6 +1744,7 @@ class mainClass:
             ("Name", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"))  # write to the csv
 
         for aTrial in aExperiment:
+
             xSummed = 0.0
             ySummed = 0.0
             xAv = 0.0
@@ -1763,8 +1755,6 @@ class mainClass:
             distanceAverage = 0.0
             aX = 0.0
             aY = 0.0
-
-            missingData = 0
 
             distanceToCenterOfPool = 0.0
             totalDistanceToCenterOfPool = 0.0
@@ -1797,15 +1787,13 @@ class mainClass:
             quadrantTotal = 0
             # </editor-fold>
             # initialize our cell matrix
-            print(aTrial, platformX, platformY, poolCentreX,
-                poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
-                biggerWallZone, scalingFactor)
             Matrix = [[0 for x in range(0, areaCoverageGridSize)] for y in range(0, areaCoverageGridSize)]
             # Analyze the data ----------------------------------------------------------------------------------------------
-            jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, missingDataFlag, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY = self.calculateValues(
+            jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY = self.calculateValues(
                 aTrial, Matrix, platformX, platformY, poolCentreX,
                 poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
                 biggerWallZone, scalingFactor)
+
             try:
                 velocity = totalDistance / latency
             except:
@@ -1884,7 +1872,6 @@ class mainClass:
                                 str(strategyType), float(platEstDiam))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
-
             writer.writerow((aTrial.name, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
             f.flush()
         theStatus.set('Updating CSV...')

@@ -199,6 +199,8 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     values = []
                     if firstFlag == True:
                         if a == "" or b == "" or c == "":
+                            firstFlag = False
+                            secondFlag = True
                             continue
                         aTrial.setname(a)
                         firstFlag = False
@@ -209,7 +211,8 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     else:
                         if a == "" or b == "" or c == "":
                             continue
-                        aDatapoint = Datapoint(float(c),float(a),float(b))
+                        else:
+                            aDatapoint = Datapoint(float(c),float(a),float(b))
                     try:
                         aTrial.append(aDatapoint)
                     except:
