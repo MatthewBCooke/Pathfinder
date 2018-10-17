@@ -8,7 +8,7 @@ import csv
 import fnmatch
 import logging
 import math
-import os
+import os, subprocess
 import sys
 import threading
 import webbrowser
@@ -156,63 +156,6 @@ def show_error(text):  # popup box with error text
         Button(top, text="OK", command=top.destroy).pack(pady=5)   # add ok button
     except:
         logging.info("Couldn't Display error "+text)
-
-
-
-class csvDisplay:
-    def __init__(self, root):
-        global canvas
-        global xscrollbar
-        global vsb
-        global frame
-        try:  # we try to delete a canvas (if one exists this will execute)
-            deleteCanvas()
-            logging.info("Canvas destroyed")
-        except:
-            logging.debug("Didn't kill canvas, could be first call")
-
-        logging.debug("CSV Display is called")
-
-        try:
-            canvas = Canvas(root, borderwidth=0, width=500, height=400, bg="white")  # we create the canvas
-            frame = Frame(canvas)   # we place a frame in the canvas
-            xscrollbar = Scrollbar(root, orient=HORIZONTAL, command=canvas.xview)   # we add a horizontal scroll bar
-            xscrollbar.pack(side=BOTTOM, fill=X)   # we put the horizontal scroll bar on the bottom
-            vsb = Scrollbar(root, orient="vertical", command=canvas.yview)   # vertical scroll bar
-            vsb.pack(side="right", fill="y")  # put on right
-
-            canvas.pack(side="left", fill="both", expand=True)   # we pack in the canvas
-            canvas.create_window((4, 4), window=frame, anchor="nw")   # we create the window for the results
-
-            canvas.configure(yscrollcommand=vsb.set)   # we set the commands for the scroll bars
-            canvas.configure(xscrollcommand=xscrollbar.set)
-            frame.bind("<Configure>", lambda event, canvas=canvas: self.onFrameConfigure(canvas))   # we bind on frame configure
-        except:
-            logging.critical("Couldn't create the CSV canvas") # not able to create canvas for the output
-
-        try:   # we try and fill the canvas
-            self.populate(frame)
-        except Exception:   # if we can't fill
-            logging.critical("Fatal error in populate") # cannot populate the CSV canvas
-
-    def populate(self, frame):  # function to populate the canvas
-        logging.debug("Populating the CSV canvas")
-        with open(outputFile, newline="") as file:   # we open the file with the results
-            reader = csv.reader(file)   # read the file
-            # r and c tell us where to grid the labels
-            r = 0
-            for col in reader:
-                c = 0
-                for row in col:   # for all columns and rows we place a label
-                    # i've added some styling
-                    label = Label(frame, width=20, height=1, \
-                                  text=row, relief=RIDGE)
-                    label.grid(row=r, column=c)
-                    c += 1
-                r += 1
-
-    def onFrameConfigure(self, canvas):  # configure the frame
-        canvas.configure(scrollregion=canvas.bbox("all"))
 
 class mainClass:
     def __init__(self, root):  # init is called on runtime
@@ -1741,7 +1684,7 @@ class mainClass:
             return
 
         writer.writerow(
-            ("Name", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"))  # write to the csv
+            ("Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"))  # write to the csv
 
         for aTrial in aExperiment:
 
@@ -1872,20 +1815,23 @@ class mainClass:
                                 str(strategyType), float(platEstDiam))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
-            writer.writerow((aTrial.name, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
+            writer.writerow((aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
             f.flush()
         theStatus.set('Updating CSV...')
+        if sys.platform.startswith('darwin'):
+            subprocess.call(('open', outputFile))
+        elif os.name == 'nt': # For Windows
+            os.startfile(outputFile)
+        elif os.name == 'posix': # For Linux, Mac, etc.
+            subprocess.call(('xdg-open', outputFile))
         self.updateTasks()
-        # try:
-        #     csvDisplay(root)
-        # except:
-        #     pass
         theStatus.set('')
         self.updateTasks()
         self.killBar()
         csvfilename = "results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
                                             localtime())) + ".csv"  # update the csv file name for the next run
         outputFileStringVar.set(csvfilename)
+
         try:
             t1.join()
             t2.join()

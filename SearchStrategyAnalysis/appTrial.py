@@ -31,11 +31,19 @@ class Datapoint(object):
 
 class Trial(object):  # an object for our row values
     def __init__(self):
-        self.name = "DefaultName"
         self.datapointList = []
+        self.name = "DefaultName"
+        self.date = "DefaultDate"
+        self.trial = "DefaultTrial"
 
     def setname(self, name):
         self.name = name
+
+    def setdate(self, date):
+        self.date = date
+
+    def settrial(self, trial):
+        self.trial = trial
 
     def __str__(self):
         return self.name
@@ -48,7 +56,7 @@ class Trial(object):  # an object for our row values
 
 
 class Experiment(object):
-    def __init__(self, name: str, trialList: list):
+    def __init__(self, name: str,trialList: list):
         self.name = name
         self.trialList = trialList
 
@@ -202,7 +210,9 @@ def saveFileAsExperiment(software, filename, filedirectory):
                             firstFlag = False
                             secondFlag = True
                             continue
+                        aTrial.setdate(b)
                         aTrial.setname(a)
+                        aTrial.settrial(c)
                         firstFlag = False
                         secondFlag = True
                     elif secondFlag == True:
