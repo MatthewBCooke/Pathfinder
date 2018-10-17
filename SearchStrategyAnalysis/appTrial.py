@@ -191,7 +191,6 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     number_of_columns = i
 
             for i in range(0, math.floor(number_of_columns / 3)):
-                i = 0.0
                 firstFlag = True
                 secondFlag = False
                 aTrial = Trial()
@@ -216,6 +215,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     except:
                         continue
                 trialList.append(aTrial)
+
         else:
             logging.critical("Could not determine trial, saveFileAsTrial")
             return

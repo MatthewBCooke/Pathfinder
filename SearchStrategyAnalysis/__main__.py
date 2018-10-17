@@ -1339,7 +1339,7 @@ class mainClass:
         global usePerseveranceV
         global oldPlatformPosVar
         global poolCentreVar
-
+        theStatus.set("Calculating Search Strategies")
         if usePerseveranceV:
             oldPlatformPosVar = oldPlatformPosVar
             oldPlatfromX, oldPlatformY = oldPlatformPosVar
@@ -1398,18 +1398,6 @@ class mainClass:
         arrayX = []
         arrayY = []
 
-
-        for aDatapoint in theTrial:
-            if aDatapoint.getx() == "-" or aDatapoint.getx() == "":  # throw out missing data
-                continue
-            if aDatapoint.gety() == "-" or aDatapoint.gety() == "":
-                continue
-            if x == 0:
-                startTime = aDatapoint.gettime()
-            if x == 1:
-                sampleRate = aDatapoint.gettime() - startTime
-            x += 1
-
         for aDatapoint in theTrial:  # for each row in our sheet
             if aDatapoint.getx() == "-" or aDatapoint.getx() == "":  # throw out missing data
                 missingData += 1  # keep track of how much we throw out
@@ -1420,10 +1408,13 @@ class mainClass:
             if i == 0:
                 startX = aDatapoint.getx()
                 startY = aDatapoint.gety()
+                startTime = aDatapoint.gettime()
+            if i == 1:
+                sampleRate = aDatapoint.gettime() - startTime
 
             # Swim Path centroid
             i += 1.0
-            mainLatency += sampleRate
+            mainLatency = aDatapoint.gettime()
             xSummed += float(aDatapoint.getx())
             ySummed += float(aDatapoint.gety())
             aX = float(aDatapoint.getx())
@@ -1449,11 +1440,8 @@ class mainClass:
 
             jsls += -(distanceFromStartToPlatform - distanceFromPlatformSummed) / 1000
             distance = math.sqrt(abs(oldX - aX) ** 2 + abs(oldY - aY) ** 2)
-            if currentDistanceFromPlatform > 5:
-                latencyCounter += 1.0
-                distanceFromPlatformSummed += currentDistanceFromPlatform
-                if distance < 5:
-                    totalDistance += distance
+            distanceFromPlatformSummed += currentDistanceFromPlatform
+            totalDistance += distance
             oldX = aX
             oldY = aY
 
@@ -1547,7 +1535,7 @@ class mainClass:
             elif aDatapoint.gety() > 80 and aDatapoint.gety() <= 90:
                 b = 9
             # </editor-fold>
-            Matrix[a][b] = 1  # set matrix cells to 1 if we have visited them
+            Matrix[a+9][b+9] = 1  # set matrix cells to 1 if we have visited them
             if (poolCentreX - aX) != 0:
                 centerArcTangent = math.degrees(math.atan((poolCentreY - aY) / (poolCentreX - aX)))
 
@@ -1561,7 +1549,8 @@ class mainClass:
             elif aDatapoint.getx() < 0 and aDatapoint.gety() < 0:
                 quadrantFour = 1
 
-        latency = latencyCounter * sampleRate
+            latency = aDatapoint.gettime()
+
         quadrantTotal = quadrantOne + quadrantTwo + quadrantThree + quadrantFour
         # <editor-fold desc="Swim Path centroid">
         if i <= 0:  # make sure we don't divide by 0
@@ -1628,14 +1617,12 @@ class mainClass:
                                    252.0 * scalingFactor)) * 100.0  # turn our count into a percentage over how many cells we can visit
 
 
-        idealDistance = distanceFromStartToPlatform-5
+        idealDistance = distanceFromStartToPlatform
         if latency != 0:
             try:
                 velocity = (totalDistance/latency)
             except:
                 pass
-        else:
-            latency = 0.04
         cumulativeDistanceError = 0.0
 
         while idealDistance > 5.0:
@@ -1649,6 +1636,7 @@ class mainClass:
         logging.debug("Calculate Called")
         self.updateTasks()
         self.csvDestroy()
+        theStatus.set("Initializing")
 
         platformPosVar = platformPosStringVar.get()
         poolDiamVar = poolDiamStringVar.get()
@@ -1708,17 +1696,6 @@ class mainClass:
         perseveranceCount = 0.0
         spatialIndirectCount = 0.0
         notRecognizedCount = 0.0
-        oldTotalCount = 0.0
-        oldThigmotaxisCount = 0.0
-        oldRandomCount = 0.0
-        oldScanningCount = 0.0
-        oldChainingCount = 0.0
-        oldDirectSearchCount = 0.0
-        oldFocalSearchCount = 0.0
-        oldDirectSwimCount = 0.0
-        oldPerseveranceCount = 0.0
-        oldspatialIndirectCount = 0.0
-        oldNotRecognizedCount = 0.0
         n = 0
         numOfRows = 0
         poolCentreX, poolCentreY = poolCentre
@@ -1746,7 +1723,6 @@ class mainClass:
             logging.info("Extension set to csv")
             softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
 
-        print(aExperiment)
         poolCentreX, poolCentreY, platformX, platformY, poolDiamVar, poolRadius, platEstDiam = self.getAutoLocations(aExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, software)
         scalingFactor = float(poolDiamVar) / 180.0  # set scaling factor for different pool sizes
         if scale:
@@ -1811,7 +1787,7 @@ class mainClass:
             startX = 0.0
             startY = 0.0
 
-            areaCoverageGridSize = 18
+            areaCoverageGridSize = 19
 
             corridorCounter = 0.0
             quadrantOne = 0
@@ -1821,13 +1797,19 @@ class mainClass:
             quadrantTotal = 0
             # </editor-fold>
             # initialize our cell matrix
+            print(aTrial, platformX, platformY, poolCentreX,
+                poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
+                biggerWallZone, scalingFactor)
             Matrix = [[0 for x in range(0, areaCoverageGridSize)] for y in range(0, areaCoverageGridSize)]
             # Analyze the data ----------------------------------------------------------------------------------------------
             jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, missingDataFlag, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY = self.calculateValues(
                 aTrial, Matrix, platformX, platformY, poolCentreX,
                 poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
                 biggerWallZone, scalingFactor)
-            velocity = totalDistance / latency
+            try:
+                velocity = totalDistance / latency
+            except:
+                velocity = 0
             cse = float(distanceFromPlatformSummed - cumulativeDistanceError)*sampleRate
 
             strategyType = ""
@@ -1907,10 +1889,10 @@ class mainClass:
             f.flush()
         theStatus.set('Updating CSV...')
         self.updateTasks()
-        try:
-            csvDisplay(root)
-        except:
-            pass
+        # try:
+        #     csvDisplay(root)
+        # except:
+        #     pass
         theStatus.set('')
         self.updateTasks()
         self.killBar()
