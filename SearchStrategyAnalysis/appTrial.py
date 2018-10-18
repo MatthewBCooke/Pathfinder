@@ -9,26 +9,54 @@ import fnmatch
 from collections import defaultdict
 from xlrd import open_workbook
 
-
-
-class Trial(object):  # an object for our row values
-    def __init__(self, name, time, x, y):
-        self.name = name
+class Datapoint(object):
+    def __init__(self, time: float, x: float, y: float):
         self.time = time
         self.x = x
         self.y = y
 
     def __str__(self):
-        return("Trial object:\n"
-               "  Name = {0}\n"
+        return("Datapoint object:\n"
                "  Time = {1}\n"
                "  x = {2}\n"
                "  y = {3}"
-               .format(self.name, self.time, self.x, self.y))
+               .format(self.time, self.x, self.y))
+    def getx(self):
+        return self.x
+    def gety(self):
+        return self.y
+    def gettime(self):
+        return self.time
+
+
+class Trial(object):  # an object for our row values
+    def __init__(self):
+        self.datapointList = []
+        self.name = "DefaultName"
+        self.date = "DefaultDate"
+        self.trial = "DefaultTrial"
+
+    def setname(self, name):
+        self.name = name
+
+    def setdate(self, date):
+        self.date = date
+
+    def settrial(self, trial):
+        self.trial = trial
+
+    def __str__(self):
+        return self.name
+
+    def append(self, adatapoint):
+        self.datapointList.append(adatapoint)
+
+    def __iter__(self):
+        return iter(self.datapointList)
 
 
 class Experiment(object):
-    def __init__(self, name: str, trialList: list):
+    def __init__(self, name: str,trialList: list):
         self.name = name
         self.trialList = trialList
 
@@ -37,6 +65,9 @@ class Experiment(object):
 
     def append(self, atrial):
         self.trialList.append(atrial)
+
+    def __iter__(self):
+        return iter(self.trialList)
 
 
 class Parameters:
@@ -168,15 +199,20 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     number_of_columns = i
 
             for i in range(0, math.floor(number_of_columns / 3)):
-                i = 0.0
                 firstFlag = True
                 secondFlag = False
+                aTrial = Trial()
                 for a, b, c in zip(columns[i * 3], columns[1 + i * 3], columns[2 + i * 3]):
                     logging.debug("Running through columns: " + str(a) + str(b) + str(c))
                     values = []
                     if firstFlag == True:
                         if a == "" or b == "" or c == "":
+                            firstFlag = False
+                            secondFlag = True
                             continue
+                        aTrial.setdate(b)
+                        aTrial.setname(a)
+                        aTrial.settrial(c)
                         firstFlag = False
                         secondFlag = True
                     elif secondFlag == True:
@@ -185,11 +221,14 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     else:
                         if a == "" or b == "" or c == "":
                             continue
-                        values.append(float(c))
-                        values.append(float(a))
-                        values.append(float(b))
-                        item = Trial(*values)
-                        trialList.append(item)
+                        else:
+                            aDatapoint = Datapoint(float(c),float(a),float(b))
+                    try:
+                        aTrial.append(aDatapoint)
+                    except:
+                        continue
+                trialList.append(aTrial)
+
         else:
             logging.critical("Could not determine trial, saveFileAsTrial")
             return
