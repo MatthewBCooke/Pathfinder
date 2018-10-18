@@ -206,7 +206,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     logging.debug("Running through columns: " + str(a) + str(b) + str(c))
                     values = []
                     if firstFlag == True:
-                        if a == "" or b == "" or c == "":
+                        if a == "" or a == "NaN" or b == "" or b == "NaN" or c == "" or c == "NaN":
                             firstFlag = False
                             secondFlag = True
                             continue
@@ -219,7 +219,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                         secondFlag = False
                         continue
                     else:
-                        if a == "" or b == "" or c == "":
+                        if a == "" or a == "NaN" or b == "" or b == "NaN" or c == "" or c == "NaN":
                             continue
                         else:
                             aDatapoint = Datapoint(float(c),float(a),float(b))
