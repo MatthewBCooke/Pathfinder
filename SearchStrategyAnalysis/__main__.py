@@ -1289,7 +1289,6 @@ class mainClass:
             oldPlatformY = float(oldPlatfromY)
         i = 0
         totalDistance = 0.0
-        sampleRate = 0.0
         latency = 0.0
         mainLatency = 0.0
         xSummed = 0.0
@@ -1320,8 +1319,6 @@ class mainClass:
         totalDistanceToOldPlatform = 0.0
         averageDistanceToOldPlatform = 0.0
 
-        jsls = 0.0
-
         startX = 0.0
         startY = 0.0
 
@@ -1345,8 +1342,6 @@ class mainClass:
                 startX = aDatapoint.getx()
                 startY = aDatapoint.gety()
                 startTime = aDatapoint.gettime()
-            if i == 1:
-                sampleRate = aDatapoint.gettime() - startTime
 
             # Swim Path centroid
             i += 1.0
@@ -1374,7 +1369,6 @@ class mainClass:
             totalDistanceToCenterOfPool += distanceToCenterOfPool
             distanceFromStartToPlatform = math.sqrt((platformX - startX) ** 2 + (platformY - startY) ** 2)
 
-            jsls += -(distanceFromStartToPlatform - distanceFromPlatformSummed) / 1000
             distance = math.sqrt(abs(oldX - aX) ** 2 + abs(oldY - aY) ** 2)
             distanceFromPlatformSummed += currentDistanceFromPlatform
             totalDistance += distance
@@ -1552,16 +1546,18 @@ class mainClass:
             try:
                 velocity = (totalDistance/latency)
             except:
+                velocity = 0
                 pass
-        cumulativeDistanceError = 0.0
+        idealCumulativeDistance = 0.0
 
+        sampleRate = (theTrial.datapointList[-1].gettime() - startTime)/(len(theTrial.datapointList) - 1)
         while idealDistance > 10.0:
-            cumulativeDistanceError += idealDistance
+            idealCumulativeDistance += idealDistance
             idealDistance = (idealDistance - velocity*sampleRate)
-            if(cumulativeDistanceError > 10000):
+            if(idealCumulativeDistance > 10000):
                 break
-
-        return jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, mainLatency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY
+        cse = float(distanceFromPlatformSummed - idealCumulativeDistance)*sampleRate
+        return corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, mainLatency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, cse
 
     def mainCalculate(self):
         global softwareStringVar
@@ -1694,7 +1690,6 @@ class mainClass:
             yAv = 0.0
 
             currentDistanceFromPlatform = 0.0
-            distanceFromPlatformSummed = 0.0
             distanceAverage = 0.0
             aX = 0.0
             aY = 0.0
@@ -1732,17 +1727,11 @@ class mainClass:
             # initialize our cell matrix
             Matrix = [[0 for x in range(0, areaCoverageGridSize)] for y in range(0, areaCoverageGridSize)]
             # Analyze the data ----------------------------------------------------------------------------------------------
-            jsls, corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, cumulativeDistanceError, distanceFromPlatformSummed, arrayX, arrayY = self.calculateValues(
+            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, cse = self.calculateValues(
                 aTrial, Matrix, platformX, platformY, poolCentreX,
                 poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
                 biggerWallZone, scalingFactor)
-# THIS NEEDS TO BE PUT IN CALCULATEVALUES
-            try:
-                velocity = totalDistance / latency
-            except:
-                velocity = 0
-            cse = float(distanceFromPlatformSummed - cumulativeDistanceError)*sampleRate
-# Up to here
+
             strategyType = ""
             # DIRECT SWIM
             if cse <= cseMaxVal and averageHeadingError <= headingMaxVal and isRuediger == False and useDirectSwimV:  # direct swim

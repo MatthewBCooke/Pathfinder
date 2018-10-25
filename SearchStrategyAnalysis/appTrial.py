@@ -199,35 +199,30 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     number_of_columns = i
 
             for i in range(0, math.floor(number_of_columns / 3)):
-                firstFlag = True
-                secondFlag = False
+                col1 = columns[i * 3]
+                col2 = columns[1 + i * 3]
+                col3 = columns[2 + i * 3]
+
                 aTrial = Trial()
-                for a, b, c in zip(columns[i * 3], columns[1 + i * 3], columns[2 + i * 3]):
+                aTrial.setname(col1[0])
+                aTrial.setdate(col2[0])
+                aTrial.settrial(col3[0])
+
+                for a, b, c in zip(col1[2:], col2[2:], col3[2:]):
                     logging.debug("Running through columns: " + str(a) + str(b) + str(c))
                     values = []
-                    if firstFlag == True:
-                        if a == "" or a == "NaN" or b == "" or b == "NaN" or c == "" or c == "NaN":
-                            firstFlag = False
-                            secondFlag = True
-                            continue
-                        aTrial.setdate(b)
-                        aTrial.setname(a)
-                        aTrial.settrial(c)
-                        firstFlag = False
-                        secondFlag = True
-                    elif secondFlag == True:
-                        secondFlag = False
+                    if a == "" and b == "" and c == "":
+                        break
+                    elif a == "NaN" or b == "NaN" or c == "NaN":
                         continue
                     else:
-                        if a == "" or a == "NaN" or b == "" or b == "NaN" or c == "" or c == "NaN":
+                        try:
+                            aTrial.append(Datapoint(float(c),float(a),float(b)))
+                        except ValueError:
                             continue
-                        else:
-                            aDatapoint = Datapoint(float(c),float(a),float(b))
-                    try:
-                        aTrial.append(aDatapoint)
-                    except:
-                        continue
-                trialList.append(aTrial)
+                            
+                if len(aTrial.datapointList) > 0:
+                    trialList.append(aTrial)
 
         else:
             logging.critical("Could not determine trial, saveFileAsTrial")
