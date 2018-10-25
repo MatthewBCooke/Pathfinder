@@ -6,5 +6,6 @@
 *.log
 *.csv
 *.xlsx
+*.png
 
 __pycache__/
