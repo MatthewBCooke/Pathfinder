@@ -1736,13 +1736,13 @@ class mainClass:
                 aTrial, Matrix, platformX, platformY, poolCentreX,
                 poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
                 biggerWallZone, scalingFactor)
-
+# THIS NEEDS TO BE PUT IN CALCULATEVALUES
             try:
                 velocity = totalDistance / latency
             except:
                 velocity = 0
             cse = float(distanceFromPlatformSummed - cumulativeDistanceError)*sampleRate
-
+# Up to here
             strategyType = ""
             # DIRECT SWIM
             if cse <= cseMaxVal and averageHeadingError <= headingMaxVal and isRuediger == False and useDirectSwimV:  # direct swim
@@ -1815,6 +1815,7 @@ class mainClass:
                                 str(strategyType), float(platEstDiam))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
+
             writer.writerow((aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
             f.flush()
         theStatus.set('Updating CSV...')
