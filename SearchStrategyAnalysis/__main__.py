@@ -216,7 +216,7 @@ class mainClass:
                                   command=self.openFile)  # add buttons in the menus
         self.fileMenu.add_command(label="Open Directory...", accelerator=accelD, command=self.openDir)
         self.fileMenu.add_separator()  # adds a seperator
-        self.fileMenu.add_command(label="Generate Heatmap", command=heatmap.guiHeatmap)
+        self.fileMenu.add_command(label="Generate Heatmap", command=lambda: self.generateHeatmap(root))
         self.fileMenu.add_separator()  # adds a seperator
         self.fileMenu.add_command(label="Exit", command=self.tryQuit)  # exit button quits
 
@@ -458,6 +458,15 @@ class mainClass:
         fileFlag = 0
         theFile = ""
         fileDirectory = filedialog.askdirectory(mustexist=TRUE)
+
+    def generateHeatmap(self, root):
+        global softwareStringVar
+        global fileDirectory
+        global theFile
+        software = softwareStringVar.get()
+
+        experiment = saveFileAsExperiment(software, theFile, fileDirectory)
+        heatmap.guiHeatmap(root, experiment)
 
     def on_enter(self, text, event):
         global oldStatus
@@ -1074,10 +1083,6 @@ class mainClass:
             logging.info("CSV display destroyed")
         except:
             logging.debug("Couldn't remove CSV display")
-
-    def callHeatmap(self):
-        global root
-        heatmap.guiHeatmap(root, experiment)
 
     def getAutoLocations(self, theExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, software):
         platEstX = 0.0
