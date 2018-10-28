@@ -16,7 +16,8 @@ else:  # tkinter for python 3
     from tkinter import ttk
     from tkinter import filedialog
 
-def guiHeatmap(root, experiment):
+
+def guiHeatmap(self, root, experiment, gridSizeStringVar, maxValStringVar):
 
         self.top3 = Toplevel(root)  # create a new toplevel window
         self.top3.configure(bg="white")
@@ -33,10 +34,10 @@ def guiHeatmap(root, experiment):
         self.maxValE = Entry(self.top3, textvariable=maxValStringVar)
         self.maxValE.pack(side=TOP)
 
-        Button(self.top3, text="Generate", command=self.heatmap(experiment), fg="black", bg="white").pack()
+        Button(self.top3, text="Generate", command=lambda: heatmap(self, experiment), fg="black", bg="white").pack()
 
 
-def heatmap(experiment):
+def heatmap(self, experiment):
     logging.debug("Heatmap Called")
     theStatus.set("Generating Heatmap...")
     self.updateTasks()
