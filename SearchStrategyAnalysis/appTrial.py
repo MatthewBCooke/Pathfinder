@@ -220,12 +220,14 @@ def saveFileAsExperiment(software, filename, filedirectory):
                             aTrial.append(Datapoint(float(c),float(a),float(b)))
                         except ValueError:
                             continue
-                            
+
                 if len(aTrial.datapointList) > 0:
                     trialList.append(aTrial)
 
         else:
             logging.critical("Could not determine trial, saveFileAsTrial")
             return
-
+    
+    # sort by date then by time. Assumes time in 12-hour format
+    trialList.sort(key=lambda t: (t.date, 0 if t.trial[-2:] == "AM" or t.trial[-2:] == "am" else 1, int(t.trial.split(":")[0]) % 12, int(t.trial.split(":")[1][:2])))
     return Experiment(filename, trialList)

@@ -8,4 +8,7 @@
 *.xlsx
 *.png
 
+logs/
+results/
+
 __pycache__/

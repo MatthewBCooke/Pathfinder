@@ -51,9 +51,14 @@ __copyright__ = "Copyright 2018, Jason Snyder Lab, The University of British Col
 __credits__ = ["Matthew Cooke", "Tim O'Leary", "Phelan Harris"]
 __email__ = "mbcooke@mail.ubc.ca"
 
-logfilename = "logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
+if not os.path.exists("logs"):
+    os.makedirs("logs")
+if not os.path.exists("results"):
+    os.makedirs("results")
+
+logfilename = "logs/logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
 logging.basicConfig(filename=logfilename,level=logging.INFO)  # set the default log type to INFO, can be set to DEBUG for more detailed information
-csvfilename = "results " + str(
+csvfilename = "results/results " + str(
     strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".csv"  # name of the default results file
 theFile = ""
 fileDirectory = ""
@@ -1680,9 +1685,18 @@ class mainClass:
             return
 
         writer.writerow(
-            ("Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"))  # write to the csv
+            ("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"))  # write to the csv
 
+        dayNum = 1
+        trialNum = 0
+        curDate = aExperiment.trialList[0].date
         for aTrial in aExperiment:
+            if aTrial.date != curDate:
+                dayNum += 1
+                trialNum = 1
+                curDate = aTrial.date
+            else:
+                trialNum += 1
 
             xSummed = 0.0
             ySummed = 0.0
@@ -1805,7 +1819,7 @@ class mainClass:
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
 
-            writer.writerow((aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
+            writer.writerow((dayNum, trialNum, aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
             f.flush()
         theStatus.set('Updating CSV...')
         if sys.platform.startswith('darwin'):
@@ -1818,7 +1832,7 @@ class mainClass:
         theStatus.set('')
         self.updateTasks()
         self.killBar()
-        csvfilename = "results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
+        csvfilename = "results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
                                             localtime())) + ".csv"  # update the csv file name for the next run
         outputFileStringVar.set(csvfilename)
 
