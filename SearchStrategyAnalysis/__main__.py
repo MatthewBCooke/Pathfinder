@@ -72,11 +72,11 @@ thigmotaxisZoneSizeVar = "20"
 outputFile = csvfilename
 fileFlag = 0
 
-snyderParams = Parameters(name="snyder", cseMaxVal=35, headingMaxVal=35, distanceToSwimMaxVal=0.4,
-                          distanceToPlatMaxVal=0.45, corridorAverageMinVal=0.5, corridorCseMaxVal=1500,
-                          annulusCounterMaxVal=0.75, quadrantTotalMaxVal=3, percentTraversedMaxVal=60,
-                          percentTraversedMinVal=10, distanceToCentreMaxVal=0.7, innerWallMaxVal=0.65,
-                          outerWallMaxVal=0.3, cseIndirectMaxVal=150, percentTraversedRandomMaxVal=30)
+snyderParams = Parameters(name="snyder", cseMaxVal=75, headingMaxVal=25, distanceToSwimMaxVal=0.40,
+                          distanceToPlatMaxVal=0.45, corridorAverageMinVal=0.45, corridorCseMaxVal=1000,
+                          annulusCounterMaxVal=0.7, quadrantTotalMaxVal=4, percentTraversedMaxVal=35,
+                          percentTraversedMinVal=10, distanceToCentreMaxVal=0.6, innerWallMaxVal=0.65,
+                          outerWallMaxVal=0.2, cseIndirectMaxVal=170, percentTraversedRandomMaxVal=35)
 
 ruedigerParams = Parameters(name="ruediger", cseMaxVal=30, headingMaxVal=35, distanceToSwimMaxVal=0.45,
                             distanceToPlatMaxVal=0.5, corridorAverageMinVal=0.8, corridorCseMaxVal=999999999,
@@ -1824,6 +1824,8 @@ class mainClass:
                 strategyType = "Not Recognized"
                 notRecognizedCount += 1.0
                 if manualFlag and not useManualForAllFlag:
+                    print("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage")
+                    print(dayNum, trialNum, aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
                     #print("CSE: ", cse, " Distance to centroid: ", averageDistanceToSwimPathCentroid, " Distance to plat: ", distanceAverage)
                     self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
                                 float(platformX), float(platformY), float(scalingFactor),
@@ -1838,8 +1840,11 @@ class mainClass:
             totalTrialCount += 1.0
 
             n += 1
+            #print("CSE: ", cse, "    Heading: ",averageHeadingError, "   Corridor: ", corridorAverage)
 
             if useManualForAllFlag:
+                print("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage")
+                print(dayNum, trialNum, aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
                 self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
                                 float(platformX), float(platformY), float(scalingFactor),
                                 str(strategyType), float(platEstDiam))  # ask user for answer
