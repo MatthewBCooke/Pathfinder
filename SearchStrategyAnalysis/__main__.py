@@ -72,11 +72,11 @@ thigmotaxisZoneSizeVar = "20"
 outputFile = csvfilename
 fileFlag = 0
 
-snyderParams = Parameters(name="snyder", cseMaxVal=30, headingMaxVal=25, distanceToSwimMaxVal=0.45,
-                          distanceToPlatMaxVal=0.35, corridorAverageMinVal=0.5, corridorCseMaxVal=1500,
+snyderParams = Parameters(name="snyder", cseMaxVal=35, headingMaxVal=35, distanceToSwimMaxVal=0.4,
+                          distanceToPlatMaxVal=0.45, corridorAverageMinVal=0.5, corridorCseMaxVal=1500,
                           annulusCounterMaxVal=0.75, quadrantTotalMaxVal=3, percentTraversedMaxVal=60,
                           percentTraversedMinVal=10, distanceToCentreMaxVal=0.7, innerWallMaxVal=0.65,
-                          outerWallMaxVal=0.3, cseIndirectMaxVal=300, percentTraversedRandomMaxVal=30)
+                          outerWallMaxVal=0.3, cseIndirectMaxVal=150, percentTraversedRandomMaxVal=30)
 
 ruedigerParams = Parameters(name="ruediger", cseMaxVal=30, headingMaxVal=35, distanceToSwimMaxVal=0.45,
                             distanceToPlatMaxVal=0.5, corridorAverageMinVal=0.8, corridorCseMaxVal=999999999,
@@ -1668,8 +1668,6 @@ class mainClass:
         skipFlag = False
         software = softwareStringVar.get()
 
-
-        sampleRate = 0.04 #CALCULATE THIS
         try:
             aExperiment = saveFileAsExperiment(software, theFile, fileDirectory)
         except:
@@ -1826,10 +1824,10 @@ class mainClass:
                 strategyType = "Not Recognized"
                 notRecognizedCount += 1.0
                 if manualFlag and not useManualForAllFlag:
-                    self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX),
-                                    float(poolCentreY),
-                                    float(platformX), float(platformY), float(scalingFactor),
-                                    str(cAnimalID), float(platEstDiam))  # ask user for answer
+                    #print("CSE: ", cse, " Distance to centroid: ", averageDistanceToSwimPathCentroid, " Distance to plat: ", distanceAverage)
+                    self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
+                                float(platformX), float(platformY), float(scalingFactor),
+                                str(strategyType), float(platEstDiam))  # ask user for answer
                     root.wait_window(self.top2)  # we wait until the user responds
                     strategyType = searchStrategyV  # update the strategyType to that of the user
                     try:  # try and kill the popup window
@@ -1847,9 +1845,10 @@ class mainClass:
                                 str(strategyType), float(platEstDiam))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
-            print("Search Strategy: ", strategyType, "    Annulus: ",annulusCounter/i)
             writer.writerow((dayNum, trialNum, aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
             f.flush()
+
+        print("Direct Swim: ", directSwimCount, "| Directed Search: ", directSearchCount, "| Focal Search: ", focalSearchCount, "| Spatial Indirect: ", spatialIndirectCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ", randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
         theStatus.set('Updating CSV...')
         if sys.platform.startswith('darwin'):
             subprocess.call(('open', outputFile))
