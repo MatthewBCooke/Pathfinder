@@ -1503,10 +1503,10 @@ class mainClass:
             storeX = aDatapoint.getx()
             storeY = aDatapoint.gety()
 
-            for i in range(-math.ceil(theGridSize/2),math.ceil(theGridSize/2)):
-                if storeX >= poolCentreX+(i*theGridSize/2) and storeX <= poolCentreX+((i+1)*theGridSize/2):
+            for step in range(-math.ceil(theGridSize/2),math.ceil(theGridSize/2)):
+                if storeX >= poolCentreX+(step*theGridSize/2) and storeX <= poolCentreX+((step+1)*theGridSize/2):
                     a = gridCounter
-                if storeY >= poolCentreY+(i*theGridSize/2) and storeY <= poolCentreY+((i+1)*theGridSize/2):
+                if storeY >= poolCentreY+(step*theGridSize/2) and storeY <= poolCentreY+((step+1)*theGridSize/2):
                     b = gridCounter
                 gridCounter += 1
 
@@ -1537,7 +1537,6 @@ class mainClass:
         lowerCorridor = aArcTangent - corridorWidth
         corridorWidth = 0.0
         totalHeadingError = 0.0
-        i2 = 0
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
             distanceToSwimPathCentroid = math.sqrt((xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2)
             totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
@@ -1549,14 +1548,14 @@ class mainClass:
                     aArcTangent - abs(math.degrees(math.atan((aDatapoint.gety() - oldItemY) / (aDatapoint.getx() - oldItemX)))))
                 if float(lowerCorridor) <= float(currentArcTangent) <= float(upperCorridor):
                     corridorCounter += 1.0
-            i2 += 1
+
 
             oldItemX = aDatapoint.getx()
             oldItemY = aDatapoint.gety()
             totalHeadingError += corridorWidth # check this?
         # </editor-fold>
         # <editor-fold desc="Take Averages">
-        corridorAverage = corridorCounter / i2
+        corridorAverage = corridorCounter / i
         distanceAverage = distanceFromPlatformSummed / i  # calculate our average distances to landmarks
         averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid / i
         averageDistanceToOldPlatform = totalDistanceToOldPlatform / i
@@ -1848,7 +1847,7 @@ class mainClass:
                                 str(strategyType), float(platEstDiam))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
-            print("Search Strategy: ", strategyType, "    Percent Traversed: ",percentTraversed)
+            print("Search Strategy: ", strategyType, "    Annulus: ",annulusCounter/i)
             writer.writerow((dayNum, trialNum, aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
             f.flush()
         theStatus.set('Updating CSV...')
