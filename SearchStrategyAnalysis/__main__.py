@@ -1564,8 +1564,8 @@ class mainClass:
 
         cellCounter = 0.0  # initialize our cell counter
 
-        for k in range(0, 18):  # count how many cells we have visited
-            for j in range(0, 18):
+        for k in range(0, math.ceil(theGridSize)+1):  # count how many cells we have visited
+            for j in range(0, math.ceil(theGridSize)+1):
                 try:
                     if Matrix[k][j] == 1:
                         cellCounter += 1.0
