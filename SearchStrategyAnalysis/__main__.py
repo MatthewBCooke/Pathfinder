@@ -72,19 +72,19 @@ thigmotaxisZoneSizeVar = "20"
 outputFile = csvfilename
 fileFlag = 0
 
-snyderParams = Parameters(name="snyder", cseMaxVal=300/24, headingMaxVal=25, distanceToSwimMaxVal=0.45,
-                          distanceToPlatMaxVal=0.35, corridorAverageMinVal=0.5, corridorCseMaxVal=100000,
-                          annulusCounterMaxVal=0.70, quadrantTotalMaxVal=3, percentTraversedMaxVal=60,
-                          percentTraversedMinVal=10, distanceToCentreMaxVal=0.7, innerWallMaxVal=0.65,
-                          outerWallMaxVal=0.3, cseIndirectMaxVal=7000/24, percentTraversedRandomMaxVal=30)
+snyderParams = Parameters(name="snyder", cseMaxVal=75, headingMaxVal=25, distanceToSwimMaxVal=0.40,
+                          distanceToPlatMaxVal=0.45, corridorAverageMinVal=0.45, corridorCseMaxVal=1000,
+                          annulusCounterMaxVal=0.7, quadrantTotalMaxVal=4, percentTraversedMaxVal=35,
+                          percentTraversedMinVal=10, distanceToCentreMaxVal=0.6, innerWallMaxVal=0.65,
+                          outerWallMaxVal=0.2, cseIndirectMaxVal=170, percentTraversedRandomMaxVal=35)
 
-ruedigerParams = Parameters(name="ruediger", cseMaxVal=300/24, headingMaxVal=35, distanceToSwimMaxVal=0.45,
+ruedigerParams = Parameters(name="ruediger", cseMaxVal=30, headingMaxVal=35, distanceToSwimMaxVal=0.45,
                             distanceToPlatMaxVal=0.5, corridorAverageMinVal=0.8, corridorCseMaxVal=999999999,
                             annulusCounterMaxVal=0.65, quadrantTotalMaxVal=0, percentTraversedMaxVal=70,
                             percentTraversedMinVal=15, distanceToCentreMaxVal=0.7, innerWallMaxVal=0.65,
                             outerWallMaxVal=0.35, cseIndirectMaxVal=0, percentTraversedRandomMaxVal=70)
 
-gartheParams = Parameters(name="garthe", cseMaxVal=300/24, headingMaxVal=20, distanceToSwimMaxVal=0.35,
+gartheParams = Parameters(name="garthe", cseMaxVal=30, headingMaxVal=20, distanceToSwimMaxVal=0.35,
                           distanceToPlatMaxVal=0.3, corridorAverageMinVal=0.8, corridorCseMaxVal=999999999,
                           annulusCounterMaxVal=0.8, quadrantTotalMaxVal=0, percentTraversedMaxVal=60,
                           percentTraversedMinVal=10, distanceToCentreMaxVal=0.7, innerWallMaxVal=0.65,
@@ -1387,7 +1387,7 @@ class mainClass:
         return (poolCentreX,poolCentreY,platformX,platformY,poolDiamVar,poolRadius, platEstDiam)
 
 
-    def calculateValues(self, theTrial, Matrix, platformX, platformY, poolCentreX, poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor):
+    def calculateValues(self, theTrial, platformX, platformY, poolCentreX, poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor, poolradius):
         global usePerseveranceV
         global oldPlatformPosVar
         global poolCentreVar
@@ -1446,6 +1446,8 @@ class mainClass:
         latencyCounter = 0.0
         arrayX = []
         arrayY = []
+        theGridSize = float(poolradius*2)/10.0
+        Matrix = [[0 for x in range(0, math.ceil(theGridSize)+1)] for y in range(0, math.ceil(theGridSize)+1)]
 
         for aDatapoint in theTrial:  # for each row in our sheet
             if i == 0:
@@ -1490,143 +1492,66 @@ class mainClass:
             if distanceToCenterOfPool > smallerWallZone:
                 outerWallCounter += 1.0
             if (distanceToCenterOfPool >= annulusZoneInner) and (distanceToCenterOfPool <= annulusZoneOuter):
-                annulusCounter += 1
+                annulusCounter += 1.0
 
             a, b = 0, 0
+
             # grid creation
             # x values
             # <editor-fold desc="Grid">
-            if aDatapoint.getx() >= -100.0 and aDatapoint.getx() <= -90:
-                a = -9
-            elif aDatapoint.getx() > -90 and aDatapoint.getx() <= -80:
-                a = -8
-            elif aDatapoint.getx() > -80 and aDatapoint.getx() <= -70:
-                a = -7
-            elif aDatapoint.getx() > -70 and aDatapoint.getx() <= -60:
-                a = -6
-            elif aDatapoint.getx() > -60 and aDatapoint.getx() <= -50:
-                a = -5
-            elif aDatapoint.getx() > -50 and aDatapoint.getx() <= -40:
-                a = -4
-            elif aDatapoint.getx() > -40 and aDatapoint.getx() <= -30:
-                a = -3
-            elif aDatapoint.getx() > -30 and aDatapoint.getx() <= -20:
-                a = -2
-            elif aDatapoint.getx() > -20 and aDatapoint.getx() <= -10:
-                a = -1
-            elif aDatapoint.getx() > -10 and aDatapoint.getx() <= 0:
-                a = 0
-            elif aDatapoint.getx() > 0 and aDatapoint.getx() <= 10:
-                a = 1
-            elif aDatapoint.getx() > 10 and aDatapoint.getx() <= 20:
-                a = 2
-            elif aDatapoint.getx() > 20 and aDatapoint.getx() <= 30:
-                a = 3
-            elif aDatapoint.getx() > 30 and aDatapoint.getx() <= 40:
-                a = 4
-            elif aDatapoint.getx() > 40 and aDatapoint.getx() <= 50:
-                a = 5
-            elif aDatapoint.getx() > 50 and aDatapoint.getx() <= 60:
-                a = 6
-            elif aDatapoint.getx() > 60 and aDatapoint.getx() <= 70:
-                a = 7
-            elif aDatapoint.getx() > 70 and aDatapoint.getx() <= 80:
-                a = 8
-            elif aDatapoint.getx() > 80 and aDatapoint.getx() <= 90:
-                a = 9
+            gridCounter = 0
+            storeX = aDatapoint.getx()
+            storeY = aDatapoint.gety()
 
-            # y value categorization
-            if aDatapoint.gety() >= -100.0 and aDatapoint.gety() <= -90:
-                b = -9
-            elif aDatapoint.gety() > -90 and aDatapoint.gety() <= -80:
-                b = -8
-            elif aDatapoint.gety() > -80 and aDatapoint.gety() <= -70:
-                b = -7
-            elif aDatapoint.gety() > -70 and aDatapoint.gety() <= -60:
-                b = -6
-            elif aDatapoint.gety() > -60 and aDatapoint.gety() <= -50:
-                b = -5
-            elif aDatapoint.gety() > -50 and aDatapoint.gety() <= -40:
-                b = -4
-            elif aDatapoint.gety() > -40 and aDatapoint.gety() <= -30:
-                b = -3
-            elif aDatapoint.gety() > -30 and aDatapoint.gety() <= -20:
-                b = -2
-            elif aDatapoint.gety() > -20 and aDatapoint.gety() <= -10:
-                b = -1
-            elif aDatapoint.gety() > -10 and aDatapoint.gety() <= 0:
-                b = 0
-            elif aDatapoint.gety() > 0 and aDatapoint.gety() <= 10:
-                b = 1
-            elif aDatapoint.gety() > 10 and aDatapoint.gety() <= 20:
-                b = 2
-            elif aDatapoint.gety() > 20 and aDatapoint.gety() <= 30:
-                b = 3
-            elif aDatapoint.gety() > 30 and aDatapoint.gety() <= 40:
-                b = 4
-            elif aDatapoint.gety() > 40 and aDatapoint.gety() <= 50:
-                b = 5
-            elif aDatapoint.gety() > 50 and aDatapoint.gety() <= 60:
-                b = 6
-            elif aDatapoint.gety() > 60 and aDatapoint.gety() <= 70:
-                b = 7
-            elif aDatapoint.gety() > 70 and aDatapoint.gety() <= 80:
-                b = 8
-            elif aDatapoint.gety() > 80 and aDatapoint.gety() <= 90:
-                b = 9
-            # </editor-fold>
-            Matrix[a+9][b+9] = 1  # set matrix cells to 1 if we have visited them
+            for step in range(-math.ceil(theGridSize/2),math.ceil(theGridSize/2)):
+                if storeX >= poolCentreX+(step*theGridSize/2) and storeX <= poolCentreX+((step+1)*theGridSize/2):
+                    a = gridCounter
+                if storeY >= poolCentreY+(step*theGridSize/2) and storeY <= poolCentreY+((step+1)*theGridSize/2):
+                    b = gridCounter
+                gridCounter += 1
+
+            Matrix[a][b] = 1  # set matrix cells to 1 if we have visited them
             if (poolCentreX - aX) != 0:
                 centerArcTangent = math.degrees(math.atan((poolCentreY - aY) / (poolCentreX - aX)))
 
             # print centerArcTangent
-            if aDatapoint.getx() >= 0 and aDatapoint.gety() >= 0:
+            if aDatapoint.getx() >= poolCentreX and aDatapoint.gety() >= poolCentreY:
                 quadrantOne = 1
-            elif aDatapoint.getx() < 0 and aDatapoint.gety() >= 0:
+            elif aDatapoint.getx() < poolCentreX and aDatapoint.gety() >= poolCentreY:
                 quadrantTwo = 1
-            elif aDatapoint.getx() >= 0 and aDatapoint.gety() < 0:
+            elif aDatapoint.getx() >= poolCentreX and aDatapoint.gety() < poolCentreY:
                 quadrantThree = 1
-            elif aDatapoint.getx() < 0 and aDatapoint.gety() < 0:
+            elif aDatapoint.getx() < poolCentreX and aDatapoint.gety() < poolCentreY:
                 quadrantFour = 1
 
             latency = aDatapoint.gettime()
 
         quadrantTotal = quadrantOne + quadrantTwo + quadrantThree + quadrantFour
-        # <editor-fold desc="Swim Path centroid">
-        if i <= 0:  # make sure we don't divide by 0
-            i = 1
 
         xAv = xSummed / i  # get our average positions for the centroid
         yAv = ySummed / i
         swimPathCentroid = (xAv, yAv)
-
-        if (platformX - startX) == 0:
-            pass
 
         aArcTangent = math.degrees(math.atan((platformY - startY) / (platformX - startX)))
         upperCorridor = aArcTangent + corridorWidth
         lowerCorridor = aArcTangent - corridorWidth
         corridorWidth = 0.0
         totalHeadingError = 0.0
-
-        for aDatapoint2 in theTrial:  # go back through all values and calculate distance to the centroid
-            if aDatapoint2.getx() == "-" or aDatapoint2.getx() == "":
-                continue
-            if aDatapoint2.gety() == "-" or aDatapoint2.gety() == "":
-                continue
-            distanceToSwimPathCentroid = math.sqrt((xAv - aDatapoint2.getx()) ** 2 + (yAv - aDatapoint2.gety()) ** 2)
+        for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
+            distanceToSwimPathCentroid = math.sqrt((xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2)
             totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
-            distanceFromStartToCurrent = math.sqrt((aDatapoint2.getx() - startX) **2 + (aDatapoint2.gety() - startY)**2)
+            distanceFromStartToCurrent = math.sqrt((aDatapoint.getx() - startX) **2 + (aDatapoint.gety() - startY)**2)
 
-            if (aDatapoint2.getx() - startX) != 0 and (aDatapoint2.getx() - oldItemX) != 0:
-                currentArcTangent = math.degrees(math.atan((aDatapoint2.gety() - startY) / (aDatapoint2.getx() - startX)))
+            if oldItemX!=0 and aDatapoint.getx() - oldItemX != 0 and aDatapoint.getx() - startX != 0:
+                currentArcTangent = math.degrees(math.atan((aDatapoint.gety() - startY) / (aDatapoint.getx() - startX)))
                 corridorWidth = abs(
-                    aArcTangent - abs(math.degrees(math.atan((aDatapoint2.gety() - oldItemY) / (aDatapoint2.getx() - oldItemX)))))
-                if float(lowerCorridor) <= float(currentArcTangent) <= float(upperCorridor) and distanceFromStartToCurrent < (distanceFromStartToPlatform+5):
+                    aArcTangent - abs(math.degrees(math.atan((aDatapoint.gety() - oldItemY) / (aDatapoint.getx() - oldItemX)))))
+                if float(lowerCorridor) <= float(currentArcTangent) <= float(upperCorridor):
                     corridorCounter += 1.0
 
-            oldItemX = aDatapoint2.getx()
-            oldItemY = aDatapoint2.gety()
+
+            oldItemX = aDatapoint.getx()
+            oldItemY = aDatapoint.gety()
             totalHeadingError += corridorWidth # check this?
         # </editor-fold>
         # <editor-fold desc="Take Averages">
@@ -1639,8 +1564,8 @@ class mainClass:
 
         cellCounter = 0.0  # initialize our cell counter
 
-        for k in range(0, 18):  # count how many cells we have visited
-            for j in range(0, 18):
+        for k in range(0, math.ceil(theGridSize)+1):  # count how many cells we have visited
+            for j in range(0, math.ceil(theGridSize)+1):
                 try:
                     if Matrix[k][j] == 1:
                         cellCounter += 1.0
@@ -1648,7 +1573,7 @@ class mainClass:
                     continue
 
         # print distanceTotal/(i/25), avHeadingError
-        percentTraversed = (cellCounter / (252.0 * scalingFactor)) * 100.0  # turn our count into a percentage over how many cells we can visit
+        percentTraversed = (cellCounter / (math.ceil(gridCounter**2) * scalingFactor)) * 100.0  # turn our count into a percentage over how many cells we can visit
 
 
         idealDistance = distanceFromStartToPlatform
@@ -1743,8 +1668,6 @@ class mainClass:
         skipFlag = False
         software = softwareStringVar.get()
 
-
-        sampleRate = 0.04 #CALCULATE THIS
         try:
             aExperiment = saveFileAsExperiment(software, theFile, fileDirectory)
         except:
@@ -1847,13 +1770,12 @@ class mainClass:
             quadrantFour = 0
             quadrantTotal = 0
             # </editor-fold>
-            # initialize our cell matrix
-            Matrix = [[0 for x in range(0, areaCoverageGridSize)] for y in range(0, areaCoverageGridSize)]
+
             # Analyze the data ----------------------------------------------------------------------------------------------
             corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, cse = self.calculateValues(
-                aTrial, Matrix, platformX, platformY, poolCentreX,
+                aTrial, platformX, platformY, poolCentreX,
                 poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
-                biggerWallZone, scalingFactor)
+                biggerWallZone, scalingFactor, poolRadius)
 
             strategyType = ""
             # DIRECT SWIM
@@ -1906,10 +1828,12 @@ class mainClass:
                 strategyType = "Not Recognized"
                 notRecognizedCount += 1.0
                 if manualFlag and not useManualForAllFlag:
-                    self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX),
-                                    float(poolCentreY),
-                                    float(platformX), float(platformY), float(scalingFactor),
-                                    str(cAnimalID), float(platEstDiam))  # ask user for answer
+                    print("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage")
+                    print(dayNum, trialNum, aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
+                    #print("CSE: ", cse, " Distance to centroid: ", averageDistanceToSwimPathCentroid, " Distance to plat: ", distanceAverage)
+                    self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
+                                float(platformX), float(platformY), float(scalingFactor),
+                                str(strategyType), float(platEstDiam))  # ask user for answer
                     root.wait_window(self.top2)  # we wait until the user responds
                     strategyType = searchStrategyV  # update the strategyType to that of the user
                     try:  # try and kill the popup window
@@ -1920,16 +1844,20 @@ class mainClass:
             totalTrialCount += 1.0
 
             n += 1
+            #print("CSE: ", cse, "    Heading: ",averageHeadingError, "   Corridor: ", corridorAverage)
 
             if useManualForAllFlag:
+                print("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage")
+                print(dayNum, trialNum[trialName], aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
                 self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
                                 float(platformX), float(platformY), float(scalingFactor),
                                 str(strategyType), float(platEstDiam))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
-
             writer.writerow((dayNum, trialNum[trialName], aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
             f.flush()
+
+        print("Direct Swim: ", directSwimCount, "| Directed Search: ", directSearchCount, "| Focal Search: ", focalSearchCount, "| Spatial Indirect: ", spatialIndirectCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ", randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
         theStatus.set('Updating CSV...')
         if sys.platform.startswith('darwin'):
             subprocess.call(('open', outputFile))
