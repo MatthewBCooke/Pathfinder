@@ -1792,16 +1792,20 @@ class mainClass:
         writer.writerow(
             ("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"))  # write to the csv
 
-        dayNum = 1
-        trialNum = 0
-        curDate = aExperiment.trialList[0].date
+        dayNum = 0
+        trialNum = {}
+        curDate = None 
         for aTrial in aExperiment:
+            trialName = aTrial.name.replace("*", "")
             if aTrial.date != curDate:
                 dayNum += 1
-                trialNum = 1
                 curDate = aTrial.date
+                trialNum = {}
+                trialNum[trialName] = 1
+            elif trialName in trialNum:
+                trialNum[trialName] += 1
             else:
-                trialNum += 1
+                trialNum[trialName] = 1
 
             xSummed = 0.0
             ySummed = 0.0
@@ -1924,7 +1928,7 @@ class mainClass:
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
 
-            writer.writerow((dayNum, trialNum, aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
+            writer.writerow((dayNum, trialNum[trialName], aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
             f.flush()
         theStatus.set('Updating CSV...')
         if sys.platform.startswith('darwin'):
