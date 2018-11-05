@@ -1670,8 +1670,9 @@ class mainClass:
 
         try:
             aExperiment = saveFileAsExperiment(software, theFile, fileDirectory)
-        except:
+        except Exception as e:
             show_error("No Input")
+            print("Unexpected Error: " + str(e))
             return
         if software == "ethovision":
             logging.info("Extension set to xlsx")
@@ -1712,23 +1713,36 @@ class mainClass:
             self.killBar()
             return
 
-        writer.writerow(
-            ("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"))  # write to the csv
+        headersToWrite = []
+        if aExperiment.hasDateInfo:
+            headersToWrite.extend(["Date", "Time", "Day"])
+        
+        headersToWrite.append("Trial")
+        if aExperiment.hasTrialNames:
+            headersToWrite.append("Name")
+        if aExperiment.hasAnimalNames:
+            headersToWrite.append("Animal")
+
+        headersToWrite.extend(["Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"])
+        writer.writerow(headersToWrite) # write to the csv
 
         dayNum = 0
         trialNum = {}
         curDate = None 
         for aTrial in aExperiment:
-            trialName = aTrial.name.replace("*", "")
-            if aTrial.date != curDate:
+            animal = ""
+            if aExperiment.hasAnimalNames:
+                animal = aTrial.animal.replace("*", "")
+
+            if aExperiment.hasDateInfo and aTrial.date.date() != curDate:
                 dayNum += 1
-                curDate = aTrial.date
+                curDate = aTrial.date.date()
                 trialNum = {}
-                trialNum[trialName] = 1
-            elif trialName in trialNum:
-                trialNum[trialName] += 1
+                trialNum[animal] = 1
+            elif animal in trialNum:
+                trialNum[animal] += 1
             else:
-                trialNum[trialName] = 1
+                trialNum[animal] = 1
 
             xSummed = 0.0
             ySummed = 0.0
@@ -1848,13 +1862,30 @@ class mainClass:
 
             if useManualForAllFlag:
                 print("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage")
-                print(dayNum, trialNum[trialName], aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
+                print(dayNum, trialNum[animal], aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
                 self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
                                 float(platformX), float(platformY), float(scalingFactor),
                                 str(strategyType), float(platEstDiam))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
-            writer.writerow((dayNum, trialNum[trialName], aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)))  # writing to csv file
+            
+            dataToWrite = []
+            if aExperiment.hasDateInfo:
+                formattedDate = aTrial.date.strftime("%Y-%m-%d")
+                formattedTime = aTrial.date.strftime("%I:%M %p")
+                dataToWrite.append(formattedDate)
+                dataToWrite.append(formattedTime)
+                dataToWrite.append(dayNum)
+            
+            dataToWrite.append(trialNum[animal])
+            if aExperiment.hasTrialNames:
+                dataToWrite.append(aTrial.name)
+            if aExperiment.hasAnimalNames:
+                dataToWrite.append(aTrial.animal)
+
+            dataToWrite.extend([strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)])
+            writer.writerow(dataToWrite)  # writing to csv file
+
             f.flush()
 
         print("Direct Swim: ", directSwimCount, "| Directed Search: ", directSearchCount, "| Focal Search: ", focalSearchCount, "| Spatial Indirect: ", spatialIndirectCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ", randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
