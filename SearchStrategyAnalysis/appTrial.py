@@ -261,17 +261,17 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 aTrial.setanimal(col1[0])
                 aTrial.setdate(datetime.datetime.strptime(col2[0] + " " + col3[0], "%m/%d/%Y %H:%M %p"))
 
-                for time, x, y in zip(col1[2:], col2[2:], col3[2:]):
-                    logging.debug("Running through columns: " + str(time) + str(x) + str(y))
+                for xVal, yVal, timeVal in zip(col1[2:], col2[2:], col3[2:]):
+                    logging.debug("Running through columns: " + str(timeVal) + str(xVal) + str(yVal))
                     values = []
-                    if time == "" and x == "" and y == "":
+                    if timeVal == "" and xVal == "" and yVal == "":
                         break
-                    elif time == "NaN" or x == "NaN" or y == "NaN":
+                    elif timeVal == "NaN" or xVal == "NaN" or yVal == "NaN":
                         aTrial.markDataAsCorrupted()
                         continue
                     else:
                         try:
-                            aTrial.append(Datapoint(float(time),float(x),float(y)))
+                            aTrial.append(Datapoint(float(timeVal),float(xVal),float(yVal)))
                         except ValueError:
                             aTrial.markDataAsCorrupted()
                             continue

@@ -10,5 +10,7 @@
 
 logs/
 results/
+heatmaps/
+plots/
 
 __pycache__/

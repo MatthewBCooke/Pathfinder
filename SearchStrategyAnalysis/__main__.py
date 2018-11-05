@@ -55,6 +55,10 @@ if not os.path.exists("logs"):
     os.makedirs("logs")
 if not os.path.exists("results"):
     os.makedirs("results")
+if not os.path.exists("plots"):
+    os.makedirs("plots")
+if not os.path.exists("heatmaps"):
+    os.makedirs("heatmaps")
 
 logfilename = "logs/logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
 logging.basicConfig(filename=logfilename,level=logging.INFO)  # set the default log type to INFO, can be set to DEBUG for more detailed information
@@ -954,7 +958,7 @@ class mainClass:
             platWallsX.append(platX + ((math.ceil(platEstDiam) / 2)+1) * math.cos(math.radians(theta)))
             platWallsY.append(platY + ((math.ceil(platEstDiam) / 2)+1) * math.sin(math.radians(theta)))
 
-        plotName = name + " " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # the name will be Animal id followed by the date and time
+        plotName = "plots/" + name + " " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # the name will be Animal id followed by the date and time
         plt.scatter(x, y, s=15, c='r', alpha=1.0)  # we plot the XY position of animal
         plt.scatter(x[0],y[0], s=100, c='b', alpha=1, marker='s')  # we plot the start point
         plt.scatter(platWallsX, platWallsY, s=1, c='black', alpha=1.0)  # we plot the platform
@@ -1111,7 +1115,7 @@ class mainClass:
 
 
 
-        aFileName = "heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
+        aFileName = "heatmaps/heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
         aTitle = fileDirectory
 
         try:
