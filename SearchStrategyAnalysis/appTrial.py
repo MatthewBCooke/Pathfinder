@@ -84,11 +84,14 @@ class Experiment(object):
     def setHasTrialNames(self, hasTrialNames):
         self.hasTrialNames = hasTrialNames
 
+    def append(self, atrial):
+        self.trialList.append(atrial)
+
     def __str__(self):
         return self.name
 
-    def append(self, atrial):
-        self.trialList.append(atrial)
+    def __len__(self):
+        return len(self.trialList)
 
     def __iter__(self):
         return iter(self.trialList)

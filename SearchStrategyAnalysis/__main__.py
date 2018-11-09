@@ -1084,11 +1084,10 @@ class mainClass:
         logging.debug("Heatmap Called")
         theStatus.set("Generating Heatmap...")
         self.updateTasks()
-
         n = 0
+        i = 0
         x = []
         y = []
-        i = 0
         xMin = 0.0
         yMin = 0.0
         xMax = 0.0
@@ -1096,7 +1095,6 @@ class mainClass:
 
         for aTrial in experiment:  # for all the files we find
             theStatus.set("Running " + theFile)
-            i = 0.0
             for row in aTrial:
                 # Create data
                 if row.x == "-" or row.y == "-":
@@ -1113,7 +1111,16 @@ class mainClass:
                 if row.y > yMax:
                     yMax = row.y
 
+        # x = np.zeros(math.ceil(xMax-xMin+1))
+        # y = np.zeros(math.ceil(yMax-yMin+1))
 
+        # for aTrial in experiment:  # for all the files we find
+        #     for row in aTrial:
+        #         # Create data
+        #         if row.x == "-" or row.y == "-":
+        #             continue
+        #         x[math.floor(row.x)] += 1/len(experiment)
+        #         y[math.floor(row.y)] += 1/len(experiment)
 
         aFileName = "heatmaps/heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
         aTitle = fileDirectory
