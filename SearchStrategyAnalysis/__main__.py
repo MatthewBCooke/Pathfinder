@@ -71,16 +71,16 @@ poolDiamVar = "Auto"  # 180.0
 corridorWidthVar = "40"
 poolCentreVar = "Auto"  # 14.43,-4.409
 oldPlatformPosVar = ""
-chainingRadiusVar = "40.0"
+chainingRadiusVar = "30"
 thigmotaxisZoneSizeVar = "20"
 outputFile = csvfilename
 fileFlag = 0
 
 snyderParams = Parameters(name="snyder", cseMaxVal=75, headingMaxVal=25, distanceToSwimMaxVal=0.40,
-                          distanceToPlatMaxVal=0.45, corridorAverageMinVal=0.45, corridorCseMaxVal=1000,
-                          annulusCounterMaxVal=0.7, quadrantTotalMaxVal=4, percentTraversedMaxVal=35,
+                          distanceToPlatMaxVal=0.5, corridorAverageMinVal=0.75, corridorCseMaxVal=750,
+                          annulusCounterMaxVal=0.85, quadrantTotalMaxVal=4, percentTraversedMaxVal=30,
                           percentTraversedMinVal=10, distanceToCentreMaxVal=0.6, innerWallMaxVal=0.65,
-                          outerWallMaxVal=0.2, cseIndirectMaxVal=170, percentTraversedRandomMaxVal=35)
+                          outerWallMaxVal=0.2, cseIndirectMaxVal=150, percentTraversedRandomMaxVal=30)
 
 ruedigerParams = Parameters(name="ruediger", cseMaxVal=30, headingMaxVal=35, distanceToSwimMaxVal=0.45,
                             distanceToPlatMaxVal=0.5, corridorAverageMinVal=0.8, corridorCseMaxVal=999999999,
@@ -1476,23 +1476,23 @@ class mainClass:
             arrayX.append(aX)
             arrayY.append(aY)
             # Average Distance
-            currentDistanceFromPlatform = math.sqrt((platformX - aX) ** 2 + (platformY - aY) ** 2)
+            currentDistanceFromPlatform = math.sqrt((platformX - aX) ** 2 + (platformY - aY) ** 2)*scalingFactor
 
             #print(currentDistanceFromPlatform)
 
             if usePerseveranceV:
-                distanceToOldPlatform = math.sqrt((oldPlatformX - aX) ** 2 + (oldPlatformY - aY) ** 2)
+                distanceToOldPlatform = math.sqrt((oldPlatformX - aX) ** 2 + (oldPlatformY - aY) ** 2)*scalingFactor
                 totalDistanceToOldPlatform += distanceToOldPlatform
 
             # in zones
-            distanceCenterToPlatform = math.sqrt((poolCentreX - platformX) ** 2 + (poolCentreY - platformY) ** 2)
+            distanceCenterToPlatform = math.sqrt((poolCentreX - platformX) ** 2 + (poolCentreY - platformY) ** 2)*scalingFactor
             annulusZoneInner = distanceCenterToPlatform - (chainingRadius / 2)
             annulusZoneOuter = distanceCenterToPlatform + (chainingRadius / 2)
-            distanceToCenterOfPool = math.sqrt((poolCentreX - aX) ** 2 + (poolCentreY - aY) ** 2)
+            distanceToCenterOfPool = math.sqrt((poolCentreX - aX) ** 2 + (poolCentreY - aY) ** 2)*scalingFactor
             totalDistanceToCenterOfPool += distanceToCenterOfPool
-            distanceFromStartToPlatform = math.sqrt((platformX - startX) ** 2 + (platformY - startY) ** 2)
+            distanceFromStartToPlatform = math.sqrt((platformX - startX) ** 2 + (platformY - startY) ** 2)*scalingFactor
 
-            distance = math.sqrt(abs(oldX - aX) ** 2 + abs(oldY - aY) ** 2)
+            distance = math.sqrt(abs(oldX - aX) ** 2 + abs(oldY - aY) ** 2)*scalingFactor
             distanceFromPlatformSummed += currentDistanceFromPlatform
             totalDistance += distance
             oldX = aX
@@ -1549,9 +1549,9 @@ class mainClass:
         corridorWidth = 0.0
         totalHeadingError = 0.0
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
-            distanceToSwimPathCentroid = math.sqrt((xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2)
+            distanceToSwimPathCentroid = math.sqrt((xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2)*scalingFactor
             totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
-            distanceFromStartToCurrent = math.sqrt((aDatapoint.getx() - startX) **2 + (aDatapoint.gety() - startY)**2)
+            distanceFromStartToCurrent = math.sqrt((aDatapoint.getx() - startX) **2 + (aDatapoint.gety() - startY)**2)*scalingFactor
 
             if oldItemX!=0 and aDatapoint.getx() - oldItemX != 0 and aDatapoint.getx() - startX != 0:
                 currentArcTangent = math.degrees(math.atan((aDatapoint.gety() - startY) / (aDatapoint.getx() - startX)))
@@ -1699,9 +1699,8 @@ class mainClass:
             softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
 
         poolCentreX, poolCentreY, platformX, platformY, poolDiamVar, poolRadius, platEstDiam = self.getAutoLocations(aExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, software)
-        scalingFactor = float(poolDiamVar) / 180.0  # set scaling factor for different pool sizes
         if scale:
-            scalingFactor = scalingFactor * softwareScalingFactorVar
+            scalingFactor = softwareScalingFactorVar
         else:
             scalingFactor = 1.0
 
