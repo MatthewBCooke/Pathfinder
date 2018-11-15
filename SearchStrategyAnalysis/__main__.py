@@ -44,8 +44,6 @@ if _platform == "darwin":
 import matplotlib.pyplot as plt
 from matplotlib import cm as CM
 
-
-
 __author__ = "Matthew Cooke"
 __copyright__ = "Copyright 2018, Jason Snyder Lab, The University of British Columbia"
 __credits__ = ["Matthew Cooke", "Tim O'Leary", "Phelan Harris"]
@@ -72,15 +70,15 @@ corridorWidthVar = "40"
 poolCentreVar = "Auto"  # 14.43,-4.409
 oldPlatformPosVar = ""
 chainingRadiusVar = "30"
-thigmotaxisZoneSizeVar = "20"
+thigmotaxisZoneSizeVar = "15"
 outputFile = csvfilename
 fileFlag = 0
 
-snyderParams = Parameters(name="snyder", cseMaxVal=75, headingMaxVal=25, distanceToSwimMaxVal=0.40,
-                          distanceToPlatMaxVal=0.5, corridorAverageMinVal=0.75, corridorCseMaxVal=750,
-                          annulusCounterMaxVal=0.85, quadrantTotalMaxVal=4, percentTraversedMaxVal=30,
+snyderParams = Parameters(name="snyder", cseMaxVal=75, headingMaxVal=35, distanceToSwimMaxVal=0.4,
+                          distanceToPlatMaxVal=0.45, corridorAverageMinVal=0.7, corridorCseMaxVal=1000,
+                          annulusCounterMaxVal=0.85, quadrantTotalMaxVal=4, percentTraversedMaxVal=35,
                           percentTraversedMinVal=10, distanceToCentreMaxVal=0.6, innerWallMaxVal=0.65,
-                          outerWallMaxVal=0.2, cseIndirectMaxVal=150, percentTraversedRandomMaxVal=30)
+                          outerWallMaxVal=0.35, cseIndirectMaxVal=170, percentTraversedRandomMaxVal=35)
 
 ruedigerParams = Parameters(name="ruediger", cseMaxVal=30, headingMaxVal=35, distanceToSwimMaxVal=0.45,
                             distanceToPlatMaxVal=0.5, corridorAverageMinVal=0.8, corridorCseMaxVal=999999999,
@@ -154,8 +152,8 @@ useManual.set(False)
 useManualForAll = BooleanVar()
 useManualForAll.set(False)
 useScaling = BooleanVar()
-useScaling.set(True)
-scale = True
+useScaling.set(False)
+scale = False
 
 def show_error(text):  # popup box with error text
     logging.debug("Displaying Error")
@@ -377,11 +375,11 @@ class mainClass:
         self.thigmotaxisZoneSize.bind("<Leave>", self.on_leave)
 
 
-        self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm (for Anymaze and Watermaze):", bg="white")
+        self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm (for scaling):", bg="white")
         self.softwareScalingFactor.grid(row=7, column=0, sticky=E)
         self.softwareScalingFactorE = Entry(self.paramFrame, textvariable=softwareScalingFactorStringVar)
         self.softwareScalingFactorE.grid(row=7, column=1)
-        self.softwareScalingFactor.bind("<Enter>", partial(self.on_enter, "This is used to convert Anymaze and Watermaze from Pixels to cm"))
+        self.softwareScalingFactor.bind("<Enter>", partial(self.on_enter, "This is used to convert from Pixels to cm"))
         self.softwareScalingFactor.bind("<Leave>", self.on_leave)
 
 
@@ -945,7 +943,7 @@ class mainClass:
                     filename = os.path.join(root, basename)
                     yield filename
 
-    def plotPoints(self, x, y, poolDiam, centreX, centreY, platX, platY, scalingFactor, name, platEstDiam):  # function to graph the data for the not recognized trials
+    def plotPoints(self, x, y, poolDiam, centreX, centreY, platX, platY, scalingFactor, name, title, platEstDiam):  # function to graph the data for the not recognized trials
         wallsX = []
         wallsY = []
         platWallsX = []
@@ -964,7 +962,7 @@ class mainClass:
         plt.scatter(platWallsX, platWallsY, s=1, c='black', alpha=1.0)  # we plot the platform
         plt.scatter(centreX, centreY, s=100, c='g', alpha=1.0)  # we plot the centre
         plt.scatter(wallsX, wallsY, s=15, c='black', alpha=0.3)
-        plt.title(name)  # add the title
+        plt.title(title)  # add the title
         plt.xlim(centreX-poolDiam/2-15, centreX+poolDiam/2+15)  # set the size to be the center + radius + 30
         plt.ylim(centreY-poolDiam/2-15, centreY+poolDiam/2+15)
 
@@ -1194,6 +1192,20 @@ class mainClass:
             logging.info("CSV display destroyed")
         except:
             logging.debug("Couldn't remove CSV display")
+
+    def unit_vector(self, vector):
+        """ Returns the unit vector of the vector.  """
+        if np.linalg.norm(vector) == 0:
+            return (0,0)
+        try:
+           return vector / np.linalg.norm(vector)
+        except:
+            return (0,0)
+
+    def angle_between(self, v1, v2):
+        v1_u = self.unit_vector(v1)
+        v2_u = self.unit_vector(v2)
+        return np.degrees(np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
 
     def getAutoLocations(self, theExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, software):
         platEstX = 0.0
@@ -1431,7 +1443,7 @@ class mainClass:
         innerWallCounter = 0.0
         outerWallCounter = 0.0
         annulusCounter = 0.0
-
+        currentHeadingError = 0.0
         distanceToSwimPathCentroid = 0.0
         totalDistanceToSwimPathCentroid = 0.0
         averageDistanceToSwimPathCentroid = 0.0
@@ -1543,6 +1555,13 @@ class mainClass:
         yAv = ySummed / i
         swimPathCentroid = (xAv, yAv)
 
+
+        startPoint = np.array([startX,startY])
+        platformPoint = np.array([platformX,platformY])
+
+        startToPlatVector = platformPoint-startPoint
+
+
         aArcTangent = math.degrees(math.atan((platformY - startY) / (platformX - startX)))
         upperCorridor = aArcTangent + corridorWidth
         lowerCorridor = aArcTangent - corridorWidth
@@ -1554,16 +1573,19 @@ class mainClass:
             distanceFromStartToCurrent = math.sqrt((aDatapoint.getx() - startX) **2 + (aDatapoint.gety() - startY)**2)*scalingFactor
 
             if oldItemX!=0 and aDatapoint.getx() - oldItemX != 0 and aDatapoint.getx() - startX != 0:
-                currentArcTangent = math.degrees(math.atan((aDatapoint.gety() - startY) / (aDatapoint.getx() - startX)))
+                currentToPlat = np.subtract(np.array([platformX, platformY]),np.array([aDatapoint.getx(), aDatapoint.gety()]))
+                oldToCurrent = np.subtract(np.array([aDatapoint.getx(), aDatapoint.gety()]),np.array([oldItemX,oldItemY]))
+                currentHeadingError = abs(self.angle_between(currentToPlat,oldToCurrent))
+                withinCorridor = math.degrees(math.atan((aDatapoint.gety() - startY) / (aDatapoint.getx() - startX)))
                 corridorWidth = abs(
                     aArcTangent - abs(math.degrees(math.atan((aDatapoint.gety() - oldItemY) / (aDatapoint.getx() - oldItemX)))))
-                if float(lowerCorridor) <= float(currentArcTangent) <= float(upperCorridor):
+                if float(lowerCorridor) <= float(withinCorridor) <= float(upperCorridor):
                     corridorCounter += 1.0
 
 
             oldItemX = aDatapoint.getx()
             oldItemY = aDatapoint.gety()
-            totalHeadingError += corridorWidth # check this?
+            totalHeadingError += currentHeadingError
         # </editor-fold>
         # <editor-fold desc="Take Averages">
         corridorAverage = corridorCounter / i
@@ -1856,8 +1878,8 @@ class mainClass:
                     print(dayNum, trialNum, aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
                     #print("CSE: ", cse, " Distance to centroid: ", averageDistanceToSwimPathCentroid, " Distance to plat: ", distanceAverage)
                     self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
-                                float(platformX), float(platformY), float(scalingFactor),
-                                str(strategyType), float(platEstDiam))  # ask user for answer
+                                float(platformX), float(platformY), float(scalingFactor), str(strategyType),
+                                    ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(trialNum[animal])), float(platEstDiam))  # ask user for answer
                     root.wait_window(self.top2)  # we wait until the user responds
                     strategyType = searchStrategyV  # update the strategyType to that of the user
                     try:  # try and kill the popup window
@@ -1874,8 +1896,8 @@ class mainClass:
                 print("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage")
                 print(dayNum, trialNum[animal], aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
                 self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
-                                float(platformX), float(platformY), float(scalingFactor),
-                                str(strategyType), float(platEstDiam))  # ask user for answer
+                                float(platformX), float(platformY), float(scalingFactor), str(strategyType),
+                                ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(trialNum[animal])), float(platEstDiam))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
             
