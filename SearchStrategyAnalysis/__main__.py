@@ -58,6 +58,7 @@ csvfilename = "results " + str(
 theFile = ""
 fileDirectory = ""
 platformPosVar = "Auto"  # -21,31
+platformDiamVar = "Auto"
 poolDiamVar = "Auto"  # 180.0
 corridorWidthVar = "40"
 poolCentreVar = "Auto"  # 14.43,-4.409
@@ -120,6 +121,8 @@ theStatus = StringVar()  # create the status bar text
 theStatus.set('Waiting for user input...')  # set status bar text
 platformPosStringVar = StringVar()  # setup all the gui variables (different from normal variables)
 platformPosStringVar.set(platformPosVar)
+platformDiamStringVar = StringVar()
+platformDiamStringVar.set(platformDiamVar)
 poolDiamStringVar = StringVar()
 poolDiamStringVar.set(poolDiamVar)
 corridorWidthStringVar = StringVar()
@@ -172,6 +175,7 @@ class mainClass:
         root.wm_title("Search-O-Matic 2000")
 
         global platformPosVar
+        global platformDiamVar
         global poolDiamVar
         global corridorWidthVar
         global poolCentreVar
@@ -303,8 +307,9 @@ class mainClass:
 
         try:
             with open('mainobjs.pickle', 'rb') as f:
-                platformPosVar, poolDiamVar, poolCentreVar, oldPlatformPosVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar = pickle.load(f)
+                platformPosVar, platformDiamVar, poolDiamVar, poolCentreVar, oldPlatformPosVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar = pickle.load(f)
                 platformPosStringVar.set(platformPosVar)
+                platformDiamStringVar.set(platformDiamVar)
                 poolDiamStringVar.set(poolDiamVar)
                 poolCentreStringVar.set(poolCentreVar)
                 oldPlatformPosStringVar.set(oldPlatformPosVar)
@@ -323,63 +328,70 @@ class mainClass:
         self.platformPos.bind("<Enter>", partial(self.on_enter, "Platform position. Example: 2.5,-3.72 or Auto"))
         self.platformPos.bind("<Leave>", self.on_leave)
 
+        self.platformDiam = Label(self.paramFrame, text="Platform Diameter (cm):", bg="white")
+        self.platformDiam.grid(row=1, column=0, sticky=E)
+        self.platformDiamE = Entry(self.paramFrame, textvariable=platformDiamStringVar)
+        self.platformDiamE.grid(row=1, column=1)
+        self.platformDiam.bind("<Enter>", partial(self.on_enter, "Platform diameter. Use the same unit as the data"))
+        self.platformDiam.bind("<Leave>", self.on_leave)
+
         self.poolDiam = Label(self.paramFrame, text="Pool Diameter (cm):", bg="white")
-        self.poolDiam.grid(row=1, column=0, sticky=E)
+        self.poolDiam.grid(row=2, column=0, sticky=E)
         self.poolDiamE = Entry(self.paramFrame, textvariable=poolDiamStringVar)
-        self.poolDiamE.grid(row=1, column=1)
+        self.poolDiamE.grid(row=2, column=1)
         self.poolDiam.bind("<Enter>", partial(self.on_enter, "The diameter of the MWM. Use the same unit as the data"))
         self.poolDiam.bind("<Leave>", self.on_leave)
 
         self.poolCentre = Label(self.paramFrame, text="Pool Centre (x,y):", bg="white")
-        self.poolCentre.grid(row=2, column=0, sticky=E)
+        self.poolCentre.grid(row=3, column=0, sticky=E)
         self.poolCentreE = Entry(self.paramFrame, textvariable=poolCentreStringVar)
-        self.poolCentreE.grid(row=2, column=1)
+        self.poolCentreE.grid(row=3, column=1)
         self.poolCentre.bind("<Enter>", partial(self.on_enter, "Pool Centre. Example: 0.0,0.0 or Auto"))
         self.poolCentre.bind("<Leave>", self.on_leave)
 
         self.oldPlatformPos = Label(self.paramFrame, text="Old Platform Position (x,y):", bg="white")
-        self.oldPlatformPos.grid(row=3, column=0, sticky=E)
+        self.oldPlatformPos.grid(row=4, column=0, sticky=E)
         self.oldPlatformPosE = Entry(self.paramFrame, textvariable=oldPlatformPosStringVar)
-        self.oldPlatformPosE.grid(row=3, column=1)
+        self.oldPlatformPosE.grid(row=4, column=1)
         self.oldPlatformPos.bind("<Enter>", partial(self.on_enter, "Used only if you want to calculate a perseverance measure"))
         self.oldPlatformPos.bind("<Leave>", self.on_leave)
 
         self.headingError = Label(self.paramFrame, text="Corridor Width (degrees):", bg="white")
-        self.headingError.grid(row=4, column=0, sticky=E)
+        self.headingError.grid(row=5, column=0, sticky=E)
         self.headingErrorE = Entry(self.paramFrame, textvariable=corridorWidthStringVar)
-        self.headingErrorE.grid(row=4, column=1)
+        self.headingErrorE.grid(row=5, column=1)
         self.headingError.bind("<Enter>", partial(self.on_enter, "This is an angular corridor (in degrees) in which the animal must face"))
         self.headingError.bind("<Leave>", self.on_leave)
 
 
         self.chainingRadius = Label(self.paramFrame, text="Chaining Width (cm):", bg="white")
-        self.chainingRadius.grid(row=5, column=0, sticky=E)
+        self.chainingRadius.grid(row=6, column=0, sticky=E)
         self.chainingRadiusE = Entry(self.paramFrame, textvariable=chainingRadiusStringVar)
-        self.chainingRadiusE.grid(row=5, column=1)
+        self.chainingRadiusE.grid(row=6, column=1)
         self.chainingRadius.bind("<Enter>", partial(self.on_enter, "The diameter of the ring in which chaining is considered (centered on platform)"))
         self.chainingRadius.bind("<Leave>", self.on_leave)
 
 
         self.thigmotaxisZoneSize = Label(self.paramFrame, text="Thigmotaxis Zone Size (cm):", bg="white")
-        self.thigmotaxisZoneSize.grid(row=6, column=0, sticky=E)
+        self.thigmotaxisZoneSize.grid(row=7, column=0, sticky=E)
         self.thigmotaxisZoneSizeE = Entry(self.paramFrame, textvariable=thigmotaxisZoneSizeStringVar)
-        self.thigmotaxisZoneSizeE.grid(row=6, column=1)
+        self.thigmotaxisZoneSizeE.grid(row=7, column=1)
         self.thigmotaxisZoneSize.bind("<Enter>", partial(self.on_enter, "Size of the zone in which thigmotaxis is considered (from the outer wall)"))
         self.thigmotaxisZoneSize.bind("<Leave>", self.on_leave)
 
 
         self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm (for Anymaze and Watermaze):", bg="white")
-        self.softwareScalingFactor.grid(row=7, column=0, sticky=E)
+        self.softwareScalingFactor.grid(row=8, column=0, sticky=E)
         self.softwareScalingFactorE = Entry(self.paramFrame, textvariable=softwareScalingFactorStringVar)
-        self.softwareScalingFactorE.grid(row=7, column=1)
+        self.softwareScalingFactorE.grid(row=8, column=1)
         self.softwareScalingFactor.bind("<Enter>", partial(self.on_enter, "This is used to convert Anymaze and Watermaze from Pixels to cm"))
         self.softwareScalingFactor.bind("<Leave>", self.on_leave)
 
 
         self.saveDirectory = Label(self.paramFrame, text="Output File (.csv):", bg="white")
-        self.saveDirectory.grid(row=8, column=0, sticky=E)
+        self.saveDirectory.grid(row=9, column=0, sticky=E)
         self.saveDirectoryE = Entry(self.paramFrame, textvariable=outputFileStringVar)
-        self.saveDirectoryE.grid(row=8, column=1)
+        self.saveDirectoryE.grid(row=9, column=1)
         self.saveDirectory.bind("<Enter>", partial(self.on_enter, "The csv file to store the results"))
         self.saveDirectory.bind("<Leave>", self.on_leave)
 
@@ -1104,13 +1116,14 @@ class mainClass:
         maxLengthOfTrial = 50.0
         centreFlag = False
         platFlag = False
+        platDiamFlag = False
         diamFlag = False
-        logginText = ""
+        autoParams = []
+
         if platformPosVar != "Auto" and platformPosVar != "auto" and platformPosVar != "automatic" and platformPosVar != "Automatic" and platformPosVar != "":  # if we want manual platform
             platformX, platformY = platformPosVar.split(",")
             platformX = float(platformX)
             platformY = float(platformY)
-            platEstDiam = 12.0
             logging.debug("Platform position set manually: "+str(platformPosVar))
         elif fileFlag == 1 and software != "watermaze":  # if we only chose 1 trial
             logging.error("Cannot get platform position from single trial")
@@ -1122,6 +1135,22 @@ class mainClass:
             return
         else:  # automatic platform calculation
             platFlag = True
+            autoParams.append("platform position")
+
+        if platformDiam != "Auto" and platformDiam != "auto" and platformDiam != "automatic" and platformDiam != "Automatic" and platformDiam != "":  # if we want manual platform diameter
+            platEstDiam = platformDiamVar
+        elif fileFlag == 1 and software != "watermaze":  # if we only chose 1 trial
+            logging.error("Cannot get platform position from single trial")
+            self.killBar()
+            theStatus.set('Waiting for user input...')
+            self.updateTasks()
+            messagebox.showwarning('File Error',
+                                   'You must enter values for a single trial')
+            return
+        else:
+            platDiamFlag = True
+            autoParams.append("platform diameter")
+
 
         if poolCentreVar != "Auto" and poolCentreVar != "auto" and poolCentreVar != "automatic" and poolCentreVar != "Automatic" and poolCentreVar != "":  # manual pool center
             poolCentreX, poolCentreY = poolCentreVar.split(",")
@@ -1138,6 +1167,7 @@ class mainClass:
             return
         else:  # automatic pool centre
             centreFlag = True
+            autoParams.append("centre position")
 
         if poolDiamVar != "Auto" and poolDiamVar != "auto" and poolDiamVar != "automatic" and poolDiamVar != "Automatic" and poolDiamVar != "":  # manual diameter
             poolRadius = float(poolDiamVar) / 2.0
@@ -1152,30 +1182,11 @@ class mainClass:
             return
         else:  # automatic diameter
             diamFlag = True
+            autoParams.append("pool diameter")
 
-        if platFlag == True or centreFlag == True or diamFlag == True:  # update the status bar depending on choice
-
-            if platFlag == True and diamFlag == False:
-                theStatus.set('Getting platform position...')
-                loggingText = "Getting platform position"
-                if centreFlag == True:
-                    loggingText = "Getting platform and pool centre positions"
-                    theStatus.set('Getting platform and pool centre positions...')
-            elif platFlag == True and diamFlag == True:
-                theStatus.set('Getting platform position and pool diameter...')
-                loggingText = "Getting platform position and pool diameter"
-                if centreFlag == True:
-                    loggingText = "Getting platform and pool centre positions and pool diameter"
-                    theStatus.set('Getting platform and pool centre positions and pool diameter...')
-            elif centreFlag == True and diamFlag == True:
-                loggingText = "Getting pool centre position and pool diameter"
-                theStatus.set("Getting pool centre position and pool diameter")
-            elif diamFlag == True and platFlag == False:
-                theStatus.set('Getting pool diameter...')
-                loggingText = "Getting pool diameter"
-            else:
-                loggingText = "Getting pool centre position"
-                theStatus.set('Getting pool centre position...')
+        if len(autoParams) > 0:  # update the status bar depending on choice
+            loggingText = "Getting " + " and ".join(autoParams)
+            theStatus.set(loggingText + "...")
             logging.debug(loggingText)
             self.updateTasks()
 
@@ -1266,8 +1277,9 @@ class mainClass:
             platEstY = platEstY / count
             platformX = platEstX
             platformY = platEstY
-            platEstDiam = ((platMaxX-platMinX) + (platMaxY-platMinY))/2
             logging.info("Automatic platform position calculated as: " + str(platEstX) + ", " + str(platEstY))
+        if platDiamFlag:
+            platEstDiam = ((platMaxX-platMinX) + (platMaxY-platMinY))/2
             logging.info("Automatic platform diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
         if diamFlag:  # automatic diameter
             poolDiamEst = ((abs(absMaxX) + abs(absMinX)) + (abs(absMaxY) + abs(absMinY))) / 2
@@ -1567,6 +1579,7 @@ class mainClass:
         theStatus.set("Initializing")
 
         platformPosVar = platformPosStringVar.get()
+        platformDiamVar = platformDiamStringVar.get()
         poolDiamVar = poolDiamStringVar.get()
         poolCentreVar = poolCentreStringVar.get()
         oldPlatformPosVar = oldPlatformPosStringVar.get()
@@ -1577,7 +1590,7 @@ class mainClass:
 
         try:
             with open('mainobjs.pickle', 'wb') as f:
-                pickle.dump([platformPosVar, poolDiamVar, poolCentreVar, oldPlatformPosVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar], f)
+                pickle.dump([platformPosVar, platformDiamVar, poolDiamVar, poolCentreVar, oldPlatformPosVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar], f)
         except:
             pass
 
