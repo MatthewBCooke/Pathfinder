@@ -1137,7 +1137,7 @@ class mainClass:
             platFlag = True
             autoParams.append("platform position")
 
-        if platformDiam != "Auto" and platformDiam != "auto" and platformDiam != "automatic" and platformDiam != "Automatic" and platformDiam != "":  # if we want manual platform diameter
+        if platformDiamVar != "Auto" and platformDiamVar != "auto" and platformDiamVar != "automatic" and platformDiamVar != "Automatic" and platformDiamVar != "":  # if we want manual platform diameter
             platEstDiam = platformDiamVar
         elif fileFlag == 1 and software != "watermaze":  # if we only chose 1 trial
             logging.error("Cannot get platform position from single trial")
