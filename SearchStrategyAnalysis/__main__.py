@@ -25,6 +25,7 @@ import datetime
 import scipy.ndimage as sp
 from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
 import heatmap
+from scipy.stats import norm
 
 
 if sys.version_info<(3,0,0):  # tkinter names for python 2
@@ -64,10 +65,10 @@ csvfilename = "results/results " + str(
     strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".csv"  # name of the default results file
 theFile = ""
 fileDirectory = ""
-platformPosVar = "Auto"  # -21,31
-poolDiamVar = "Auto"  # 180.0
+platformPosVar = "Auto"
+poolDiamVar = "Auto"
 corridorWidthVar = "40"
-poolCentreVar = "Auto"  # 14.43,-4.409
+poolCentreVar = "Auto"
 oldPlatformPosVar = ""
 chainingRadiusVar = "30"
 thigmotaxisZoneSizeVar = "15"
@@ -75,7 +76,7 @@ outputFile = csvfilename
 fileFlag = 0
 
 snyderParams = Parameters(name="snyder", cseMaxVal=75, headingMaxVal=35, distanceToSwimMaxVal=0.4,
-                          distanceToPlatMaxVal=0.45, corridorAverageMinVal=0.7, corridorCseMaxVal=1000,
+                          distanceToPlatMaxVal=0.45, corridorAverageMinVal=0.65, corridorCseMaxVal=1500,
                           annulusCounterMaxVal=0.85, quadrantTotalMaxVal=4, percentTraversedMaxVal=35,
                           percentTraversedMinVal=10, distanceToCentreMaxVal=0.6, innerWallMaxVal=0.65,
                           outerWallMaxVal=0.35, cseIndirectMaxVal=170, percentTraversedRandomMaxVal=35)
@@ -450,7 +451,7 @@ class mainClass:
         global fileFlag
         fileFlag = 1
         fileDirectory = ""
-        theFile = filedialog.askopenfilename(filetypes = (("Excel Files","*.xlsx;*.xls"),("CSV Files","*.csv")))  # look for xlsx and xls files
+        theFile = filedialog.askopenfilename(filetypes = (("Excel Files","*.xlsx"),("CSV Files","*.csv")))  # look for xlsx and xls files
 
     def openDir(self):  # open dialog to get multiple files
         logging.debug("Open Dir...")
@@ -1122,7 +1123,13 @@ class mainClass:
 
         aFileName = "heatmaps/heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
         aTitle = fileDirectory
-
+        """
+        mu = 0
+        variance = 0.01
+        sigma = math.sqrt(variance)
+        x = np.random.normal(mu,sigma,50000)
+        y = np.random.normal(mu,sigma,50000)
+        """
         try:
             gridSize = int(math.floor(float(gridSizeStringVar.get())))
         except:
@@ -1567,6 +1574,8 @@ class mainClass:
         lowerCorridor = aArcTangent - corridorWidth
         corridorWidth = 0.0
         totalHeadingError = 0.0
+        initialHeadingError = 0.0
+        initialHeadingErrorCount = 0
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
             distanceToSwimPathCentroid = math.sqrt((xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2)*scalingFactor
             totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
@@ -1581,7 +1590,9 @@ class mainClass:
                     aArcTangent - abs(math.degrees(math.atan((aDatapoint.gety() - oldItemY) / (aDatapoint.getx() - oldItemX)))))
                 if float(lowerCorridor) <= float(withinCorridor) <= float(upperCorridor):
                     corridorCounter += 1.0
-
+            if(aDatapoint.gettime() < 1.0):
+                initialHeadingError += currentHeadingError
+                initialHeadingErrorCount += 1
 
             oldItemX = aDatapoint.getx()
             oldItemY = aDatapoint.gety()
@@ -1594,6 +1605,7 @@ class mainClass:
         averageDistanceToOldPlatform = totalDistanceToOldPlatform / i
         averageDistanceToCentre = totalDistanceToCenterOfPool / i
         averageHeadingError = totalHeadingError / i
+        averageInitialHeadingError = initialHeadingError/initialHeadingErrorCount
 
         cellCounter = 0.0  # initialize our cell counter
 
@@ -1625,7 +1637,7 @@ class mainClass:
             if(idealCumulativeDistance > 10000):
                 break
         cse = float(distanceFromPlatformSummed - idealCumulativeDistance)*sampleRate
-        return corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, mainLatency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, cse
+        return corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, mainLatency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, cse, averageInitialHeadingError
 
     def mainCalculate(self):
         global softwareStringVar
@@ -1755,7 +1767,7 @@ class mainClass:
         if aExperiment.hasAnimalNames:
             headersToWrite.append("Animal")
 
-        headersToWrite.extend(["Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage"])
+        headersToWrite.extend(["Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage", "score", "initial heading error"])
         writer.writerow(headersToWrite) # write to the csv
 
         dayNum = 0
@@ -1816,9 +1828,9 @@ class mainClass:
             quadrantFour = 0
             quadrantTotal = 0
             # </editor-fold>
-
+            score = 0
             # Analyze the data ----------------------------------------------------------------------------------------------
-            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, cse = self.calculateValues(
+            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, cse, initialHeadingError = self.calculateValues(
                 aTrial, platformX, platformY, poolCentreX,
                 poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
                 biggerWallZone, scalingFactor, poolRadius)
@@ -1827,23 +1839,28 @@ class mainClass:
             # DIRECT SWIM
             if cse <= cseMaxVal and averageHeadingError <= headingMaxVal and isRuediger == False and useDirectSwimV:  # direct swim
                 directSwimCount += 1.0
+                score = 3
                 strategyType = "Direct Swim"
             elif isRuediger == True and corridorAverage >= 0.98 and useDirectSwimV:
                 directSwimCount += 1.0
+                score = 3
                 strategyType = "Direct Swim"
             # FOCAL SEARCH
             elif averageDistanceToSwimPathCentroid < (
                     poolRadius * distanceToSwimMaxVal) and distanceAverage < (
                     distanceToPlatMaxVal * poolRadius) and useFocalSearchV:  # Focal Search
                 focalSearchCount += 1.0
+                score = 2
                 strategyType = "Focal Search"
             # DIRECTED SEARCH
             elif corridorAverage >= corridorAverageMinVal and cse <= corridorCseMaxVal and useDirectedSearchV:  # directed search
                 directSearchCount += 1.0
+                score = 2
                 strategyType = "Directed Search"
             # spatial INDIRECT
             elif cse < cseIndirectMaxVal and useIndirectV:  # Near miss
                 strategyType = "Spatial Indirect"
+                score = 2
                 spatialIndirectCount += 1.0
             # PERSEVERANCE
             elif averageDistanceToSwimPathCentroid < (
@@ -1855,19 +1872,23 @@ class mainClass:
             elif float(
                     annulusCounter / i) > annulusCounterMaxVal and quadrantTotal >= quadrantTotalMaxVal and useChainingV:  # or 4 chaining
                 chainingCount += 1.0
+                score = 1
                 strategyType = "Chaining"
             # SCANNING
             elif percentTraversedMinVal <= percentTraversed >= percentTraversedMaxVal and averageDistanceToCentre <= (
                     distanceToCentreMaxVal * poolRadius) and useScanningV:  # scanning
                 scanningCount += 1.0
+                score = 1
                 strategyType = "Scanning"
             # THIGMOTAXIS
             elif innerWallCounter >= innerWallMaxVal * i and outerWallCounter >= i * outerWallMaxVal and useThigmoV:  # thigmotaxis
                 thigmotaxisCount += 1.0
+                score = 0
                 strategyType = "Thigmotaxis"
             # RANDOM SEARCH
             elif percentTraversed >= percentTraversedRandomMaxVal and useRandomV:  # random search
                 randomCount += 1.0
+                score = 0
                 strategyType = "Random Search"
             # NOT RECOGNIZED
             else:  # cannot categorize
@@ -1915,7 +1936,7 @@ class mainClass:
             if aExperiment.hasAnimalNames:
                 dataToWrite.append(aTrial.animal)
 
-            dataToWrite.extend([strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2)])
+            dataToWrite.extend([strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2), score, initialHeadingError])
             writer.writerow(dataToWrite)  # writing to csv file
 
             f.flush()
