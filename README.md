@@ -1,4 +1,4 @@
-# Jason Snyder Lab
+# Pathfinder
 
 Jason Snyder Lab Watermaze Search strategy and entropy analysis.
 Created by **Matthew Cooke** at **The University of British Columbia**, **Jason Snyder Lab**
