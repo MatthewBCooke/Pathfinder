@@ -5,11 +5,11 @@ Created by **Matthew Cooke** at **The University of British Columbia**, **Jason 
 
 ## Synopsis
 
-The jslssa package (Jason Snyder Lab Search Strategy Analysis) is a animal search strategy analysis tool for the Morris Water Maze. The program analyses X-Y coordinate data exported from tracking software (currently only supports Ethovision). We then calculate the best-fit search strategy for the trial. We analyse the data and fit it into one of 9 search strategies: Direct Swim, Directed Search, Focal Search, Spatial indirect, Chaining, Scanning, Thigmotaxis, and Random Search.
+The Pathfinder package is a animal search strategy analysis tool for the Morris Water Maze. The program analyses X-Y coordinate data exported from tracking software (currently supports Ethovision, Anymazy, WaterMaze, and ezTrack). We then calculate the best-fit search strategy for the trial. We analyse the data and fit it into one of 9 search strategies: Direct Swim, Directed Search, Focal Search, Spatial indirect, Chaining, Scanning, Thigmotaxis, and Random Search.
 
 ## Usage Example
 
-1. The program can be opened by calling `jslSearch`. See [**Installation**](https://github.com/Norton50/JSL/blob/master/README.md#installation) for install instructions.
+1. The program can be opened by calling `pathfinder`. See [**Installation**](https://github.com/MatthewBCooke/Pathfinder/blob/master/README.md#installation) for install instructions.
 
 2. This will open up the GUI window.
 
@@ -17,11 +17,11 @@ The jslssa package (Jason Snyder Lab Search Strategy Analysis) is a animal searc
 
 3. You can then select an inividual file or a directory containing files from the **File** dropdown menu. These files must be Excel files if you are using Ethovision tracking software, and CSV files if you are using Anymaze or Watermaze software. *Note: For directory selection, you must enter **into** the directory and not just highlight it for it to be selected*
 
-4. From here you can choose to either [(**A**)](https://github.com/Norton50/JSL/blob/master/README.md#a-generating-heatmaps) generate heatmaps for the chosen trials, or to [(**B**)](https://github.com/Norton50/JSL/blob/master/README.md#b-search-strategy-analysis) calculate search strategies.
+4. From here you can choose to either [(**A**)](https://github.com/MatthewBCooke/Pathfinder/blob/master/README.md#a-generating-heatmaps) generate heatmaps for the chosen trials, or to [(**B**)](https://github.com/MatthewBCooke/Pathfinder/blob/master/README.md#b-search-strategy-analysis) calculate search strategies.
 
 ### (A) Generating Heatmaps
 
-The jslssa package allows for the efficient generation of heatmaps. To do so, follow these steps.
+The Pathfinder package allows for the efficient generation of heatmaps. To do so, follow these steps.
 
 1. Click on **File** -> **Generate Heatmaps**
 
@@ -73,7 +73,7 @@ This program was developed in order to simplify as well as remove inconsistencie
 ## Installation
 
 This package is hosted on PyPi, and is therefore easy to install with PIP.
-To install simply call: `pip install jslssa`
+To install simply call: `pip install pathfinder`
 
 ## References
 
