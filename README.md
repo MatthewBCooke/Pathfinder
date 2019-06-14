@@ -45,7 +45,7 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 2. (Custom) The custom button will spawn a parameters panel
 
-![custom parameters](https://flic.kr/p/2ge857P)
+![custom parameters](https://live.staticflickr.com/65535/48062538147_b7ac36a6bd_b.jpg)
 
 3. In the custom parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. For definitions of these values see Snyder et al., 2017.
 
