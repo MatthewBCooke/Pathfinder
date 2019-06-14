@@ -13,7 +13,7 @@ The Pathfinder package is a animal search strategy analysis tool for the Morris 
 
 2. This will open up the GUI window.
 
-![Window Preview](https://flic.kr/p/2ge7DRa)
+![Window Preview](https://live.staticflickr.com/65535/48062456503_3479c0c828_b.jpg)
 
 3. You can then select an inividual file or a directory containing files from the **File** dropdown menu. These files must be Excel files if you are using Ethovision tracking software, and CSV files if you are using Anymaze or Watermaze software. *Note: For directory selection, you must enter **into** the directory and not just highlight it for it to be selected*
 
