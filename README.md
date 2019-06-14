@@ -13,7 +13,7 @@ The Pathfinder package is a animal search strategy analysis tool for the Morris 
 
 2. This will open up the GUI window.
 
-![Window Preview](https://i.gyazo.com/869e96f19fee12d94d442535607f884e.png)
+![Window Preview](https://flic.kr/p/2ge7DRa)
 
 3. You can then select an inividual file or a directory containing files from the **File** dropdown menu. These files must be Excel files if you are using Ethovision tracking software, and CSV files if you are using Anymaze or Watermaze software. *Note: For directory selection, you must enter **into** the directory and not just highlight it for it to be selected*
 
@@ -27,7 +27,7 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 2. A parameters panel will appear:
 
-![Heatmap parameters](https://i.gyazo.com/e4dfcb87078433f276d785431af3bf96.png)
+![Heatmap parameters](https://flic.kr/p/2ge81ZG)
 
 3. The parameters panel lets you tailor the output to your needs:
 
@@ -35,11 +35,9 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
     2. Maximum Value. This will allow you to change at which value the points in the heatmap will become their most saturated (dark red). Setting 'Auto' will dynamically assign the maximum value to be equal to the value of the maximum grid.
 
-    3. Dynamic Parameters. Our dynamic parameter display will appear if you are using Ethovision. This display allows you to tick the boxes of which labels you would like to consider. Example: `(X) Genotype | WT` will only calculate heatmaps from trials with WT genotype animals.
-
 4. You can then click generate, and our software will plot a heatmap of your trial data.
 
-![heatmap display](https://i.gyazo.com/38211dd9a8add907ffa6b955adf3058e.png)
+![heatmap display](https://flic.kr/p/2ge7VEZ)
 
 ### (B) Search Strategy Analysis
 
@@ -47,7 +45,7 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 2. (Custom) The custom button will spawn a parameters panel
 
-![custom parameters](https://i.gyazo.com/f7a34522b4d4bcab1bc1746c0218767b.png)
+![custom parameters](https://flic.kr/p/2ge857P)
 
 3. In the custom parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. For definitions of these values see Snyder et al., 2017.
 
@@ -57,13 +55,13 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 6. There are 3 checkboxes above the **Calculate** button. The first, *Scale Values* is used to automatically scale the default values in an attempt to better match your data. This uses the Pixels/cm and the pool diameter to determine a constant C with which to multiply some parameters. (*Note: If you are using custom values, it is best to disable scaling*) The two other checkboxes enable manual categorization. Manual categorization can be used for trials in which our algorithm was unable to make a determination (**Manual categorization for uncategorized trials**) or for all trials (**Manual categorization for all trials**). 
 
-![manual categorization](https://i.gyazo.com/a394b4f18e693cb26f996cca27feac16.png)
+![manual categorization](https://flic.kr/p/2ge7pEC)
 
 7. Once you are satisfied with your parameters, click calculate. This will begin the process of determining search strategies for the trials. Once calculation is complete you will be shown a display of the results.
 
-![csv display](https://i.gyazo.com/d3c918f27785d3a8b910fd870fd18387.png)
+![display](https://flic.kr/p/2ge7quy)
 
-8. Your results will be saved as a `.csv` file with whatever name was chosen in the *Output File* field. You will also receive a log file of the excecution, and any generated paths saved in your present working directory.
+8. Your results will be saved as a `.csv` file with whatever name was chosen in the *Output File* field. You will also receive a log file of the excecution, and any generated paths saved in your present working directory. The CSV file will automatically open with whatever default CSV software you use.
 
 
 ## Motivation
