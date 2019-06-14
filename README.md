@@ -72,8 +72,35 @@ This program was developed in order to simplify as well as remove inconsistencie
 
 ## Installation
 
-This package is hosted on PyPi, and is therefore easy to install with PIP.
-To install simply call: `pip install pathfinder`
+Installing the program is easy for both macOS and Windows users.
+
+Pathfinder requires you to have Python 3.6 or later. We highly recommend installing Conda for python via the Anaconda 🐍 package https://www.anaconda.com/distribution/. Once installed, the installation of Pathfinder is easy.
+
+For the most recent stable version, cloning the GitHub repository or installing via PyPi is possible. For the most recent beta version of the software, the develop branch of the GitHub repository will host version currently being worked on.
+
+Installation Instructions:
+
+Windows:
+
+TBD
+
+Mac:
+
+Installing from the Python Package Index:
+
+Open a terminal window (located in your utilities folder under the Applications directory.
+
+Type pip install pathfinder
+
+Press return
+
+Installing from GitHub
+
+Open a terminal window Navigate to the folder you wish to install Pathfinder into
+
+Type git clone https://github.com/MatthewBCooke/Pathfinder/
+
+press return
 
 ## References
 
