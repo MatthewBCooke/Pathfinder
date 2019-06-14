@@ -27,7 +27,7 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 2. A parameters panel will appear:
 
-![Heatmap parameters](https://flic.kr/p/2ge81ZG)
+![Heatmap parameters](https://live.staticflickr.com/65535/48062527642_e4e0830e3c_b.jpg)
 
 3. The parameters panel lets you tailor the output to your needs:
 
@@ -37,7 +37,7 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 4. You can then click generate, and our software will plot a heatmap of your trial data.
 
-![heatmap display](https://flic.kr/p/2ge7VEZ)
+![heatmap display](https://live.staticflickr.com/65535/48062509737_a63f9288bf_b.jpg)
 
 ### (B) Search Strategy Analysis
 
@@ -55,11 +55,11 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 6. There are 3 checkboxes above the **Calculate** button. The first, *Scale Values* is used to automatically scale the default values in an attempt to better match your data. This uses the Pixels/cm and the pool diameter to determine a constant C with which to multiply some parameters. (*Note: If you are using custom values, it is best to disable scaling*) The two other checkboxes enable manual categorization. Manual categorization can be used for trials in which our algorithm was unable to make a determination (**Manual categorization for uncategorized trials**) or for all trials (**Manual categorization for all trials**). 
 
-![manual categorization](https://flic.kr/p/2ge7pEC)
+![manual categorization](https://live.staticflickr.com/65535/48062408796_8190298e51_b.jpg)
 
 7. Once you are satisfied with your parameters, click calculate. This will begin the process of determining search strategies for the trials. Once calculation is complete you will be shown a display of the results.
 
-![display](https://flic.kr/p/2ge7quy)
+![display](https://live.staticflickr.com/65535/48062411576_4dc5da9198_b.jpg)
 
 8. Your results will be saved as a `.csv` file with whatever name was chosen in the *Output File* field. You will also receive a log file of the excecution, and any generated paths saved in your present working directory. The CSV file will automatically open with whatever default CSV software you use.
 
