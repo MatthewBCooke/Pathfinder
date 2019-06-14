@@ -98,10 +98,7 @@ class Experiment(object):
 
 
 class Parameters:
-    def __init__(self, name, cseMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal,
-                 corridorCseMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, percentTraversedMaxVal,
-                 percentTraversedMinVal, distanceToCentreMaxVal, innerWallMaxVal, outerWallMaxVal, cseIndirectMaxVal,
-                 percentTraversedRandomMaxVal):
+    def __init__(self, name, cseMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridorCseMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, cseIndirectMaxVal, percentTraversedRandomMaxVal):
 
         self.name = name
         self.cseMaxVal = cseMaxVal
@@ -109,12 +106,17 @@ class Parameters:
         self.distanceToSwimMaxVal = distanceToSwimMaxVal
         self.distanceToPlatMaxVal = distanceToPlatMaxVal
         self.corridorAverageMinVal = corridorAverageMinVal
+        self.directedSearchMaxDistance = directedSearchMaxDistance
+        self.focalMinDistance = focalMinDistance
+        self.focalMaxDistance = focalMaxDistance
         self.corridorCseMaxVal = corridorCseMaxVal
         self.annulusCounterMaxVal = annulusCounterMaxVal
         self.quadrantTotalMaxVal = quadrantTotalMaxVal
+        self.chainingMaxCoverage = chainingMaxCoverage
         self.percentTraversedMaxVal = percentTraversedMaxVal
         self.percentTraversedMinVal = percentTraversedMinVal
         self.distanceToCentreMaxVal = distanceToCentreMaxVal
+        self.thigmoMinDistance = thigmoMinDistance
         self.innerWallMaxVal = innerWallMaxVal
         self.outerWallMaxVal = outerWallMaxVal
         self.cseIndirectMaxVal = cseIndirectMaxVal
