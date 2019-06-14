@@ -88,7 +88,7 @@ Installing from the Python Package Index:
 
 Open a terminal window (located in your utilities folder under the Applications directory.
 
-Type pip install pathfinder
+Type `pip install pathfinder`
 
 Press return
 
@@ -96,7 +96,7 @@ Installing from GitHub
 
 Open a terminal window Navigate to the folder you wish to install Pathfinder into
 
-Type git clone https://github.com/MatthewBCooke/Pathfinder/
+Type `git clone https://github.com/MatthewBCooke/Pathfinder/`
 
 press return
 
