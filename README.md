@@ -88,7 +88,7 @@ Installing from the Python Package Index:
 
 Open a terminal window (located in your utilities folder under the Applications directory.
 
-Type `pip install pathfinder`
+Type `pip install jsl-pathfinder`
 
 Press return
 
