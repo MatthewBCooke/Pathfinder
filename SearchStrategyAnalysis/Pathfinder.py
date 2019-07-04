@@ -24,8 +24,8 @@ import numpy as np
 import pickle
 import datetime
 import scipy.ndimage as sp
-from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
-import heatmap
+from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
+import SearchStrategyAnalysis.heatmap
 from scipy.stats import norm
 
 try:

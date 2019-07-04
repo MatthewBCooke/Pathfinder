@@ -9,7 +9,7 @@ The Pathfinder package is a animal search strategy analysis tool for the Morris 
 
 ## Usage Example
 
-1. The program can be opened by calling `pathfinder` if installed through PyPi or by navigating to your install location and calling `python __main__.py` in a terminal window. See [**Installation**](https://github.com/MatthewBCooke/Pathfinder/blob/master/README.md#installation) for install instructions.
+1. The program can be opened by calling `pathfinder` if installed through PyPi or by navigating to your install location and calling `python pathfinder.py` in a terminal window. See [**Installation**](https://github.com/MatthewBCooke/Pathfinder/blob/master/README.md#installation) for install instructions.
 
 2. This will open up the GUI window.
 

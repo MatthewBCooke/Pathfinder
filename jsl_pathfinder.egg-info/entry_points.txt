@@ -1,0 +1,3 @@
+[gui_scripts]
+pathfinder = SearchStrategyAnalysis.Pathfinder:main
+
