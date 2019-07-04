@@ -80,7 +80,26 @@ Installation Instructions:
 
 Windows:
 
-TBD
+Installing from the Python Package Index:
+Launch a CMD window by launching `run` from the start menu, and typing `CMD` in Run.
+
+Once the CMD shell has opened, type `pip install jsl-pathfinder`
+
+Press enter
+
+Installing from GitHub
+
+Download and install Git here: https://git-scm.com
+
+Open Git Bash.
+
+Change the current working directory to the location where you want the cloned directory to be made.
+
+Type `git clone https://github.com/MatthewBCooke/Pathfinder`
+
+Press enter
+
+***
 
 Mac:
 
