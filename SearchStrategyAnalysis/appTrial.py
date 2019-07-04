@@ -264,7 +264,11 @@ def saveFileAsExperiment(software, filename, filedirectory):
 
                 aTrial = Trial()
                 aTrial.setanimal(col1[0])
-                aTrial.setdate(datetime.datetime.strptime(col2[0] + " " + col3[0], "%m/%d/%Y %H:%M %p"))
+                try:
+                    aTrial.setdate(datetime.datetime.strptime(col2[0] + " " + col3[0], "%m/%d/%Y %H:%M %p"))
+                except ValueError:
+                    aTrial.markDataAsCorrupted()
+                    print(ValueError)
 
                 for xVal, yVal, timeVal in zip(col1[2:], col2[2:], col3[2:]):
                     logging.debug("Running through columns: " + str(timeVal) + str(xVal) + str(yVal))

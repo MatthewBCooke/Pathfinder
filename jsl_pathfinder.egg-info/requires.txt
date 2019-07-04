@@ -1,0 +1,5 @@
+xlrd
+plotly
+pillow
+matplotlib
+scipy

@@ -26,6 +26,8 @@ import datetime
 import scipy.ndimage as sp
 from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
 import heatmap
+
+
 from scipy.stats import norm
 
 try:
@@ -73,7 +75,7 @@ fileDirectory = ""
 platformPosVar = "Auto"
 poolDiamVar = "Auto"
 platformPosVar = "Auto"  # -21,31
-platformDiamVar = "Auto"
+platformDiamVar = "10"
 poolDiamVar = "Auto"  # 180.0
 corridorWidthVar = "40"
 poolCentreVar = "Auto"
@@ -407,13 +409,6 @@ class mainClass:
         self.thigmotaxisZoneSize.bind("<Enter>", partial(self.on_enter, "Size of the zone in which thigmotaxis is considered (from the outer wall)"))
         self.thigmotaxisZoneSize.bind("<Leave>", self.on_leave)
 
-
-
-        self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm (for scaling):", bg="white")
-        self.softwareScalingFactor.grid(row=7, column=0, sticky=E)
-        self.softwareScalingFactorE = Entry(self.paramFrame, textvariable=softwareScalingFactorStringVar)
-        self.softwareScalingFactorE.grid(row=7, column=1)
-        self.softwareScalingFactor.bind("<Enter>", partial(self.on_enter, "This is used to convert from Pixels to cm"))
 
         self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm (for Anymaze and Watermaze):", bg="white")
         self.softwareScalingFactor.grid(row=8, column=0, sticky=E)
@@ -1567,6 +1562,8 @@ class mainClass:
             print("Automatic platform position calculated as: " + str(platEstX) + ", " + str(platEstY))
         if platDiamFlag:
             platEstDiam = ((platMaxX-platMinX) + (platMaxY-platMinY))/2
+            if platEstDiam > 20 or platEstDiam < 5:
+                platEstDiam = 10
             logging.info("Automatic platform diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
             print("Automatic platform diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
         if diamFlag:  # automatic diameter

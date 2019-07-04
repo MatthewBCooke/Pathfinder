@@ -1,12 +1,12 @@
 from setuptools import *
 
 setup(
-    name='jslssa',
-    version='1.5.3',
+    name='jsl-pathfinder',
+    version='1.0.0',
     description='Morris Water Maze Search Strategy Analysis',
-    url='https://github.com/Norton50/JSL',
+    url='https://github.com/MatthewBCooke/Pathfinder',
     author='Matthew Cooke',
-    author_email='matthew.cooke@alumni.ubc.ca',
+    author_email='mbcooke@mail.ubc.ca',
     license='GNU',
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -28,11 +28,11 @@ setup(
         'plotly',
         'pillow',
         'matplotlib',
+        'scipy',
     ],
     entry_points={
        'gui_scripts': [
-           'jslSearch = SearchStrategyAnalysis.__main__:main',
-           'jslssa = SearchStrategyAnalysis.__main__:main',
+           'pathfinder = SearchStrategyAnalysis.__main__:main',
        ],
     }
 )

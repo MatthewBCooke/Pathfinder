@@ -1,0 +1,17 @@
+Metadata-Version: 1.1
+Name: jsl-pathfinder
+Version: 1.0.0
+Summary: Morris Water Maze Search Strategy Analysis
+Home-page: https://github.com/MatthewBCooke/Pathfinder
+Author: Matthew Cooke
+Author-email: mbcooke@mail.ubc.ca
+License: GNU
+Description: UNKNOWN
+Keywords: morris water maze jason snyder lab search strategy strategies analysis
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: Natural Language :: English
+Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Classifier: Programming Language :: Python :: 3.5
