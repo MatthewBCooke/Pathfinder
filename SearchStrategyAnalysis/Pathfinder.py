@@ -1058,21 +1058,6 @@ class mainClass:
             logging.debug("Threading mainCalculate thread started")
         except Exception:
             logging.critical("Fatal error in mainCalculate")  # couldnt be started
-        try:
-            t2 = threading.Thread(target=self.progressBar)  # create a thread for the progressBar
-            t2.start()  # start that thread
-            logging.debug("Threading progressBar thread started")
-        except Exception:
-            logging.critical("Fatal error in progressBar")  # couldn't be started
-
-    def progressBar(self):  # create a progressbar
-        logging.debug("ProgressBar")
-        try:
-            self.progress = ttk.Progressbar(orient="vertical", length=200, mode="determinate")  # create the bar
-            self.progress.pack(side=LEFT)  # pack it left
-            self.progress.start()  # start the bar
-        except:
-            logging.info("Couldn't generate a progressBar")
 
     def find_files(self, directory, pattern):  # searches for our files in the directory
         logging.debug("Finding files in the directory")
@@ -1320,12 +1305,6 @@ class mainClass:
         except:
             logging.info("Couldn't update the GUI")
 
-    def killBar(self):  # called when we want to kill the progressBar
-        try:
-            self.progress.stop()
-            self.progress.destroy()
-        except:
-            logging.info("Couldn't destroy the progressBar")
 
     def csvDestroy(self):
         try:  # try to remove the csv display (for second run)
@@ -1411,7 +1390,6 @@ class mainClass:
             logging.debug("Platform position set manually: "+str(platformPosVar))
         elif fileFlag == 1 and software != "watermaze":  # if we only chose 1 trial
             logging.error("Cannot get platform position from single trial")
-            self.killBar()
             theStatus.set('Waiting for user input...')
             self.updateTasks()
             messagebox.showwarning('File Error',
@@ -1425,7 +1403,6 @@ class mainClass:
             platEstDiam = platformDiamVar
         elif fileFlag == 1 and software != "watermaze":  # if we only chose 1 trial
             logging.error("Cannot get platform position from single trial")
-            self.killBar()
             theStatus.set('Waiting for user input...')
             self.updateTasks()
             messagebox.showwarning('File Error',
@@ -1443,7 +1420,6 @@ class mainClass:
             logging.debug("Pool centre set manually: "+str(poolCentreVar))
         elif fileFlag == 1 and software != "watermaze":  # if we only chose 1 trial
             logging.error("Cannot get pool centre from single trial")
-            self.killBar()
             theStatus.set('Waiting for user input...')
             self.updateTasks()
             messagebox.showwarning('File Error',
@@ -1458,7 +1434,6 @@ class mainClass:
             logging.debug("Pool diameter set manually: " + str(poolDiamVar))
         elif fileFlag == 1 and software != "watermaze":  # if we only chose 1 trial
             logging.error("Tried to get diameter from single trial")
-            self.killBar()
             theStatus.set('Waiting for user input...')
             self.updateTasks()
             messagebox.showwarning('File Error',
@@ -1534,7 +1509,6 @@ class mainClass:
                                            'We were unable to determine a diameter from the trials')
                 theStatus.set('Waiting for user input...')
                 self.updateTasks()
-                self.killBar()
                 return
 
         if count < 1 and platFlag:
@@ -1543,7 +1517,6 @@ class mainClass:
                                    'We were unable to determine a platform position from the trials')
             theStatus.set('Waiting for user input...')
             self.updateTasks()
-            self.killBar()
             return
 
         if centreFlag:  # if we want an automatic centre position
@@ -1567,6 +1540,8 @@ class mainClass:
             print("Automatic platform position calculated as: " + str(platEstX) + ", " + str(platEstY))
         if platDiamFlag:
             platEstDiam = ((platMaxX-platMinX) + (platMaxY-platMinY))/2
+            if platEstDiam > 15 or platEstDiam < 5:
+                platEstDiam = 10
             logging.info("Automatic platform diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
             print("Automatic platform diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
         if diamFlag:  # automatic diameter
@@ -1927,7 +1902,6 @@ class mainClass:
             writer = csv.writer(f, delimiter=',', quotechar='"')
         except:
             logging.error("Cannot write to " + str(outputFile))
-            self.killBar()
             return
 
         headersToWrite = []
@@ -2120,7 +2094,6 @@ class mainClass:
         self.updateTasks()
         theStatus.set('')
         self.updateTasks()
-        self.killBar()
         csvfilename = "results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
                                             localtime())) + ".csv"  # update the csv file name for the next run
         outputFileStringVar.set(csvfilename)
