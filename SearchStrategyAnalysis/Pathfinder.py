@@ -408,13 +408,6 @@ class mainClass:
         self.thigmotaxisZoneSize.bind("<Leave>", self.on_leave)
 
 
-
-        self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm (for scaling):", bg="white")
-        self.softwareScalingFactor.grid(row=7, column=0, sticky=E)
-        self.softwareScalingFactorE = Entry(self.paramFrame, textvariable=softwareScalingFactorStringVar)
-        self.softwareScalingFactorE.grid(row=7, column=1)
-        self.softwareScalingFactor.bind("<Enter>", partial(self.on_enter, "This is used to convert from Pixels to cm"))
-
         self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm (for Anymaze and Watermaze):", bg="white")
         self.softwareScalingFactor.grid(row=8, column=0, sticky=E)
         self.softwareScalingFactorE = Entry(self.paramFrame, textvariable=softwareScalingFactorStringVar)
@@ -782,7 +775,7 @@ class mainClass:
 
         rowCount+=1
 
-        headingErrorCustomL = Label(self.top, text="Heading degree error [maximum]: ", bg="white")
+        headingErrorCustomL = Label(self.top, text="Heading error [maximum, degrees]: ", bg="white")
         headingErrorCustomL.grid(row=rowCount, column=0, sticky=E)
         headingErrorCustomE = Entry(self.top, textvariable=self.headingErrorCustom)
         headingErrorCustomE.grid(row=rowCount, column=1)
@@ -796,28 +789,28 @@ class mainClass:
 
         rowCount+=1
 
-        distanceToSwimCustomL = Label(self.top, text="Distance to swim path centroid [% of radius]: ", bg="white")
+        distanceToSwimCustomL = Label(self.top, text="Distance to swim path centroid [maximum, % of radius]: ", bg="white")
         distanceToSwimCustomL.grid(row=rowCount, column=0, sticky=E)
         distanceToSwimCustomE = Entry(self.top, textvariable=self.distanceToSwimCustom)
         distanceToSwimCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        distanceToPlatCustomL = Label(self.top, text="Distance to platform [% of radius]: ", bg="white")
+        distanceToPlatCustomL = Label(self.top, text="Distance to platform [maximum, % of radius]: ", bg="white")
         distanceToPlatCustomL.grid(row=rowCount, column=0, sticky=E)
         distanceToPlatCustomE = Entry(self.top, textvariable=self.distanceToPlatCustom)
         distanceToPlatCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        focalMinDistanceCustomL = Label(self.top, text="Minimum distance covered (cm): ", bg="white")
+        focalMinDistanceCustomL = Label(self.top, text="Distance covered (minimum, cm): ", bg="white")
         focalMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
         focalMinDistanceCustomE = Entry(self.top, textvariable=self.focalMinDistanceCustom)
         focalMinDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        focalMaxDistanceCustomL = Label(self.top, text="Maximum distance covered (cm): ", bg="white")
+        focalMaxDistanceCustomL = Label(self.top, text="Distance covered (maximum, cm): ", bg="white")
         focalMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
         focalMaxDistanceCustomE = Entry(self.top, textvariable=self.focalMaxDistanceCustom)
         focalMaxDistanceCustomE.grid(row=rowCount, column=1)
@@ -831,14 +824,14 @@ class mainClass:
 
         rowCount+=1
 
-        corridorAverageCustomL = Label(self.top, text="Angular corridor minimum [% of time]: ", bg="white")
+        corridorAverageCustomL = Label(self.top, text="Time in angular corridor [minimum, % of trial]: ", bg="white")
         corridorAverageCustomL.grid(row=rowCount, column=0, sticky=E)
         corridorAverageCustomE = Entry(self.top, textvariable=self.corridorAverageCustom)
         corridorAverageCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        directedSearchMaxDistanceCustomL = Label(self.top, text="Maximum distance covered (cm): ", bg="white")
+        directedSearchMaxDistanceCustomL = Label(self.top, text="Distance covered (maximum, cm): ", bg="white")
         directedSearchMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
         directedSearchMaxDistanceCustomE = Entry(self.top, textvariable=self.directedSearchMaxDistanceCustom)
         directedSearchMaxDistanceCustomE.grid(row=rowCount, column=1)
@@ -873,7 +866,7 @@ class mainClass:
 
         rowCount+=1
 
-        annulusCustomL = Label(self.top, text="Time in annulus zone [% of time]: ", bg="white")
+        annulusCustomL = Label(self.top, text="Time in annulus zone [minimum, % of trial]: ", bg="white")
         annulusCustomL.grid(row=rowCount, column=0, sticky=E)
         annulusCustomE = Entry(self.top, textvariable=self.annulusCustom)
         annulusCustomE.grid(row=rowCount, column=1)
@@ -887,7 +880,7 @@ class mainClass:
 
         rowCount+=1
 
-        chainingMaxCoverageCustomL = Label(self.top, text="Maximum pool coverage (%): ", bg="white")
+        chainingMaxCoverageCustomL = Label(self.top, text="Area of pool traversed (maximum, % of pool): ", bg="white")
         chainingMaxCoverageCustomL.grid(row=rowCount, column=0, sticky=E)
         chainingMaxCoverageCustomE = Entry(self.top, textvariable=self.chainingMaxCoverageCustom)
         chainingMaxCoverageCustomE.grid(row=rowCount, column=1)
@@ -901,21 +894,21 @@ class mainClass:
 
         rowCount+=1
 
-        percentTraversedCustomL = Label(self.top, text="Area traversed [maximum]: ", bg="white")
+        percentTraversedCustomL = Label(self.top, text="Area of pool traversed [maximum, % of pool]: ", bg="white")
         percentTraversedCustomL.grid(row=rowCount, column=0, sticky=E)
         percentTraversedCustomE = Entry(self.top, textvariable=self.percentTraversedCustom)
         percentTraversedCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        percentTraversedMinCustomL = Label(self.top, text="Area traversed [minimum]: ", bg="white")
+        percentTraversedMinCustomL = Label(self.top, text="Area of pool traversed [minimum, % of pool]: ", bg="white")
         percentTraversedMinCustomL.grid(row=rowCount, column=0, sticky=E)
         percentTraversedMinCustomE = Entry(self.top, textvariable=self.percentTraversedMinCustom)
         percentTraversedMinCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        distanceToCentreCustomL = Label(self.top, text="Average distance to center [% of radius]: ", bg="white")
+        distanceToCentreCustomL = Label(self.top, text="Average distance to pool centre [maximum, % of radius]: ", bg="white")
         distanceToCentreCustomL.grid(row=rowCount, column=0, sticky=E)
         distanceToCentreCustomE = Entry(self.top, textvariable=self.distanceToCentreCustom)
         distanceToCentreCustomE.grid(row=rowCount, column=1)
@@ -929,21 +922,21 @@ class mainClass:
 
         rowCount+=1
 
-        innerWallCustomL = Label(self.top, text="Inner wall zone [% of time]: ", bg="white")
+        innerWallCustomL = Label(self.top, text="Time in inner wall zone [minimum, % of trial]: ", bg="white")
         innerWallCustomL.grid(row=rowCount, column=0, sticky=E)
         innerWallCustomE = Entry(self.top, textvariable=self.innerWallCustom)
         innerWallCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        outerWallCustomL = Label(self.top, text="Outer wall zone [% of time]: ", bg="white")
+        outerWallCustomL = Label(self.top, text="Time in outer wall zone [minimum, % of trial]: ", bg="white")
         outerWallCustomL.grid(row=rowCount, column=0, sticky=E)
         outerWallCustomE = Entry(self.top, textvariable=self.outerWallCustom, bg="white")
         outerWallCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        thigmoMinDistanceCustomL = Label(self.top, text="Minimum distance covered (cm): ", bg="white")
+        thigmoMinDistanceCustomL = Label(self.top, text="Total distance covered (minimum, cm): ", bg="white")
         thigmoMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
         thigmoMinDistanceCustomE = Entry(self.top, textvariable=self.thigmoMinDistanceCustom, bg="white")
         thigmoMinDistanceCustomE.grid(row=rowCount, column=1)
@@ -957,7 +950,7 @@ class mainClass:
 
         rowCount+=1
 
-        percentTraversedRandomCustomL = Label(self.top, text="Area traversed [% minimum]: ", bg="white")
+        percentTraversedRandomCustomL = Label(self.top, text="Area of pool traversed [minimum, % of pool]: ", bg="white")
         percentTraversedRandomCustomL.grid(row=rowCount, column=0, sticky=E)
         percentTraversedRandomCustomE = Entry(self.top, textvariable=self.percentTraversedRandomCustom)
         percentTraversedRandomCustomE.grid(row=rowCount, column=1)
