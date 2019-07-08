@@ -98,10 +98,10 @@ class Experiment(object):
 
 
 class Parameters:
-    def __init__(self, name, cseMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridorCseMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, cseIndirectMaxVal, percentTraversedRandomMaxVal):
+    def __init__(self, name, ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal):
 
         self.name = name
-        self.cseMaxVal = cseMaxVal
+        self.ipeMaxVal = ipeMaxVal
         self.headingMaxVal = headingMaxVal
         self.distanceToSwimMaxVal = distanceToSwimMaxVal
         self.distanceToPlatMaxVal = distanceToPlatMaxVal
@@ -109,7 +109,7 @@ class Parameters:
         self.directedSearchMaxDistance = directedSearchMaxDistance
         self.focalMinDistance = focalMinDistance
         self.focalMaxDistance = focalMaxDistance
-        self.corridorCseMaxVal = corridorCseMaxVal
+        self.corridoripeMaxVal = corridoripeMaxVal
         self.annulusCounterMaxVal = annulusCounterMaxVal
         self.quadrantTotalMaxVal = quadrantTotalMaxVal
         self.chainingMaxCoverage = chainingMaxCoverage
@@ -119,7 +119,7 @@ class Parameters:
         self.thigmoMinDistance = thigmoMinDistance
         self.innerWallMaxVal = innerWallMaxVal
         self.outerWallMaxVal = outerWallMaxVal
-        self.cseIndirectMaxVal = cseIndirectMaxVal
+        self.ipeIndirectMaxVal = ipeIndirectMaxVal
         self.percentTraversedRandomMaxVal = percentTraversedRandomMaxVal
 
     def __str__(self):
