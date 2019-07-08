@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-"""searchStrategyAnalysis.py: GUI + analyses ethovision exported xlsx files to determine which search strategy animals follow during
-Morris Water Maze trials."""
+"""Pathfinder.py"""
 
 from __future__ import print_function
 import csv
@@ -55,18 +54,20 @@ __copyright__ = "Copyright 2018, Jason Snyder Lab, The University of British Col
 __credits__ = ["Matthew Cooke", "Tim O'Leary", "Phelan Harris"]
 __email__ = "mbcooke@mail.ubc.ca"
 
-if not os.path.exists("logs"):
-    os.makedirs("logs")
-if not os.path.exists("results"):
-    os.makedirs("results")
-if not os.path.exists("plots"):
-    os.makedirs("plots")
-if not os.path.exists("heatmaps"):
-    os.makedirs("heatmaps")
+if not os.path.exists("pathfinder"):
+    os.makedirs("pathfinder")
+if not os.path.exists("pathfinder/logs"):
+    os.makedirs("pathfinder/logs")
+if not os.path.exists("pathfinder/results"):
+    os.makedirs("pathfinder/results")
+if not os.path.exists("pathfinder/plots"):
+    os.makedirs("pathfinder/plots")
+if not os.path.exists("pathfinder/heatmaps"):
+    os.makedirs("pathfinder/heatmaps")
 
-logfilename = "logs/logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
+logfilename = "pathfinder/logs/logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
 logging.basicConfig(filename=logfilename,level=logging.INFO)  # set the default log type to INFO, can be set to DEBUG for more detailed information
-csvfilename = "results/results " + str(
+csvfilename = "pathfinder/results/results " + str(
     strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".csv"  # name of the default results file
 theFile = ""
 fileDirectory = ""
@@ -278,21 +279,21 @@ class mainClass:
         self.defaultButton = ttk.Button(self.toolbar, text="Default", command=self.defaultButtonFunc,
                                         style='selected.TButton')  # add snyder button
         self.defaultButton.grid(row=0, ipadx=2, pady=2, padx=2)
-        self.strictButton = ttk.Button(self.toolbar, text="Relaxed", command=self.strictButtonFunc,
+        '''self.strictButton = ttk.Button(self.toolbar, text="Relaxed", command=self.strictButtonFunc,
                                         style='default.TButton')  # add reudiger button
         self.strictButton.grid(row=0, column=1, ipadx=2, pady=2, padx=2)
         self.relaxedButton = ttk.Button(self.toolbar, text="Strict", command=self.relaxedButtonFunc,
                                        style='default.TButton')  # add garthe button
-        self.relaxedButton.grid(row=0, column=2, ipadx=2, pady=2, padx=2)
+        self.relaxedButton.grid(row=0, column=2, ipadx=2, pady=2, padx=2)'''
         self.customButton = ttk.Button(self.toolbar, text="Custom...", command=self.custom, style='default.TButton')
         self.customButton.grid(row=0, column=3, ipadx=2, pady=2, padx=2)  # add custom button
         self.toolbar.pack(side=TOP, fill=X)  # place the toolbar
         self.defaultButton.bind("<Enter>", partial(self.on_enter, "Use preset values from our paper"))
         self.defaultButton.bind("<Leave>", self.on_leave)
-        self.relaxedButton.bind("<Enter>", partial(self.on_enter, "Use preset values relaxed"))
+        '''self.relaxedButton.bind("<Enter>", partial(self.on_enter, "Use preset values relaxed"))
         self.relaxedButton.bind("<Leave>", self.on_leave)
         self.strictButton.bind("<Enter>", partial(self.on_enter, "Use preset values strict"))
-        self.strictButton.bind("<Leave>", self.on_leave)
+        self.strictButton.bind("<Leave>", self.on_leave)'''
         self.customButton.bind("<Enter>", partial(self.on_enter, "Choose your own values (please disable scaling)"))
         self.customButton.bind("<Leave>", self.on_leave)
 
@@ -377,14 +378,14 @@ class mainClass:
         self.poolCentre.bind("<Enter>", partial(self.on_enter, "Pool Centre. Example: 0.0,0.0 or Auto"))
         self.poolCentre.bind("<Leave>", self.on_leave)
 
-        self.oldPlatformPos = Label(self.paramFrame, text="Old Platform Position (x,y):", bg="white")
+        self.oldPlatformPos = Label(self.paramFrame, text="Platform position 2 (x,y):", bg="white")
         self.oldPlatformPos.grid(row=4, column=0, sticky=E)
         self.oldPlatformPosE = Entry(self.paramFrame, textvariable=oldPlatformPosStringVar)
         self.oldPlatformPosE.grid(row=4, column=1)
         self.oldPlatformPos.bind("<Enter>", partial(self.on_enter, "Not currently used"))
         self.oldPlatformPos.bind("<Leave>", self.on_leave)
 
-        self.headingError = Label(self.paramFrame, text="Corridor Width (degrees):", bg="white")
+        self.headingError = Label(self.paramFrame, text="Angular Corridor Width (degrees):", bg="white")
         self.headingError.grid(row=5, column=0, sticky=E)
         self.headingErrorE = Entry(self.paramFrame, textvariable=corridorWidthStringVar)
         self.headingErrorE.grid(row=5, column=1)
@@ -392,7 +393,7 @@ class mainClass:
         self.headingError.bind("<Leave>", self.on_leave)
 
 
-        self.chainingRadius = Label(self.paramFrame, text="Chaining Width (cm):", bg="white")
+        self.chainingRadius = Label(self.paramFrame, text="Chaining Annulus Width (cm):", bg="white")
         self.chainingRadius.grid(row=6, column=0, sticky=E)
         self.chainingRadiusE = Entry(self.paramFrame, textvariable=chainingRadiusStringVar)
         self.chainingRadiusE.grid(row=6, column=1)
@@ -431,7 +432,7 @@ class mainClass:
         useManualForAllFlag = False
         useEntropyFlag = False
 
-        self.scalingTickL = Label(self.paramFrame, text="Scale values: ", bg="white")  # label for the tickbox
+        self.scalingTickL = Label(self.paramFrame, text="Scale values (convert pixels to cm): ", bg="white")  # label for the tickbox
         self.scalingTickL.grid(row=14, column=0, sticky=E)  # placed here
         self.scalingTickC = Checkbutton(self.paramFrame, variable=useScaling, bg="white")  # the actual tickbox
         self.scalingTickC.grid(row=14, column=1)
@@ -528,11 +529,11 @@ class mainClass:
 
     def about(self):  # go to README
         logging.debug("Called about")
-        webbrowser.open('https://github.com/Norton50/JSL/blob/master/README.md')
+        webbrowser.open('https://github.com/MatthewBCooke/Pathfinder')
 
     def getHelp(self):  # go to readme
         logging.debug("Called help")
-        webbrowser.open('https://github.com/Norton50/JSL/blob/master/README.md')
+        webbrowser.open('https://github.com/MatthewBCooke/Pathfinder/wiki')
 
     def tryQuit(self):  # tries to stop threads
         logging.debug("trying to quit")
@@ -922,14 +923,14 @@ class mainClass:
 
         rowCount+=1
 
-        innerWallCustomL = Label(self.top, text="Time in inner wall zone [minimum, % of trial]: ", bg="white")
+        innerWallCustomL = Label(self.top, text="Time in larger thigmotaxis zone [minimum, % of trial]: ", bg="white")
         innerWallCustomL.grid(row=rowCount, column=0, sticky=E)
         innerWallCustomE = Entry(self.top, textvariable=self.innerWallCustom)
         innerWallCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        outerWallCustomL = Label(self.top, text="Time in outer wall zone [minimum, % of trial]: ", bg="white")
+        outerWallCustomL = Label(self.top, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg="white")
         outerWallCustomL.grid(row=rowCount, column=0, sticky=E)
         outerWallCustomE = Entry(self.top, textvariable=self.outerWallCustom, bg="white")
         outerWallCustomE.grid(row=rowCount, column=1)
@@ -1073,7 +1074,7 @@ class mainClass:
             platWallsX.append(platX + ((math.ceil(platEstDiam) / 2)+1) * math.cos(math.radians(theta)))
             platWallsY.append(platY + ((math.ceil(platEstDiam) / 2)+1) * math.sin(math.radians(theta)))
 
-        plotName = "plots/" + name + " " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # the name will be Animal id followed by the date and time
+        plotName = "pathfinder/plots/" + name + " " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # the name will be Animal id followed by the date and time
         plt.scatter(x, y, s=15, c='r', alpha=1.0)  # we plot the XY position of animal
         plt.scatter(x[0],y[0], s=100, c='b', alpha=1, marker='s')  # we plot the start point
         plt.scatter(platWallsX, platWallsY, s=1, c='black', alpha=1.0)  # we plot the platform
@@ -1240,7 +1241,7 @@ class mainClass:
         #         x[math.floor(row.x)] += 1/len(experiment)
         #         y[math.floor(row.y)] += 1/len(experiment)
 
-        aFileName = "heatmaps/heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
+        aFileName = "pathfinder/heatmaps/heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
         aTitle = fileDirectory
         """
         mu = 0
@@ -2087,7 +2088,7 @@ class mainClass:
         self.updateTasks()
         theStatus.set('')
         self.updateTasks()
-        csvfilename = "results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
+        csvfilename = "pathfinder/results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
                                             localtime())) + ".csv"  # update the csv file name for the next run
         outputFileStringVar.set(csvfilename)
 

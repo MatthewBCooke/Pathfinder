@@ -2,6 +2,7 @@
 
 Jason Snyder Lab Watermaze Search strategy and entropy analysis.
 Created by **Matthew Cooke** at **The University of British Columbia**, **Jason Snyder Lab**
+Visit us at [https://matthewbcooke.github.io/Pathfinder/]()
 
 ## Synopsis
 
@@ -41,17 +42,17 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 ### (B) Search Strategy Analysis
 
-1. For search strategy analysis we have multiple options. To use predefined values from either Snyder et el., 2017, Ruediger et al., 2012, or Gathe et al., 2009 click their respecive buttons. To set your own strategy parameters, click custom.
+1. For search strategy analysis we have multiple options. To set your own strategy parameters, click custom.
 
 2. (Custom) The custom button will spawn a parameters panel
 
 ![custom parameters](https://live.staticflickr.com/65535/48062538147_b7ac36a6bd_b.jpg)
 
-3. In the custom parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. For definitions of these values see Snyder et al., 2017.
+3. In the custom parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. For definitions of these values see Cooke et al., 2019, in preparation.
 
 4. Once you have chosen your parameters, be sure to select your tracking software. Ethovision, Anymaze, and Watermaze are currently supported. (*Note: Anymaze and Watermaze are currently in beta -- not all features are available*)
 
-5. You may then alter the main values to suit your data. Platform position, pool centre, and pool diameter can be automatically calculated for groups of non-probe trials tracked in Ethovision. For all other data you must manually define these values (Example: `Platform Position (x,y) | 6.53,-17.3`). Old platform position is only used when Perseverance is chosen in the Custom parameters pane. For more in-depth explanations of these values, see Snyder et al., 2017.
+5. You may then alter the main values to suit your data. Platform position, pool centre, and pool diameter can be automatically calculated for groups of non-probe trials tracked in Ethovision. For all other data you must manually define these values (Example: `Platform Position (x,y) | 6.53,-17.3`). Old platform position is only used when Perseverance is chosen in the Custom parameters pane. For more in-depth explanations of these values, see Cooke et al., 2019, in preparation.
 
 6. There are 3 checkboxes above the **Calculate** button. The first, *Scale Values* is used to automatically scale the default values in an attempt to better match your data. This uses the Pixels/cm and the pool diameter to determine a constant C with which to multiply some parameters. (*Note: If you are using custom values, it is best to disable scaling*) The two other checkboxes enable manual categorization. Manual categorization can be used for trials in which our algorithm was unable to make a determination (**Manual categorization for uncategorized trials**) or for all trials (**Manual categorization for all trials**). 
 
@@ -119,16 +120,6 @@ Type `git clone https://github.com/MatthewBCooke/Pathfinder/`
 
 press return
 
-## References
-
->Ruediger S, Spirig D, Donato F, Caroni P. Goal-oriented searching mediated by ventral hippocampus early in trial-and-error learning. Nat Neurosci. 2012 Nov;15(11):1563-71. doi: 10.1038/nn.3224. Epub 2012 Sep 23. PubMed PMID: 23001061.
-
->Adult-Generated Hippocampal Neurons Allow the Flexible Use of Spatially Precise Learning Strategies 
-Garthe A, Behr J, Kempermann G (2009) Adult-Generated Hippocampal Neurons Allow the Flexible Use of Spatially Precise Learning Strategies. PLOS ONE 4(5): e5464. https://doi.org/10.1371/journal.pone.0005464
-
->Garthe A, Huang Z, Kaczmarek L, Filipkowski RK, Kempermann G. Not all water mazes are created equal: cyclin D2 knockout mice with constitutively suppressed adult hippocampal neurogenesis do show specific spatial learning deficits. Genes, Brain, and Behavior. 2014;13(4):357-364. doi:10.1111/gbb.12130.
-
->Graziano A, Petrosini L, Bartoletti A. Automatic recognition of explorative strategies in the Morris water maze. J Neurosci Methods. 2003 Nov 30;130(1):33-44. PubMed PMID: 14583402.
 
 ## License
 
