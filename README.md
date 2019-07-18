@@ -55,6 +55,7 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 ![settings parameters](http://snyderlab.com/pathfinder/settings.jpg)
 
+
 3. In the settings parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. For definitions of these values see Cooke et al., 2019, in preparation.
 
 4. Once you have chosen your parameters, be sure to select your tracking software. Ethovision, Anymaze, WaterMaze, and ezTrack are currently supported. 
@@ -65,9 +66,11 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 ![manual categorization](http://snyderlab.com/pathfinder/manual.jpg)
 
+
 7. Once you are satisfied with your parameters, click calculate. This will begin the process of determining search strategies for the trials. Once calculation is complete you will be shown a display of the results.
 
 ![display](http://snyderlab.com/pathfinder/output.jpg)
+
 
 8. Your results will be saved as a `.csv` file with whatever name was chosen in the *Output File* field. You will also receive a log file of the excecution, and any generated paths saved in your present working directory. The CSV file will automatically open with whatever default CSV software you use.
 
