@@ -50,7 +50,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm as CM
 
 __author__ = "Matthew Cooke"
-__copyright__ = "Copyright 2018, Jason Snyder Lab, The University of British Columbia"
+__copyright__ = "Copyright 2019, Jason Snyder Lab, The University of British Columbia"
 __credits__ = ["Matthew Cooke", "Tim O'Leary", "Phelan Harris"]
 __email__ = "mbcooke@mail.ubc.ca"
 
@@ -86,11 +86,11 @@ fileFlag = 0
 
 defaultParams = Parameters(name="Default", ipeMaxVal=125, headingMaxVal=40, distanceToSwimMaxVal=0.3,
                            distanceToPlatMaxVal=0.3, corridorAverageMinVal=0.7, directedSearchMaxDistance=400, focalMinDistance=100, focalMaxDistance=400, corridoripeMaxVal=1500,
-                           annulusCounterMaxVal=0.90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=35,
-                           percentTraversedMinVal=5, distanceToCentreMaxVal=0.7, thigmoMinDistance=400, innerWallMaxVal=0.65,
+                           annulusCounterMaxVal=0.90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=20,
+                           percentTraversedMinVal=5, distanceToCentreMaxVal=0.6, thigmoMinDistance=400, innerWallMaxVal=0.65,
                            outerWallMaxVal=0.35, ipeIndirectMaxVal=300, percentTraversedRandomMaxVal=10)
 
-relaxedParams = Parameters(name="Relaxed", ipeMaxVal=150, headingMaxVal=45, distanceToSwimMaxVal=0.4,
+'''relaxedParams = Parameters(name="Relaxed", ipeMaxVal=150, headingMaxVal=45, distanceToSwimMaxVal=0.4,
                            distanceToPlatMaxVal=0.4, corridorAverageMinVal=0.65, directedSearchMaxDistance=500, focalMinDistance=100, focalMaxDistance=500, corridoripeMaxVal=1500,
                            annulusCounterMaxVal=0.85, quadrantTotalMaxVal=3, chainingMaxCoverage=40, percentTraversedMaxVal=35,
                            percentTraversedMinVal=5, distanceToCentreMaxVal=0.7, thigmoMinDistance=400, innerWallMaxVal=0.65,
@@ -101,7 +101,7 @@ strictParams = Parameters(name="Strict", ipeMaxVal=100, headingMaxVal=35, distan
                            annulusCounterMaxVal=0.90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=35,
                            percentTraversedMinVal=5, distanceToCentreMaxVal=0.7, thigmoMinDistance=400, innerWallMaxVal=0.65,
                            outerWallMaxVal=0.35, ipeIndirectMaxVal=250, percentTraversedRandomMaxVal=15)
-
+'''
 params = defaultParams
 
 ipeMaxVal = params.ipeMaxVal
@@ -160,6 +160,10 @@ outputFileStringVar = StringVar()
 outputFileStringVar.set(outputFile)
 maxValStringVar = StringVar()
 maxValStringVar.set("Auto")
+dayValStringVar = StringVar()
+dayValStringVar.set("All")
+trialValStringVar = StringVar()
+trialValStringVar.set("All")
 gridSizeStringVar = StringVar()
 gridSizeStringVar.set("70")
 useManual = BooleanVar()
@@ -1163,11 +1167,11 @@ class mainClass:
         except:
             pass
 
-    def guiHeatmap(self, experiment):
+    def guiHeatmap(self, aExperiment):
 
         self.top3 = Toplevel(root)  # create a new toplevel window
         self.top3.configure(bg="white")
-        self.top3.geometry('{}x{}'.format( 500, 1000 ))
+        self.top3.geometry('{}x{}'.format( 500, 500 ))
         Label(self.top3, text="Heatmap Parameters", bg="white", fg="black", width=15).pack()  # add a title
 
         self.gridSizeL = Label(self.top3, text="Grid Size:", bg="white")
@@ -1180,10 +1184,20 @@ class mainClass:
         self.maxValE = Entry(self.top3, textvariable=maxValStringVar)
         self.maxValE.pack(side=TOP)
 
-        Button(self.top3, text="Generate", command=lambda: self.heatmap(experiment), fg="black", bg="white").pack()
+        self.dayValL = Label(self.top3, text="Day(s) to consider:", bg="white")
+        self.dayValL.pack(side=TOP)
+        self.dayValE = Entry(self.top3, textvariable=dayValStringVar)
+        self.dayValE.pack(side=TOP)
+
+        self.trialValL = Label(self.top3, text="Trial(s) to consider:", bg="white")
+        self.trialValL.pack(side=TOP)
+        self.trialValE = Entry(self.top3, textvariable=trialValStringVar)
+        self.trialValE.pack(side=TOP)
+
+        Button(self.top3, text="Generate", command=lambda: self.heatmap(aExperiment), fg="black", bg="white").pack()
 
 
-    def heatmap(self, experiment):
+    def heatmap(self, aExperiment):
         logging.debug("Heatmap Called")
         theStatus.set("Generating Heatmap...")
         self.updateTasks()
@@ -1195,24 +1209,62 @@ class mainClass:
         yMin = 0.0
         xMax = 0.0
         yMax = 0.0
+        dayStartStop = []
+        trialStartStop = []
+        dayVal = dayValStringVar.get()
+        trialVal = trialValStringVar.get()
+        dayNum = 0
+        trialNum = {}
+        curDate = None
 
-        for aTrial in experiment:  # for all the files we find
+        if dayVal == "All" or dayVal == "all" or dayVal == "":
+            dayStartStop = [1,float(math.inf)]
+        elif "-" in dayVal:
+            dayStartStop = dayVal.split("-",1)
+            dayStartStop = [int(dayStartStop[0]),int(dayStartStop[1])]
+        else:
+            dayStartStop = [int(dayVal),int(dayVal)]
+
+        if trialVal == "All" or trialVal == "all" or trialVal == "":
+            trialStartStop = [1,float(math.inf)]
+        elif "-" in trialVal:
+            trialStartStop = trialVal.split("-",1)
+            trialStartStop = [int(trialStartStop[0]),int(trialStartStop[1])]
+        else:
+            trialStartStop = [int(trialVal),int(trialVal)]
+
+        for aTrial in aExperiment:  # for all the files we find
             theStatus.set("Running " + theFile)
-            for row in aTrial:
-                # Create data
-                if row.x == "-" or row.y == "-":
-                    continue
-                x.append(float(row.x))
-                y.append(float(row.y))
+            animal = ""
+            if aExperiment.hasAnimalNames:
+                animal = aTrial.animal.replace("*", "")
+            if aExperiment.hasDateInfo and aTrial.date.date() != curDate:
+                dayNum += 1
+                curDate = aTrial.date.date()
+                trialNum = {}
+                trialNum[animal] = 1
+            elif animal in trialNum:
+                trialNum[animal] += 1
+            else:
+                trialNum[animal] = 1
 
-                if row.x < xMin:
-                    xMin = row.x
-                if row.y < yMin:
-                    yMin = row.y
-                if row.x > xMax:
-                    xMax = row.x
-                if row.y > yMax:
-                    yMax = row.y
+            for aDatapoint in aTrial:
+                # Create data
+                if dayNum >= dayStartStop[0] and dayNum <= dayStartStop[1]:
+                    if trialNum[animal] >= trialStartStop[0] and trialNum[animal] <= trialStartStop[1]:
+                        if aDatapoint.getx() == "-" or aDatapoint.gety() == "-":
+                            continue
+                        x.append(float(aDatapoint.getx()))
+                        y.append(float(aDatapoint.gety()))
+
+                        if aDatapoint.getx() < xMin:
+                            xMin = aDatapoint.getx()
+                        if aDatapoint.gety() < yMin:
+                            yMin = aDatapoint.gety()
+                        if aDatapoint.getx() > xMax:
+                            xMax = aDatapoint.getx()
+                        if aDatapoint.gety() > yMax:
+                            yMax = aDatapoint.gety()
 
         # x = np.zeros(math.ceil(xMax-xMin+1))
         # y = np.zeros(math.ceil(yMax-yMin+1))
@@ -1225,7 +1277,7 @@ class mainClass:
         #         x[math.floor(row.x)] += 1/len(experiment)
         #         y[math.floor(row.y)] += 1/len(experiment)
 
-        aFileName = "pathfinder/heatmaps/heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
+        aFileName = "pathfinder/heatmaps/ " + "Day "+ dayValStringVar.get() + " Trial " + trialValStringVar.get() + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
         aTitle = fileDirectory
         """
         mu = 0
@@ -1243,8 +1295,7 @@ class mainClass:
 
         X = sp.filters.gaussian_filter(x, sigma=2, order=0)
         Y = sp.filters.gaussian_filter(y, sigma=2, order=0)
-        heatmap, xedges, yedges = np.histogram2d(X, Y, bins=(30, 30))
-        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+        heatmap, xedges, yedges = np.histogram2d(X, Y)
 
         # Plot heatmap
         maxVal = maxValStringVar.get()
@@ -1259,8 +1310,6 @@ class mainClass:
                 theStatus.set("Waiting for user input...")
                 return
 
-
-        plt.axis([xMin, xMax, yMin, yMax])
         try:
             plt.gca().set_aspect('equal')
         except:
@@ -1269,10 +1318,10 @@ class mainClass:
         theStatus.set("Waiting for user input...")
         self.updateTasks()
 
-        plt.title(aTitle)
+        plt.title("Day: " + dayValStringVar.get() + " Trial: "+ trialValStringVar.get())
         cb = plt.colorbar()
         photoName = aFileName + ".png"  # image name the same as plotname
-        plt.savefig(photoName, dpi=300, figsize=(3,3))  # save the file
+        plt.savefig(photoName, dpi=300, figsize=(4,4))  # save the file
         plt.show()
 
 
@@ -1532,7 +1581,7 @@ class mainClass:
         return (poolCentreX,poolCentreY,platformX,platformY,poolDiamVar,poolRadius, platEstDiam)
 
 
-    def calculateValues(self, theTrial, platformX, platformY, poolCentreX, poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor, poolradius):
+    def calculateValues(self, theTrial, platformX, platformY, poolCentreX, poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor, poolradius, dayNum):
         global oldPlatformPosVar
         global poolCentreVar
         global useEntropyFlag
@@ -1591,6 +1640,9 @@ class mainClass:
         Matrix = [[0 for x in range(0, math.ceil(theGridSize)+1)] for y in range(0, math.ceil(theGridSize)+1)]
 
         for aDatapoint in theTrial:  # for each row in our sheet
+            # if dayNum == 9 or dayNum == 14:
+            #     if aDatapoint.gettime() > 15:
+            #         continue
             if i == 0:
                 startX = aDatapoint.getx()
                 startY = aDatapoint.gety()
@@ -1598,7 +1650,6 @@ class mainClass:
 
             # Swim Path centroid
             i += 1.0
-            mainLatency = aDatapoint.gettime()
             xSummed += float(aDatapoint.getx())
             ySummed += float(aDatapoint.gety())
             aX = float(aDatapoint.getx())
@@ -1662,7 +1713,7 @@ class mainClass:
             elif aDatapoint.getx() < poolCentreX and aDatapoint.gety() < poolCentreY:
                 quadrantFour = 1
 
-            latency = aDatapoint.gettime()
+            latency = aDatapoint.gettime() - startTime
 
         quadrantTotal = quadrantOne + quadrantTwo + quadrantThree + quadrantFour
 
@@ -1685,6 +1736,9 @@ class mainClass:
         initialHeadingError = 0.0
         initialHeadingErrorCount = 0
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
+            # if dayNum == 9 or dayNum == 14:
+            #     if aDatapoint.gettime() > 15:
+            #         continue
             distanceToSwimPathCentroid = math.sqrt((xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2)*scalingFactor
             totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
             distanceFromStartToCurrent = math.sqrt((aDatapoint.getx() - startX) **2 + (aDatapoint.gety() - startY)**2)*scalingFactor
@@ -1717,12 +1771,6 @@ class mainClass:
             averageInitialHeadingError = initialHeadingError/initialHeadingErrorCount
         except:
             averageInitialHeadingError = 0
-        ''' for the next 3 weeks work harder, be impressive, you're good at this and can make it work
-        
-        corridorAverage = corridorCounter /i
-        distance Average - distance From PlatformSummed/i
-        averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid/i
-        averageInitialHeadingError'''
         cellCounter = 0.0  # initialize our cell counter
 
         for k in range(0, math.ceil(theGridSize)+1):  # count how many cells we have visited
@@ -1747,18 +1795,23 @@ class mainClass:
         idealCumulativeDistance = 0.0
 
         sampleRate = (theTrial.datapointList[-1].gettime() - startTime)/(len(theTrial.datapointList) - 1)
-        while idealDistance > 10.0:
+        while idealDistance > 5.0:
             idealCumulativeDistance += idealDistance
             idealDistance = (idealDistance - velocity*sampleRate)
             if(idealCumulativeDistance > 10000):
                 break
+
         ipe = float(distanceFromPlatformSummed - idealCumulativeDistance)*sampleRate
+
+        if ipe<0:
+            ipe = 0
 
         if useEntropyFlag:
             entropyResult = self.calculateEntropy(theTrial,platformX,platformY)
         else:
             entropyResult = False
-        return corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, mainLatency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, averageInitialHeadingError, entropyResult
+        return corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, averageInitialHeadingError, entropyResult
+
     def mainCalculate(self):
         global softwareStringVar
         logging.debug("Calculate Called")
@@ -1897,11 +1950,23 @@ class mainClass:
 
         dayNum = 0
         trialNum = {}
-        curDate = None 
+        curDate = None
         for aTrial in aExperiment:
-            animal = ""
+            animal = aTrial.animal
             if aExperiment.hasAnimalNames:
                 animal = aTrial.animal.replace("*", "")
+                animal = animal.replace("Jan","1")
+                animal = animal.replace("Feb","2")
+                animal = animal.replace("Mar","3")
+                animal = animal.replace("Apr","4")
+                animal = animal.replace("May","5")
+                animal = animal.replace("Jun","6")
+                animal = animal.replace("Jul","7")
+                animal = animal.replace("Aug","8")
+                animal = animal.replace("Sep","9")
+                animal = animal.replace("Oct","10")
+                animal = animal.replace("Nov","11")
+                animal = animal.replace("Dec","12")
 
             if aExperiment.hasDateInfo and aTrial.date.date() != curDate:
                 dayNum += 1
@@ -1955,14 +2020,16 @@ class mainClass:
             # </editor-fold>
             score = 0
             # Analyze the data ----------------------------------------------------------------------------------------------
+
+
             corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
                 aTrial, platformX, platformY, poolCentreX,
                 poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
-                biggerWallZone, scalingFactor, poolRadius)
+                biggerWallZone, scalingFactor, poolRadius, dayNum)
 
             strategyType = ""
             # DIRECT SWIM
-            if ipe <= ipeMaxVal and averageHeadingError <= headingMaxVal and isRuediger == False and useDirectSwimV:  # direct swim
+            if ipe <= ipeMaxVal and averageHeadingError <= headingMaxVal and useDirectSwimV:  # direct swim
                 directSwimCount += 1.0
                 score = 3
                 strategyType = "Direct Swim"
@@ -2054,7 +2121,7 @@ class mainClass:
                 dataToWrite.append(aTrial.animal)
 
             dataToWrite.extend(
-                [(str(aTrial.animal) + " " + str(dayNum) + " " + str(trialNum[animal])), strategyType, round(ipe, 2), round(velocity, 2), round(totalDistance, 2), round(distanceAverage, 2),
+                [(str(animal) + " " + str(dayNum) + " " + str(trialNum[animal])), strategyType, round(ipe, 2), round(velocity, 2), round(totalDistance, 2), round(distanceAverage, 2),
                  round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2),
                  round(corridorAverage, 2), score, initialHeadingError, round(entropyResult, 2)])
             writer.writerow(dataToWrite)  # writing to csv file
