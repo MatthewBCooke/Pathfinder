@@ -1,7 +1,9 @@
 # Pathfinder
 
-Jason Snyder Lab Watermaze Search strategy and entropy analysis.
+Morris Water Maze search strategy and entropy analysis.
+
 Created by **Matthew Cooke** at **The University of British Columbia**, **Jason Snyder Lab**
+
 Visit us at [https://matthewbcooke.github.io/Pathfinder/]()
 
 ## Synopsis
