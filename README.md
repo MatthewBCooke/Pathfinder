@@ -67,7 +67,7 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
     ![manual categorization](http://snyderlab.com/pathfinder/manual.jpg)
 
 
-7. Once you are satisfied with your parameters, click calculate. This will begin the process of determining search strategies for the trials. Once calculation is complete you will be shown a display of the results.
+7. Once you are satisfied with your parameters, click calculate. This will begin the process of determining search strategies for the trials. Once calculation is complete, you will be shown a display of the results.
 
     ![display](http://snyderlab.com/pathfinder/output.jpg)
 
@@ -85,7 +85,7 @@ Installing the program is easy for both macOS and Windows users.
 
 Pathfinder requires you to have Python 3.6 or later. We highly recommend installing Conda for python via the Anaconda 🐍 package https://www.anaconda.com/distribution/. Once installed, the installation of Pathfinder is easy.
 
-For the most recent stable version, cloning the GitHub repository or installing via PyPi is possible. For the most recent beta version of the software, the develop branch of the GitHub repository will host version currently being worked on.
+For the most recent stable version, cloning the GitHub repository or installing via PyPi is possible. For the most recent beta version of the software, the develop branch of the GitHub repository will host the version currently being worked on.
 
 Installation Instructions:
 
