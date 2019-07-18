@@ -14,7 +14,7 @@ The Pathfinder package is a animal search strategy analysis tool for the Morris 
 
 2. This will open up the GUI window.
 
-![Window Preview](https://live.staticflickr.com/65535/48062456503_3479c0c828_b.jpg)
+![Window Preview](http://snyderlab.com/pathfinder/main.jpg)
 
 3. You can then select an inividual file or a directory containing files from the **File** dropdown menu. These files must be Excel files if you are using Ethovision tracking software, and CSV files if you are using Anymaze or Watermaze software. *Note: For directory selection, you must enter **into** the directory and not just highlight it for it to be selected*
 
@@ -28,7 +28,7 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 2. A parameters panel will appear:
 
-![Heatmap parameters](https://live.staticflickr.com/65535/48062527642_e4e0830e3c_b.jpg)
+![Heatmap parameters](http://snyderlab.com/pathfinder/heatmapparams.jpg)
 
 3. The parameters panel lets you tailor the output to your needs:
 
@@ -38,17 +38,17 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 4. You can then click generate, and our software will plot a heatmap of your trial data.
 
-![heatmap display](https://live.staticflickr.com/65535/48062509737_a63f9288bf_b.jpg)
+![heatmap display](http://snyderlab.com/pathfinder/heatmap.jpg)
 
 ### (B) Search Strategy Analysis
 
 1. For search strategy analysis we have multiple options. To set your own strategy parameters, click custom.
 
-2. (Custom) The custom button will spawn a parameters panel
+2. (Custom) The settings button will spawn a parameters panel
 
-![custom parameters](https://live.staticflickr.com/65535/48062538147_b7ac36a6bd_b.jpg)
+![settings parameters](http://snyderlab.com/pathfinder/settings.jpg)
 
-3. In the custom parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. For definitions of these values see Cooke et al., 2019, in preparation.
+3. In the settings parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. For definitions of these values see Cooke et al., 2019, in preparation.
 
 4. Once you have chosen your parameters, be sure to select your tracking software. Ethovision, Anymaze, and Watermaze are currently supported. 
 
@@ -56,11 +56,11 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 6. There are 3 checkboxes above the **Calculate** button. The first, *Scale Values* is used to automatically scale the default values in an attempt to better match your data. This uses the Pixels/cm and the pool diameter to determine a constant C with which to multiply some parameters. (*Note: If you are using custom values, it is best to disable scaling*) The two other checkboxes enable manual categorization. Manual categorization can be used for trials in which our algorithm was unable to make a determination (**Manual categorization for uncategorized trials**) or for all trials (**Manual categorization for all trials**). 
 
-![manual categorization](https://live.staticflickr.com/65535/48062408796_8190298e51_b.jpg)
+![manual categorization](http://snyderlab.com/pathfinder/manual.jpg)
 
 7. Once you are satisfied with your parameters, click calculate. This will begin the process of determining search strategies for the trials. Once calculation is complete you will be shown a display of the results.
 
-![display](https://live.staticflickr.com/65535/48062411576_4dc5da9198_b.jpg)
+![display](http://snyderlab.com/pathfinder/output.jpg)
 
 8. Your results will be saved as a `.csv` file with whatever name was chosen in the *Output File* field. You will also receive a log file of the excecution, and any generated paths saved in your present working directory. The CSV file will automatically open with whatever default CSV software you use.
 
