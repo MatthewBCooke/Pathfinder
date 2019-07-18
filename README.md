@@ -8,17 +8,17 @@ Visit us at [https://matthewbcooke.github.io/Pathfinder/]()
 
 ## Synopsis
 
-The Pathfinder package is a animal search strategy analysis tool for the Morris Water Maze. The program analyses X-Y coordinate data exported from tracking software (currently supports Ethovision, Anymazy, WaterMaze, and ezTrack). We then calculate the best-fit search strategy for the trial. We analyse the data and fit it into one of 9 search strategies: Direct Swim, Directed Search, Focal Search, Spatial indirect, Chaining, Scanning, Thigmotaxis, and Random Search.
+The Pathfinder package is a search strategy analysis tool for the Morris Water Maze, and can be expanded for other spatial navigation tasks. The program analyses X-Y coordinate data exported from commercially available tracking software. Pathfinder currently supports outputs from: Ethovision, Anymazy, WaterMaze, and ezTrack. We then calculate the best-fit search strategy for the trial. Trials are fit into one of: Direct Swim, Directed Search, Focal Search, Spatial indirect, Chaining, Scanning, Thigmotaxis, and Random Search.
 
 ## Usage Example
 
-1. The program can be opened by calling `pathfinder` if installed through PyPi or by navigating to your install location and calling `python pathfinder.py` in a terminal window. See [**Installation**](https://github.com/MatthewBCooke/Pathfinder/blob/master/README.md#installation) for install instructions.
+1. The program can be opened by calling `pathfinder` if installed through PyPi or by navigating to your install location and calling `python pathfinder.py` in a terminal window. See [**Installation**](https://github.com/MatthewBCooke/Pathfinder/wiki/Installation) for install instructions.
 
-2. This will open up the GUI window.
+2. This will open up the main GUI window.
 
 ![Window Preview](http://snyderlab.com/pathfinder/main.jpg)
 
-3. You can then select an inividual file or a directory containing files from the **File** dropdown menu. These files must be Excel files if you are using Ethovision tracking software, and CSV files if you are using Anymaze or Watermaze software. *Note: For directory selection, you must enter **into** the directory and not just highlight it for it to be selected*
+3. You can select an inividual file or a directory containing export files from the **File** drop-down menu.
 
 4. From here you can choose to either [(**A**)](https://github.com/MatthewBCooke/Pathfinder/blob/master/README.md#a-generating-heatmaps) generate heatmaps for the chosen trials, or to [(**B**)](https://github.com/MatthewBCooke/Pathfinder/blob/master/README.md#b-search-strategy-analysis) calculate search strategies.
 
@@ -26,7 +26,7 @@ The Pathfinder package is a animal search strategy analysis tool for the Morris 
 
 The Pathfinder package allows for the efficient generation of heatmaps. To do so, follow these steps.
 
-1. Click on **File** -> **Generate Heatmaps**
+1. Once a directory or file has been imported, select **File** -> **Generate Heatmaps**
 
 2. A parameters panel will appear:
 
@@ -38,25 +38,30 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
     2. Maximum Value. This will allow you to change at which value the points in the heatmap will become their most saturated (dark red). Setting 'Auto' will dynamically assign the maximum value to be equal to the value of the maximum grid.
 
+
+    3. Day: A day or range of days to use for calculating the heatmaps. (E.g. 1 or 3-6 or All)
+
+    4. Trial: A trial or range of trials on the above selected days. (E.g. All or 1-4 or 2)
+
 4. You can then click generate, and our software will plot a heatmap of your trial data.
 
 ![heatmap display](http://snyderlab.com/pathfinder/heatmap.jpg)
 
 ### (B) Search Strategy Analysis
 
-1. For search strategy analysis we have multiple options. To set your own strategy parameters, click custom.
+1. For search strategy analysis we have multiple options. To set your own strategy parameters, click settings.
 
-2. (Custom) The settings button will spawn a parameters panel
+2. The settings button will spawn a parameters panel:
 
 ![settings parameters](http://snyderlab.com/pathfinder/settings.jpg)
 
 3. In the settings parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. For definitions of these values see Cooke et al., 2019, in preparation.
 
-4. Once you have chosen your parameters, be sure to select your tracking software. Ethovision, Anymaze, and Watermaze are currently supported. 
+4. Once you have chosen your parameters, be sure to select your tracking software. Ethovision, Anymaze, WaterMaze, and ezTrack are currently supported. 
 
-5. You may then alter the main values to suit your data. Platform position, pool centre, and pool diameter can be automatically calculated for groups of non-probe trials tracked in Ethovision. For all other data you must manually define these values (Example: `Platform Position (x,y) | 6.53,-17.3`). Old platform position is only used when Perseverance is chosen in the Custom parameters pane. For more in-depth explanations of these values, see Cooke et al., 2019, in preparation.
+5. You may then alter the main values to suit your data. Platform position, pool centre, and pool diameter can be automatically calculated for groups of trials with a consistent single platform location. For all other data, you must manually define these values (Example: `Platform Position (x,y) | 6.53,-17.3`). For more in-depth explanations of these values, see Cooke et al., 2019, in preparation.
 
-6. There are 3 checkboxes above the **Calculate** button. The first, *Scale Values* is used to automatically scale the default values in an attempt to better match your data. This uses the Pixels/cm and the pool diameter to determine a constant C with which to multiply some parameters. (*Note: If you are using custom values, it is best to disable scaling*) The two other checkboxes enable manual categorization. Manual categorization can be used for trials in which our algorithm was unable to make a determination (**Manual categorization for uncategorized trials**) or for all trials (**Manual categorization for all trials**). 
+6. There are 4 checkboxes above the **Calculate** button. The first, *Scale Values* is used to automatically scale the default values in an attempt to better match your data. This uses the Pixels/cm and the pool diameter to determine a constant C with which to multiply some parameters. (*Note: If you are using custom values, it is best to disable scaling*) The two following checkboxes enable manual categorization. Manual categorization can be used for trials in which our algorithm was unable to make a determination (**Manual categorization for uncategorized trials**) or for all trials (**Manual categorization for all trials**). The last checkbox enables the calculation of entropy for the trial. This requires MATLAB.
 
 ![manual categorization](http://snyderlab.com/pathfinder/manual.jpg)
 
