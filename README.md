@@ -34,7 +34,7 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 3. The parameters panel lets you tailor the output to your needs:
 
-    1. Grid size. This roughly translates into how many bins to put the data in. For more information on grid size see matplotlib documentation: http://matplotlib.org/devdocs/api/_as_gen/matplotlib.axes.Axes.hexbin.html
+    1. Grid size. This roughly translates into how many bins to put the data in. For more information on grid size see matplotlib documentation [(here)](http://matplotlib.org/devdocs/api/_as_gen/matplotlib.axes.Axes.hexbin.html).
 
     2. Maximum Value. This will allow you to change at which value the points in the heatmap will become their most saturated (dark red). Setting 'Auto' will dynamically assign the maximum value to be equal to the value of the maximum grid.
 
