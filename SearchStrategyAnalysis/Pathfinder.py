@@ -26,6 +26,8 @@ import scipy.ndimage as sp
 from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
 import SearchStrategyAnalysis.heatmap
 from scipy.stats import norm
+import re
+import traceback
 
 try:
     import matlab.engine
@@ -54,21 +56,21 @@ __copyright__ = "Copyright 2019, Jason Snyder Lab, The University of British Col
 __credits__ = ["Matthew Cooke", "Tim O'Leary", "Phelan Harris"]
 __email__ = "mbcooke@mail.ubc.ca"
 
-if not os.path.exists("pathfinder"):
-    os.makedirs("pathfinder")
-if not os.path.exists("pathfinder/logs"):
-    os.makedirs("pathfinder/logs")
-if not os.path.exists("pathfinder/results"):
-    os.makedirs("pathfinder/results")
-if not os.path.exists("pathfinder/plots"):
-    os.makedirs("pathfinder/plots")
-if not os.path.exists("pathfinder/heatmaps"):
-    os.makedirs("pathfinder/heatmaps")
+if not os.path.exists("output"):
+    os.makedirs("output")
+if not os.path.exists("output/logs"):
+    os.makedirs("output/logs")
+if not os.path.exists("output/results"):
+    os.makedirs("output/results")
+if not os.path.exists("output/plots"):
+    os.makedirs("output/plots")
+if not os.path.exists("output/heatmaps"):
+    os.makedirs("output/heatmaps")
 
-logfilename = "pathfinder/logs/logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
-logging.basicConfig(filename=logfilename,level=logging.INFO)  # set the default log type to INFO, can be set to DEBUG for more detailed information
-csvfilename = "pathfinder/results/results " + str(
-    strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".csv"  # name of the default results file
+logfilename = "output/logs/logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
+logging.basicConfig(filename=logfilename,level=logging.DEBUG)  # set the default log type to INFO, can be set to DEBUG for more detailed information
+csvfilename = "output/results/results " + str(
+    strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the default results file
 theFile = ""
 fileDirectory = ""
 platformPosVar = "Auto"
@@ -78,7 +80,6 @@ platformDiamVar = "Auto"
 poolDiamVar = "Auto"  # 180.0
 corridorWidthVar = "40"
 poolCentreVar = "Auto"
-oldPlatformPosVar = ""
 chainingRadiusVar = "35"
 thigmotaxisZoneSizeVar = "15"
 outputFile = csvfilename
@@ -90,18 +91,6 @@ defaultParams = Parameters(name="Default", ipeMaxVal=125, headingMaxVal=40, dist
                            percentTraversedMinVal=5, distanceToCentreMaxVal=0.6, thigmoMinDistance=400, innerWallMaxVal=0.65,
                            outerWallMaxVal=0.35, ipeIndirectMaxVal=300, percentTraversedRandomMaxVal=10)
 
-'''relaxedParams = Parameters(name="Relaxed", ipeMaxVal=150, headingMaxVal=45, distanceToSwimMaxVal=0.4,
-                           distanceToPlatMaxVal=0.4, corridorAverageMinVal=0.65, directedSearchMaxDistance=500, focalMinDistance=100, focalMaxDistance=500, corridoripeMaxVal=1500,
-                           annulusCounterMaxVal=0.85, quadrantTotalMaxVal=3, chainingMaxCoverage=40, percentTraversedMaxVal=35,
-                           percentTraversedMinVal=5, distanceToCentreMaxVal=0.7, thigmoMinDistance=400, innerWallMaxVal=0.65,
-                           outerWallMaxVal=0.35, ipeIndirectMaxVal=350, percentTraversedRandomMaxVal=10)
-
-strictParams = Parameters(name="Strict", ipeMaxVal=100, headingMaxVal=35, distanceToSwimMaxVal=0.3,
-                           distanceToPlatMaxVal=0.3, corridorAverageMinVal=0.7, directedSearchMaxDistance=400, focalMinDistance=100, focalMaxDistance=400, corridoripeMaxVal=1500,
-                           annulusCounterMaxVal=0.90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=35,
-                           percentTraversedMinVal=5, distanceToCentreMaxVal=0.7, thigmoMinDistance=400, innerWallMaxVal=0.65,
-                           outerWallMaxVal=0.35, ipeIndirectMaxVal=250, percentTraversedRandomMaxVal=15)
-'''
 params = defaultParams
 
 ipeMaxVal = params.ipeMaxVal
@@ -148,8 +137,6 @@ corridorWidthStringVar = StringVar()
 corridorWidthStringVar.set(corridorWidthVar)
 poolCentreStringVar = StringVar()
 poolCentreStringVar.set(poolCentreVar)
-oldPlatformPosStringVar = StringVar()
-oldPlatformPosStringVar.set(oldPlatformPosVar)
 chainingRadiusStringVar = StringVar()
 chainingRadiusStringVar.set(chainingRadiusVar)
 thigmotaxisZoneSizeStringVar = StringVar()
@@ -172,9 +159,12 @@ useManualForAll = BooleanVar()
 useManualForAll.set(False)
 useEntropy = BooleanVar()
 useEntropy.set(False)
+truncate = BooleanVar()
+truncate.set(False)
 useScaling = BooleanVar()
 useScaling.set(False)
 scale = False
+rois = []
 
 def show_error(text):  # popup box with error text
     logging.debug("Displaying Error")
@@ -185,12 +175,39 @@ def show_error(text):  # popup box with error text
     except:
         logging.info("Couldn't Display error "+text)
 
+class EntryWithPlaceholder(Entry):
+    def __init__(self, master=None, placeholder="PLACEHOLDER", color='grey'):
+        super().__init__(master)
+
+        self.placeholder = placeholder
+        self.placeholder_color = color
+        self.default_fg_color = self['fg']
+
+        self.bind("<FocusIn>", self.foc_in)
+        self.bind("<FocusOut>", self.foc_out)
+
+        self.put_placeholder()
+
+    def put_placeholder(self):
+        self.insert(0, self.placeholder)
+        self['fg'] = self.placeholder_color
+
+    def foc_in(self, *args):
+        if self['fg'] == self.placeholder_color:
+            self.delete('0', 'end')
+            self['fg'] = self.default_fg_color
+
+    def foc_out(self, *args):
+        if not self.get():
+            self.put_placeholder()
+
 class mainClass:
     def __init__(self, root):  # init is called on runtime
         logging.debug("Initiating Main program")
         try:
             self.buildGUI(root)
-        except:
+        except Exception:
+            traceback.print_exc()
             logging.fatal("Couldn't build GUI")
             self.tryQuit()
             return
@@ -204,13 +221,13 @@ class mainClass:
         global poolDiamVar
         global corridorWidthVar
         global poolCentreVar
-        global oldPlatformPosVar
         global chainingRadiusVar
         global thigmotaxisZoneSizeVar
         global outputFile
         global manualFlag
         global useManualForAllFlag
         global useEntropyFlag
+        global truncateFlag
         global softwareStringVar
         global softwareScalingFactorStringVar
 
@@ -270,32 +287,7 @@ class mainClass:
         self.helpMenu.add_command(label="Help", command=self.getHelp)
         self.helpMenu.add_command(label="About", command=self.about)
 
-        # ****** TOOLBAR ******
-        '''self.toolbar = Frame(root)  # add a toolbar to the frame
-        self.toolbar.config(bg="white")
-
-        ttk.Style().configure('selected.TButton', foreground='red', background='white')  # have two button styles
-        ttk.Style().configure('default.TButton', foreground='black',
-                              background='white')  # note: we are using TKK buttons not tk buttons because tk buttons don't support style changes on mac
-        '''
         rowCount = 0
-
-        '''self.defaultButton = ttk.Button(self.toolbar, text="Default", command=self.defaultButtonFunc,
-                                        style='selected.TButton')  # add snyder button
-        self.defaultButton.grid(row=rowCount, ipadx=2, pady=2, padx=2)
-        self.strictButton = ttk.Button(self.toolbar, text="Relaxed", command=self.strictButtonFunc,
-                                        style='default.TButton')  # add reudiger button
-        self.strictButton.grid(row=rowCount, column=1, ipadx=2, pady=2, padx=2)
-        self.relaxedButton = ttk.Button(self.toolbar, text="Strict", command=self.relaxedButtonFunc,
-                                       style='default.TButton')  # add garthe button
-        self.relaxedButton.grid(row=rowCount, column=2, ipadx=2, pady=2, padx=2)'''
-        '''self.toolbar.pack(side=TOP, fill=X)  # place the toolbar
-        self.defaultButton.bind("<Enter>", partial(self.on_enter, "Use preset values from our paper"))
-        self.defaultButton.bind("<Leave>", self.on_leave)
-        self.relaxedButton.bind("<Enter>", partial(self.on_enter, "Use preset values relaxed"))
-        self.relaxedButton.bind("<Leave>", self.on_leave)
-        self.strictButton.bind("<Enter>", partial(self.on_enter, "Use preset values strict"))
-        self.strictButton.bind("<Leave>", self.on_leave)'''
         # ******* Software Type *******
         self.softwareBar = Frame(root)  # add a toolbar to the frame
         self.softwareBar.config(bg="white")
@@ -335,12 +327,11 @@ class mainClass:
 
         try:
             with open('mainobjs.pickle', 'rb') as f:
-                platformPosVar, platformDiamVar, poolDiamVar, poolCentreVar, oldPlatformPosVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar = pickle.load(f)
+                platformPosVar, platformDiamVar, poolDiamVar, poolCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar = pickle.load(f)
                 platformPosStringVar.set(platformPosVar)
                 platformDiamStringVar.set(platformDiamVar)
                 poolDiamStringVar.set(poolDiamVar)
                 poolCentreStringVar.set(poolCentreVar)
-                oldPlatformPosStringVar.set(oldPlatformPosVar)
                 corridorWidthStringVar.set(corridorWidthVar)
                 chainingRadiusStringVar.set(chainingRadiusVar)
                 thigmotaxisZoneSizeStringVar.set(thigmotaxisZoneSizeVar)
@@ -355,6 +346,11 @@ class mainClass:
         self.platformPosE.grid(row=rowCount, column=1)  # place this in row 0 column 1
         self.platformPos.bind("<Enter>", partial(self.on_enter, "Platform position. Example: 2.5,-3.72 or Auto"))
         self.platformPos.bind("<Leave>", self.on_leave)
+        self.otherROIButton = Button(self.paramFrame, text="Add ROIs", command=self.otherROI, fg="black")
+        self.otherROIButton.grid(row=rowCount, column=2)  # add custom button
+        self.otherROIButton.bind("<Enter>", partial(self.on_enter, "Add more Regions of Interest to be considered in strategy calculation"))
+        self.otherROIButton.bind("<Leave>", self.on_leave)
+        self.otherROIButton.config(width = 10)
         rowCount = rowCount+1
         self.platformDiam = Label(self.paramFrame, text="Platform Diameter (cm):", bg="white")
         self.platformDiam.grid(row=rowCount, column=0, sticky=E)
@@ -377,13 +373,7 @@ class mainClass:
         self.poolCentre.bind("<Enter>", partial(self.on_enter, "Pool Centre. Example: 0.0,0.0 or Auto"))
         self.poolCentre.bind("<Leave>", self.on_leave)
         rowCount = rowCount+1
-        self.oldPlatformPos = Label(self.paramFrame, text="Platform position 2 (x,y):", bg="white")
-        self.oldPlatformPos.grid(row=rowCount, column=0, sticky=E)
-        self.oldPlatformPosE = Entry(self.paramFrame, textvariable=oldPlatformPosStringVar)
-        self.oldPlatformPosE.grid(row=rowCount, column=1)
-        self.oldPlatformPos.bind("<Enter>", partial(self.on_enter, "Not currently used"))
-        self.oldPlatformPos.bind("<Leave>", self.on_leave)
-        rowCount = rowCount+1
+
         self.headingError = Label(self.paramFrame, text="Angular Corridor Width (degrees):", bg="white")
         self.headingError.grid(row=rowCount, column=0, sticky=E)
         self.headingErrorE = Entry(self.paramFrame, textvariable=corridorWidthStringVar)
@@ -408,7 +398,7 @@ class mainClass:
         self.thigmotaxisZoneSize.bind("<Leave>", self.on_leave)
         rowCount = rowCount+1
 
-        self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm (for Anymaze and Watermaze):", bg="white")
+        self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm for scaling:", bg="white")
         self.softwareScalingFactor.grid(row=rowCount, column=0, sticky=E)
         self.softwareScalingFactorE = Entry(self.paramFrame, textvariable=softwareScalingFactorStringVar)
         self.softwareScalingFactorE.grid(row=rowCount, column=1)
@@ -430,6 +420,7 @@ class mainClass:
         manualFlag = False  # a flag that lets us know if we want to use manual categorization
         useManualForAllFlag = False
         useEntropyFlag = False
+        truncateFlag = False
         rowCount = rowCount+1
         self.scalingTickL = Label(self.paramFrame, text="Scale values (convert pixels to cm): ", bg="white")  # label for the tickbox
         self.scalingTickL.grid(row=rowCount, column=0, sticky=E)  # placed here
@@ -461,17 +452,26 @@ class mainClass:
         self.entropyC.grid(row=rowCount, column=1)
         self.entropyL.bind("<Enter>", partial(self.on_enter, "Calculates the entropy of the trial (slow)"))
         self.entropyL.bind("<Leave>", self.on_leave)
+        rowCount = rowCount+1
+        self.truncateL = Label(self.paramFrame, text="Truncate trials when animal reaches goal location: ", bg="white")  # label for the tickbox
+        self.truncateL.grid(row=rowCount, column=0, sticky=E)  # placed here
+        self.truncateC = Checkbutton(self.paramFrame, variable=truncate, bg="white")  # the actual tickbox
+        self.truncateC.grid(row=rowCount, column=1)
+        self.truncateL.bind("<Enter>", partial(self.on_enter, "Will end the trial onces the animal reaches the goal location."))
+        self.truncateL.bind("<Leave>", self.on_leave)
 
         useManualForAllFlag = useManualForAll.get()
         useEntropyFlag = useEntropy.get()
         manualFlag = useManual.get()  # get the value of the tickbox
+        trunacteFlag = truncate.get()
         rowCount = rowCount+1
         self.calculateButton = Button(self.paramFrame, text="Calculate", fg="black",
-                                      command=self.manual)  # add a button that says calculate
-        self.calculateButton.grid(row=rowCount, column=1, columnspan=2)
+                                      command=self.mainHelper)  # add a button that says calculate
+        self.calculateButton.grid(row=rowCount, column=1, columnspan=1)
         self.settingsButton = Button(self.paramFrame, text="Settings", command=self.settings, fg="black")
-        self.settingsButton.grid(row=rowCount, column=0, columnspan=2)  # add custom button
-
+        self.settingsButton.grid(row=rowCount, column=0, columnspan=1)  # add custom button
+        self.calculateButton.config(width = 10)
+        self.settingsButton.config(width = 10)
 
         if _platform == "darwin":
             root.bind('<Command-d>', self.ctrlDir)
@@ -550,7 +550,7 @@ class mainClass:
         root.destroy()
 
     def enterManual(self, event):  # called when shift enter is pressed in the GUI
-        self.manual()
+        self.mainHelper()
 
     def ctrlDir(self, event):  # called when CTRL D is pressed
         self.openDir()
@@ -588,41 +588,109 @@ class mainClass:
     def enterSave(self, event):
         self.saveStrat()
 
-    def manual(self):  # function that checks for the manual flag and runs the program
+    def mainHelper(self):  # function that checks for the manual flag and runs the program
         global manualFlag
         global useManualForAllFlag
         global useEntropyFlag
+        global truncateFlag
         manualFlag = useManual.get()
         useManualForAllFlag = useManualForAll.get()
         useEntropyFlag = useEntropy.get()
-        if manualFlag or useManualForAllFlag:  # if we want manual we can't use threading
-            self.mainCalculate()
-        else:  # else start the threads
-            self.mainThreader()
+        truncateFlag = truncate.get()
+        platformPosVar = platformPosStringVar.get()
+        platformDiamVar = platformDiamStringVar.get()
+        poolDiamVar = poolDiamStringVar.get()
+        poolCentreVar = poolCentreStringVar.get()
+        corridorWidthVar = corridorWidthStringVar.get()
+        chainingRadiusVar = chainingRadiusStringVar.get()
+        thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()  # get important values
+        softwareScalingFactorVar = softwareScalingFactorStringVar.get()
 
-    '''def defaultButtonFunc(self):  # actions on button press (snyder button)
-        logging.debug("Default selected")
-        self.defaultButton.configure(style='selected.TButton')  # change the style of the selected
-        self.strictButton.configure(style='default.TButton')  # and non-selected buttons
-        self.relaxedButton.configure(style='default.TButton')
-        self.customButton.configure(style='default.TButton')
-        params = defaultParams
+        try:
+            with open('mainobjs.pickle', 'wb') as f:
+                pickle.dump([platformPosVar, platformDiamVar, poolDiamVar, poolCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar], f)
+        except:
+            pass
 
-    def strictButtonFunc(self):  # see snyder
-        logging.debug("Strict selected")
-        self.defaultButton.configure(style='default.TButton')
-        self.strictButton.configure(style='selected.TButton')
-        self.relaxedButton.configure(style='default.TButton')
-        self.customButton.configure(style='default.TButton')
-        params = strictParams
+        self.mainCalculate(platformPosVar,platformDiamVar)
 
-    def relaxedButtonFunc(self):  # see snyder
-        logging.debug("Relaxed selected")
-        self.defaultButton.configure(style='default.TButton')
-        self.strictButton.configure(style='default.TButton')
-        self.relaxedButton.configure(style='selected.TButton')
-        self.customButton.configure(style='default.TButton')
-        params = relaxedParams'''
+        for roi in rois:
+            print("Running for ROI: " + roi[0])
+            self.mainCalculate(roi[0],roi[1])
+
+
+    def otherROI(self):
+        logging.debug("Opening ROI menu")
+        self.entries = []
+        number = 0
+        self.top4 = Toplevel(root)  # we set this to be the top
+        self.canvas = Canvas(self.top4, width=500, height=200)
+        self.vsb = Scrollbar(self.top4, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(bg="white", yscrollcommand=self.vsb.set)
+        self.add_button = Button(self.top4, text="Add ROI", command=self.addROI)
+        self.saveButton = Button(self.top4, text="Save", command=self.saveROI)
+        self.saveButton.config(width = 10)
+        self.add_button.config(width = 10)
+        self.container = Frame(self.top4)
+        self.canvas.create_window(0,0,anchor="nw",window=self.container)
+        Label(self.top4, text="Settings", bg="white", fg="red").pack(side="top") # we title it
+        self.add_button.pack(side="top")
+        self.vsb.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.saveButton.pack(side="bottom")
+
+    def addROI(self):
+        labelText = "ROI #" + str(int((len(self.entries))/2+2))
+        label = Label(self.container,text=labelText)
+        label.grid(row=int(((len(self.entries))/2)),column=0)
+        entry1 = EntryWithPlaceholder(self.container, "Location (x,y)")
+        entry1.grid(row=int(((len(self.entries))/2)),column=1)
+        entry2 = EntryWithPlaceholder(self.container, "Diameter (cm)")
+        entry2.grid(row=int(((len(self.entries))/2)),column=2)
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        self.entries.append(entry1)
+        self.entries.append(entry2)
+
+    def saveROI(self):
+        roiError = False
+        roiList = []
+        sizeList = []
+        count = 0
+        for entry in self.entries:
+            if count % 2 == 0:
+                roiList.append(entry.get())
+            else:
+                sizeList.append(entry.get())
+            count = count + 1
+
+        tempRois = zip(roiList,sizeList)
+
+        patternROI = re.compile("^[0-9]{1,3}[,][0-9]{1,3}$")
+        patternSize = re.compile("^[0-9]{1,3}$")
+
+        for aTuple in tempRois:
+            if aTuple[0] == 'Location (x,y)' or aTuple[1] == 'Diameter (cm)':
+                continue
+            if patternROI.match(aTuple[0]) == None:
+                messagebox.showwarning('Input Error',
+                                   'Please verify your ROI input')
+                rois.clear()
+                roiError = True
+            elif patternSize.match(aTuple[1]) == None:
+                messagebox.showwarning('Input Error',
+                                   'Please verify your size input')
+                rois.clear()
+                roiError = True
+            else:
+                rois.append(aTuple)
+
+        for aTuple in rois:
+            print(aTuple)
+        if roiError == False:
+            try:
+                self.top4.destroy()
+            except:
+                pass
 
     def settings(self):
         logging.debug("Getting custom values")
@@ -1030,17 +1098,6 @@ class mainClass:
             except:
                 pass
 
-
-    def mainThreader(self):  # start the threaded execution
-        logging.debug("Threading")
-
-        try:
-            t1 = threading.Thread(target=self.mainCalculate)  # create a thread for the main function
-            t1.start()  # start that thread
-            logging.debug("Threading mainCalculate thread started")
-        except Exception:
-            logging.critical("Fatal error in mainCalculate")  # couldnt be started
-
     def find_files(self, directory, pattern):  # searches for our files in the directory
         logging.debug("Finding files in the directory")
         for root, dirs, files in os.walk(directory):
@@ -1062,7 +1119,7 @@ class mainClass:
             platWallsX.append(platX + ((math.ceil(platEstDiam) / 2)+1) * math.cos(math.radians(theta)))
             platWallsY.append(platY + ((math.ceil(platEstDiam) / 2)+1) * math.sin(math.radians(theta)))
 
-        plotName = "pathfinder/plots/" + name + " " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # the name will be Animal id followed by the date and time
+        plotName = "output/plots/" + name + " " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # the name will be Animal id followed by the date and time
         plt.scatter(x, y, s=15, c='r', alpha=1.0)  # we plot the XY position of animal
         plt.scatter(x[0],y[0], s=100, c='b', alpha=1, marker='s')  # we plot the start point
         plt.scatter(platWallsX, platWallsY, s=1, c='black', alpha=1.0)  # we plot the platform
@@ -1277,7 +1334,7 @@ class mainClass:
         #         x[math.floor(row.x)] += 1/len(experiment)
         #         y[math.floor(row.y)] += 1/len(experiment)
 
-        aFileName = "pathfinder/heatmaps/ " + "Day "+ dayValStringVar.get() + " Trial " + trialValStringVar.get() + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
+        aFileName = "output/heatmaps/ " + "Day "+ dayValStringVar.get() + " Trial " + trialValStringVar.get() + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
         aTitle = fileDirectory
         """
         mu = 0
@@ -1332,21 +1389,6 @@ class mainClass:
         except:
             logging.info("Couldn't update the GUI")
 
-
-    def csvDestroy(self):
-        try:  # try to remove the csv display (for second run)
-            theStatus.set('Loading...')
-            self.updateTasks()
-            frame.grid_forget()
-            canvas.grid_forget()
-            frame.destroy()
-            canvas.destroy()
-            vsb.destroy()
-            xscrollbar.destroy()
-            logging.info("Loaded")
-        except:
-            logging.debug("Failed to load")
-
     def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
         if np.linalg.norm(vector) == 0:
@@ -1376,7 +1418,7 @@ class mainClass:
         entropyResult = eng.Entropy(xList,yList,platformX,platformY)
         return entropyResult
 
-    def getAutoLocations(self, theExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, software):
+    def getAutoLocations(self, theExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, software, platformDiamVar):
         platEstX = 0.0
         platEstY = 0.0
         maxX = 0.0
@@ -1409,6 +1451,7 @@ class mainClass:
         platDiamFlag = False
         diamFlag = False
         autoParams = []
+
 
         if platformPosVar != "Auto" and platformPosVar != "auto" and platformPosVar != "automatic" and platformPosVar != "Automatic" and platformPosVar != "":  # if we want manual platform
             platformX, platformY = platformPosVar.split(",")
@@ -1475,7 +1518,6 @@ class mainClass:
             theStatus.set(loggingText + "...")
             logging.debug(loggingText)
             self.updateTasks()
-
             for aTrial in theExperiment:
                 for aDatapoint in aTrial:
                     if aDatapoint.getx() == "-" or aDatapoint.getx() == "":  # throw out missing data
@@ -1567,7 +1609,7 @@ class mainClass:
             print("Automatic platform position calculated as: " + str(platEstX) + ", " + str(platEstY))
         if platDiamFlag:
             platEstDiam = ((platMaxX-platMinX) + (platMaxY-platMinY))/2
-            if platEstDiam > 15 or platEstDiam < 5:
+            if platEstDiam > 50 or platEstDiam < 1:
                 platEstDiam = 10
             logging.info("Automatic platform diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
             print("Automatic platform diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
@@ -1577,19 +1619,18 @@ class mainClass:
             print("Automatic pool diameter calculated as: " + str(poolDiamEst))
             poolDiamVar = poolDiamEst
             poolRadius = float(poolDiamVar) / 2
-        print("Pool Centre calculated as: ",poolCentreX,poolCentreY)
-        return (poolCentreX,poolCentreY,platformX,platformY,poolDiamVar,poolRadius, platEstDiam)
+        return (poolCentreX,poolCentreY,platformX,platformY,poolDiamVar,poolRadius,platEstDiam)
 
 
-    def calculateValues(self, theTrial, platformX, platformY, poolCentreX, poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor, poolradius, dayNum):
-        global oldPlatformPosVar
+    def calculateValues(self, theTrial, platformX, platformY, poolCentreX, poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor, poolradius, dayNum, platformDiam):
         global poolCentreVar
         global useEntropyFlag
+        global truncateFlag
         theStatus.set("Calculating Search Strategies: " + str(theTrial))
 
         i = 0
         totalDistance = 0.0
-        latency = 0.0
+        latency = 1
         mainLatency = 0.0
         xSummed = 0.0
         ySummed = 0.0
@@ -1654,12 +1695,13 @@ class mainClass:
             ySummed += float(aDatapoint.gety())
             aX = float(aDatapoint.getx())
             aY = float(aDatapoint.gety())
+
             arrayX.append(aX)
             arrayY.append(aY)
+
             # Average Distance
             currentDistanceFromPlatform = math.sqrt((platformX - aX) ** 2 + (platformY - aY) ** 2)*scalingFactor
 
-            #print(currentDistanceFromPlatform)
 
 
             # in zones
@@ -1714,6 +1756,8 @@ class mainClass:
                 quadrantFour = 1
 
             latency = aDatapoint.gettime() - startTime
+            if truncateFlag and currentDistanceFromPlatform < float(platformDiam)/2.0:
+                break
 
         quadrantTotal = quadrantOne + quadrantTwo + quadrantThree + quadrantFour
 
@@ -1736,9 +1780,7 @@ class mainClass:
         initialHeadingError = 0.0
         initialHeadingErrorCount = 0
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
-            # if dayNum == 9 or dayNum == 14:
-            #     if aDatapoint.gettime() > 15:
-            #         continue
+            currentDistanceFromPlatform = math.sqrt((platformX - aDatapoint.getx()) ** 2 + (platformY - aDatapoint.gety()) ** 2)*scalingFactor
             distanceToSwimPathCentroid = math.sqrt((xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2)*scalingFactor
             totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
             distanceFromStartToCurrent = math.sqrt((aDatapoint.getx() - startX) **2 + (aDatapoint.gety() - startY)**2)*scalingFactor
@@ -1759,6 +1801,8 @@ class mainClass:
             oldItemX = aDatapoint.getx()
             oldItemY = aDatapoint.gety()
             totalHeadingError += currentHeadingError
+            if truncateFlag and currentDistanceFromPlatform < float(platformDiam)/2.0:
+                break
         # </editor-fold>
         # <editor-fold desc="Take Averages">
         corridorAverage = corridorCounter / i
@@ -1784,7 +1828,7 @@ class mainClass:
         # print distanceTotal/(i/25), avHeadingError
         percentTraversed = (cellCounter / (math.ceil(gridCounter**2) * scalingFactor)) * 100.0  # turn our count into a percentage over how many cells we can visit
 
-
+        velocity = 0
         idealDistance = distanceFromStartToPlatform
         if latency != 0:
             try:
@@ -1810,32 +1854,24 @@ class mainClass:
             entropyResult = self.calculateEntropy(theTrial,platformX,platformY)
         else:
             entropyResult = False
-        return corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, averageInitialHeadingError, entropyResult
+        return corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, averageInitialHeadingError, entropyResult
 
-    def mainCalculate(self):
+    def mainCalculate(self, platformPosVar=platformPosVar, platformDiamVar=platformDiamVar):
         global softwareStringVar
         logging.debug("Calculate Called")
         self.updateTasks()
-        self.csvDestroy()
         theStatus.set("Initializing")
 
-        platformPosVar = platformPosStringVar.get()
-        platformDiamVar = platformDiamStringVar.get()
+        print("Running: " + str(platformPosVar) + " with diamater " + str(platformDiamVar))
+
         poolDiamVar = poolDiamStringVar.get()
         poolCentreVar = poolCentreStringVar.get()
-        oldPlatformPosVar = oldPlatformPosStringVar.get()
         corridorWidthVar = corridorWidthStringVar.get()
         chainingRadiusVar = chainingRadiusStringVar.get()
         thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()  # get important values
         softwareScalingFactorVar = softwareScalingFactorStringVar.get()
-
-        try:
-            with open('mainobjs.pickle', 'wb') as f:
-                pickle.dump([platformPosVar, platformDiamVar, poolDiamVar, poolCentreVar, oldPlatformPosVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar], f)
-        except:
-            pass
-
         # basic setup
+
 
         ipeMaxVal = params.ipeMaxVal
         headingMaxVal = params.headingMaxVal
@@ -1865,8 +1901,6 @@ class mainClass:
         platformX = 0.0
         platformY = 0.0
         oldDay = ""
-        oldPlatformX = platformX
-        oldPlatformY = platformY
         chainingRadius = 0.0
         poolCentre = (0.0, 0.0)
         poolRadius = 0.0
@@ -1894,24 +1928,13 @@ class mainClass:
 
         try:
             aExperiment = saveFileAsExperiment(software, theFile, fileDirectory)
-        except Exception as e:
+        except Exception:
             show_error("No Input")
-            print("Unexpected Error: " + str(e))
+            print("Unexpected Error loading experiment")
+            traceback.print_exc()
             return
-        if software == "ethovision":
-            logging.info("Extension set to xlsx")
-            extensionType = r'*.xlsx'
-            softwareScalingFactorVar = 1.0
-        elif software == "anymaze":
-            extensionType = r'*.csv'
-            logging.info("Extension set to csv")
-            softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
-        elif software == "watermaze":
-            extensionType = r'*.csv'
-            logging.info("Extension set to csv")
-            softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
 
-        poolCentreX, poolCentreY, platformX, platformY, poolDiamVar, poolRadius, platEstDiam = self.getAutoLocations(aExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, software)
+        poolCentreX, poolCentreY, platformX, platformY, poolDiamVar, poolRadius, platformDiamVar = self.getAutoLocations(aExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, software, platformDiamVar)
         if scale:
             scalingFactor = softwareScalingFactorVar
         else:
@@ -1926,13 +1949,14 @@ class mainClass:
 
         theStatus.set('Calculating Search Strategies...')  # update status bar
         self.updateTasks()
-
+        currentOutputFile = outputFile+str(platformPosVar)+".csv"
         logging.debug("Calculating search strategies")
         try:  # try to open a csv file for output
-            f = open(outputFile, 'wt')
+            f = open(currentOutputFile, 'wt')
             writer = csv.writer(f, delimiter=',', quotechar='"')
-        except:
-            logging.error("Cannot write to " + str(outputFile))
+        except Exception:
+            traceback.print_exc()
+            logging.error("Cannot write to " + str(currentOutputFile))
             return
 
         headersToWrite = []
@@ -2022,10 +2046,10 @@ class mainClass:
             # Analyze the data ----------------------------------------------------------------------------------------------
 
 
-            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
+            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
                 aTrial, platformX, platformY, poolCentreX,
                 poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
-                biggerWallZone, scalingFactor, poolRadius, dayNum)
+                biggerWallZone, scalingFactor, poolRadius, dayNum, platformDiamVar)
 
             strategyType = ""
             # DIRECT SWIM
@@ -2102,7 +2126,7 @@ class mainClass:
                 plotName = "Strategy " + str(strategyType) + " Animal " + str(animal) + "  Day " + str(dayNum) + " Trial " + str(trialNum[animal])
                 self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
                                 float(platformX), float(platformY), float(scalingFactor), plotName,
-                                ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(trialNum[animal])), float(platEstDiam))  # ask user for answer
+                                ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(trialNum[animal])), float(platformDiamVar))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
                 strategyType = searchStrategyV  # update the strategyType to that of the user
 
@@ -2129,25 +2153,20 @@ class mainClass:
             f.flush()
 
         print("Direct Swim: ", directSwimCount, "| Directed Search: ", directSearchCount, "| Focal Search: ", focalSearchCount, "| Indirect Search: ", indirectSearchCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ", randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
-        theStatus.set('Updating CSV...')
         if sys.platform.startswith('darwin'):
-            subprocess.call(('open', outputFile))
+            subprocess.call(('open', currentOutputFile))
         elif os.name == 'nt': # For Windows
-            os.startfile(outputFile)
+            os.startfile(currentOutputFile)
         elif os.name == 'posix': # For Linux, Mac, etc.
-            subprocess.call(('xdg-open', outputFile))
+            subprocess.call(('xdg-open', currentOutputFile))
         self.updateTasks()
         theStatus.set('')
         self.updateTasks()
-        csvfilename = "pathfinder/results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
-                                            localtime())) + ".csv"  # update the csv file name for the next run
+        csvfilename = "output/results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
+                                            localtime()))  # update the csv file name for the next run
         outputFileStringVar.set(csvfilename)
 
-        try:
-            t1.join()
-            t2.join()
-        except:
-            return
+        return
 
 def main():
     b = mainClass(root)  # start the main class (main program)

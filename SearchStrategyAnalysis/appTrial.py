@@ -145,7 +145,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
         else:
             if software == "ethovision":
                 extensionType = r"*.xlsx"
-            elif software == "anymaze" or software == "watermaze":
+            else:
                 extensionType = r"*.csv"
             for aFile in find_files(filedirectory, extensionType):
                 filenameList.append(aFile)
@@ -163,7 +163,8 @@ def saveFileAsExperiment(software, filename, filedirectory):
             try:
                 wb = open_workbook(filename)
                 logging.debug("Opened" + filename)
-            except:
+            except Exception:
+                traceback.print_exc()
                 logging.error("Unable to open excel file " + filename)
                 return
 
@@ -210,7 +211,8 @@ def saveFileAsExperiment(software, filename, filedirectory):
             try:
                 f = open(filename)
                 logging.debug("Opened " + filename)
-            except:
+            except Exception:
+                traceback.print_exc()
                 logging.info("Could not open " + filename)
                 return
             reader = csv.reader(f, delimiter=",")
@@ -223,7 +225,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
             aTrial.setname(filename.split("/")[-1])
 
             for time, x, y in zip(columns[0][1:], columns[1][1:], columns[2][1:]):
-                try: 
+                try:
                     hours = float(time.split(':')[0])
                     minutes = float(time.split(':')[1])
                     seconds = float(time.split(':')[2])
@@ -287,6 +289,49 @@ def saveFileAsExperiment(software, filename, filedirectory):
 
                 if len(aTrial.datapointList) > 0:
                     trialList.append(aTrial)
+
+        elif software == "eztrack":
+            logging.info("Reading file ezTrack")
+            experiment.setHasAnimalNames(False)
+            experiment.setHasDateInfo(False)
+            experiment.setHasTrialNames(True)
+            try:
+                f = open(filename)
+            except:
+                logging.info("Could not open " + filename)
+                return
+
+            reader = csv.reader(f, delimiter=",")
+            listReader = list(reader)
+            aTrial = Trial()
+            aTrial.setname(filename.split("/")[-1])
+            columns = defaultdict(list)  # each value in each column is appended to a list
+            aIndex = 0
+            for aColumn in listReader[0]:
+                if aColumn == "FPS":
+                    fpsCol = aIndex
+                elif aColumn == "Frame":
+                    frameCol = aIndex
+                elif aColumn == "X":
+                    xCol = aIndex
+                elif aColumn == "Y":
+                    yCol = aIndex
+                aIndex = aIndex +1
+            for row in listReader:
+                for (i, v) in enumerate(row):
+                    columns[i].append(v)
+
+            for fps, frame, x, y in zip(columns[fpsCol][1:], columns[frameCol][1:], columns[xCol][1:], columns[yCol][1:]):
+                try:
+                    time = float(frame)/float(fps)
+                    x = float(x)
+                    y = float(y)
+                    print(time,x,y)
+                    aTrial.append(Datapoint(time, x, y))
+                except:
+                    aTrial.markDataAsCorrupted()
+
+            trialList.append(aTrial)
 
         else:
             logging.critical("Could not determine trial, saveFileAsTrial")
