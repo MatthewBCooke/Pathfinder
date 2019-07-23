@@ -259,7 +259,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     columns[i].append(v)
                     number_of_columns = i
 
-            for i in range(0, math.floor(number_of_columns / 3)):
+            for i in range(0, int(round((number_of_columns / 3)))):
                 col1 = columns[i * 3]
                 col2 = columns[1 + i * 3]
                 col3 = columns[2 + i * 3]
