@@ -80,21 +80,22 @@ theFile = ""
 fileDirectory = ""
 goalPosVar = "Auto"
 mazeDiamVar = "Auto"
-goalPosVar = "Auto"  # -21,31
+goalPosVar = "Auto"
 goalDiamVar = "Auto"
-mazeDiamVar = "Auto"  # 180.0
+mazeDiamVar = "Auto"
 corridorWidthVar = "40"
 mazeCentreVar = "Auto"
 chainingRadiusVar = "35"
 thigmotaxisZoneSizeVar = "15"
 outputFile = csvfilename
 fileFlag = 0
+probeCutVar = math.inf #stop probe trials at X seconds, inf = no cutoff
 
 defaultParams = Parameters(name="Default", ipeMaxVal=125, headingMaxVal=40, distanceToSwimMaxVal=0.3,
                            distanceToPlatMaxVal=0.3, corridorAverageMinVal=0.7, directedSearchMaxDistance=400, focalMinDistance=100, focalMaxDistance=400, corridoripeMaxVal=1500,
                            annulusCounterMaxVal=0.90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=20,
                            percentTraversedMinVal=5, distanceToCentreMaxVal=0.6, thigmoMinDistance=400, innerWallMaxVal=0.65,
-                           outerWallMaxVal=0.35, ipeIndirectMaxVal=300, percentTraversedRandomMaxVal=10)
+                           outerWallMaxVal=0.35, ipeIndirectMaxVal=300, percentTraversedRandomMaxVal=10, headingIndirectMaxVal=70)
 
 params = defaultParams
 
@@ -118,6 +119,7 @@ focalMinDistance = params.focalMinDistance
 focalMaxDistance = params.focalMaxDistance
 chainingMaxCoverage = params.chainingMaxCoverage
 thigmoMinDistanceCustom = params.thigmoMinDistance
+headingIndirectMaxVal = params.headingIndirectMaxVal
 
 customFlag = False
 useDirectPathV = True
@@ -748,10 +750,11 @@ class mainClass:
         self.focalMaxDistanceCustom = StringVar()
         self.chainingMaxCoverageCustom = StringVar()
         self.thigmoMinDistanceCustom = StringVar()
+        self.headingIndirectCustom = StringVar()
 
         try:
             with open('customobjs.pickle', 'rb') as f:
-                ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV = pickle.load(f)
+                ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV = pickle.load(f)
                 self.useDirectPath.set(useDirectPathV)
                 self.useFocalSearch.set(useFocalSearchV)
                 self.useDirectedSearch.set(useDirectedSearchV)
@@ -783,6 +786,7 @@ class mainClass:
             focalMaxDistance = params.focalMaxDistance
             chainingMaxCoverage = params.chainingMaxCoverage
             thigmoMinDistance = params.thigmoMinDistance
+            headingIndirectMaxVal = params.headingIndirectMaxVal
 
             self.useDirectPath.set(True)
             self.useFocalSearch.set(True)
@@ -815,6 +819,7 @@ class mainClass:
         self.focalMaxDistanceCustom.set(focalMaxDistance)
         self.chainingMaxCoverageCustom.set(chainingMaxCoverage)
         self.thigmoMinDistanceCustom.set(thigmoMinDistance)
+        self.headingIndirectCustom.set(headingIndirectMaxVal)
         # all of the above is the same as in snyder, plus the creation of variables to hold values from the custom menu
 
         self.top = Toplevel(root)  # we set this to be the top
@@ -918,6 +923,13 @@ class mainClass:
         jslsIndirectCustomL.grid(row=rowCount, column=0, sticky=E)
         jslsIndirectCustomE = Entry(self.top, textvariable=self.jslsIndirectCustom)
         jslsIndirectCustomE.grid(row=rowCount, column=1)
+
+        rowCount+=1
+
+        headingIndirectCustomL = Label(self.top, text="Heading error [maximum]: ", bg="white")
+        headingIndirectCustomL.grid(row=rowCount, column=0, sticky=E)
+        headingIndirectCustomE = Entry(self.top, textvariable=self.headingIndirectCustom, bg="white")
+        headingIndirectCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
@@ -1065,12 +1077,13 @@ class mainClass:
         focalMaxDistance = float(self.focalMaxDistanceCustom.get())
         chainingMaxCoverage = float(self.chainingMaxCoverageCustom.get())
         thigmoMinDistance = float(self.thigmoMinDistanceCustom.get())
+        headingIndirectMaxVal = float(self.headingIndirectCustom.get())
 
         params = Parameters(name="Custom", ipeMaxVal=float(self.jslsMaxCustom.get()), headingMaxVal=float(self.headingErrorCustom.get()), distanceToSwimMaxVal=float(self.distanceToSwimCustom.get())/100,
                             distanceToPlatMaxVal=float(self.distanceToPlatCustom.get())/100, corridorAverageMinVal=float(self.corridorAverageCustom.get()) / 100, directedSearchMaxDistance=float(self.directedSearchMaxDistanceCustom.get()), focalMinDistance=float(self.focalMinDistanceCustom.get()), focalMaxDistance=float(self.focalMaxDistanceCustom.get()), corridoripeMaxVal=float(self.corridorJslsCustom.get()),
                             annulusCounterMaxVal=float(self.annulusCustom.get())/100, quadrantTotalMaxVal=float(self.quadrantTotalCustom.get()), chainingMaxCoverage=float(self.chainingMaxCoverageCustom.get()), percentTraversedMaxVal=float(self.percentTraversedCustom.get()),
                             percentTraversedMinVal=float(self.percentTraversedMinCustom.get()), distanceToCentreMaxVal=float(self.distanceToCentreCustom.get())/100, thigmoMinDistance = float(self.thigmoMinDistanceCustom.get()), innerWallMaxVal=float(self.innerWallCustom.get())/100,
-                            outerWallMaxVal=float(self.outerWallCustom.get())/100, ipeIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get()))
+                            outerWallMaxVal=float(self.outerWallCustom.get())/100, ipeIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get(), headingIndirectMaxVal=float(self.headingIndirectCustom.get())))
 
         useDirectPathV = self.useDirectPath.get()
         useFocalSearchV = self.useFocalSearch.get()
@@ -1082,7 +1095,7 @@ class mainClass:
         useThigmoV = self.useThigmo.get()
         try:
             with open('customobjs.pickle', 'wb') as f:
-                pickle.dump([ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
+                pickle.dump([ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
         except:
             pass
         try:
@@ -1105,7 +1118,7 @@ class mainClass:
             useThigmoV = True
             try:
                 with open('customobjs.pickle', 'wb') as f:
-                    pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.innerWallMaxVal, params.outerWallMaxVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
+                    pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.innerWallMaxVal, params.outerWallMaxVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, params.headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
             except:
                 pass
             try:
@@ -1173,32 +1186,32 @@ class mainClass:
         Label(self.top2, text="Maze centre", bg="green", fg="white", width=15).grid(row=2, column=3, padx=3)
         Label(self.top2, text="Path", bg="red", fg="white", width=15).grid(row=2, column=4, padx=3)
 
-        self.directRadio = Radiobutton(self.top2, text="(1) Direct Path", variable=searchStrategyStringVar, value="Direct path (m)",
+        self.directRadio = Radiobutton(self.top2, text="(1) Direct Path", variable=searchStrategyStringVar, value="Direct path",
                                        indicatoron=0, width=15, bg="white")
         self.directRadio.grid(row=3, column=0, columnspan = 7, pady=3)  # add the radiobuttons for selection
 
-        self.focalRadio = Radiobutton(self.top2, text="(2) Focal Search", variable=searchStrategyStringVar, value="Focal Search (m)",
+        self.focalRadio = Radiobutton(self.top2, text="(2) Focal Search", variable=searchStrategyStringVar, value="Focal Search",
                                       indicatoron=0, width=15, bg="white")
         self.focalRadio.grid(row=4, column=0, columnspan = 7, pady=3)
         self.directedRadio = Radiobutton(self.top2, text="(3) Directed Search", variable=searchStrategyStringVar,
                                          value="Directed Search (m)", indicatoron=0, width=15, bg="white")
         self.directedRadio.grid(row=5, column=0, columnspan = 7, pady=3)
         self.spatialRadio = Radiobutton(self.top2, text="(4) Indirect Search", variable=searchStrategyStringVar,
-                                        value="Indirect Search (m)", indicatoron=0, width=15, bg="white")
+                                        value="Indirect Search", indicatoron=0, width=15, bg="white")
         self.spatialRadio.grid(row=6, column=0, columnspan = 7, pady=3)
-        self.chainingRadio = Radiobutton(self.top2, text="(5) Chaining", variable=searchStrategyStringVar, value="Chaining (m)",
+        self.chainingRadio = Radiobutton(self.top2, text="(5) Chaining", variable=searchStrategyStringVar, value="Chaining",
                                          indicatoron=0, width=15, bg="white")
         self.chainingRadio.grid(row=7, column=0, columnspan = 7, pady=3)
-        self.scanningRadio = Radiobutton(self.top2, text="(6) Scanning", variable=searchStrategyStringVar, value="Scanning (m)",
+        self.scanningRadio = Radiobutton(self.top2, text="(6) Scanning", variable=searchStrategyStringVar, value="Scanning",
                                          indicatoron=0, width=15, bg="white")
         self.scanningRadio.grid(row=8, column=0, columnspan = 7, pady=3)
-        self.randomRadio = Radiobutton(self.top2, text="(7) Random Search", variable=searchStrategyStringVar, value="Random Search (m)",
+        self.randomRadio = Radiobutton(self.top2, text="(7) Random Search", variable=searchStrategyStringVar, value="Random Search",
                                        indicatoron=0, width=15, bg="white")
         self.randomRadio.grid(row=9, column=0, columnspan = 7, pady=3)
-        self.thigmoRadio = Radiobutton(self.top2, text="(8) Thigmotaxis", variable=searchStrategyStringVar, value="Thigmotaxis (m)",
+        self.thigmoRadio = Radiobutton(self.top2, text="(8) Thigmotaxis", variable=searchStrategyStringVar, value="Thigmotaxis",
                                        indicatoron=0, width=15, bg="white")
         self.thigmoRadio.grid(row=10, column=0, columnspan=7, pady=3)
-        self.notRecognizedRadio = Radiobutton(self.top2, text="(9) Not Recognized", variable=searchStrategyStringVar, value="Not Recognized (m)",
+        self.notRecognizedRadio = Radiobutton(self.top2, text="(9) Not Recognized", variable=searchStrategyStringVar, value="Not Recognized",
                                               indicatoron=0, width=15, bg="white")
         self.notRecognizedRadio.grid(row=11, column=0, columnspan = 7, pady=3)
 
@@ -1692,17 +1705,19 @@ class mainClass:
         latencyCounter = 0.0
         arrayX = []
         arrayY = []
-        theGridSize = float(mazeradius*2)/10.0
-        Matrix = [[0 for x in range(0, math.ceil(theGridSize)+1)] for y in range(0, math.ceil(theGridSize)+1)]
+        gridCellSize = float(mazeradius*2)/10.0
+        Matrix = [[0 for x in range(0, math.ceil(gridCellSize)+1)] for y in range(0, math.ceil(gridCellSize)+1)]
 
         for aDatapoint in theTrial:  # for each row in our sheet
-            # if dayNum == 9 or dayNum == 14:
-            #     if aDatapoint.gettime() > 15:
-            #         continue
+
+            if dayNum == 9 or dayNum == 14:
+                if aDatapoint.gettime() > probeCutVar:
+                    continue
             if i == 0:
                 startX = aDatapoint.getx()
                 startY = aDatapoint.gety()
                 startTime = aDatapoint.gettime()
+
 
             # Swim Path centroid
             i += 1.0
@@ -1742,25 +1757,12 @@ class mainClass:
 
             a, b = 0, 0
 
-            # grid creation
-            # x values
-            # <editor-fold desc="Grid">
-            gridCounter = 0
-            storeX = aDatapoint.getx()
-            storeY = aDatapoint.gety()
+            Matrix[int(aDatapoint.getx()/gridCellSize)][int(aDatapoint.gety()/gridCellSize)] = 1  # set matrix cells to 1 if we have visited them
 
-            for step in range(-math.ceil(theGridSize/2),math.ceil(theGridSize/2)):
-                if storeX >= mazeCentreX+(step*theGridSize/2) and storeX <= mazeCentreX+((step+1)*theGridSize/2):
-                    a = gridCounter
-                if storeY >= mazeCentreY+(step*theGridSize/2) and storeY <= mazeCentreY+((step+1)*theGridSize/2):
-                    b = gridCounter
-                gridCounter += 1
-
-            Matrix[a][b] = 1  # set matrix cells to 1 if we have visited them
             if (mazeCentreX - aX) != 0:
                 centerArcTangent = math.degrees(math.atan((mazeCentreY - aY) / (mazeCentreX - aX)))
 
-            # print centerArcTangent
+
             if aDatapoint.getx() >= mazeCentreX and aDatapoint.gety() >= mazeCentreY:
                 quadrantOne = 1
             elif aDatapoint.getx() < mazeCentreX and aDatapoint.gety() >= mazeCentreY:
@@ -1795,6 +1797,9 @@ class mainClass:
         initialHeadingError = 0.0
         initialHeadingErrorCount = 0
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
+            if dayNum == 9 or dayNum == 14:
+                if aDatapoint.gettime() > probeCutVar:
+                    continue
             currentDistanceFromGoal = math.sqrt((goalX - aDatapoint.getx()) ** 2 + (goalY - aDatapoint.gety()) ** 2)*scalingFactor
             distanceToSwimPathCentroid = math.sqrt((xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2)*scalingFactor
             totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
@@ -1818,8 +1823,7 @@ class mainClass:
             totalHeadingError += currentHeadingError
             if truncateFlag and currentDistanceFromGoal < float(goalDiam)/2.0:
                 break
-        # </editor-fold>
-        # <editor-fold desc="Take Averages">
+
         corridorAverage = corridorCounter / i
         distanceAverage = distanceFromGoalSummed / i  # calculate our average distances to landmarks
         averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid / i
@@ -1832,16 +1836,7 @@ class mainClass:
             averageInitialHeadingError = 0
         cellCounter = 0.0  # initialize our cell counter
 
-        for k in range(0, math.ceil(theGridSize)+1):  # count how many cells we have visited
-            for j in range(0, math.ceil(theGridSize)+1):
-                try:
-                    if Matrix[k][j] == 1:
-                        cellCounter += 1.0
-                except:
-                    continue
-
-        # print distanceTotal/(i/25), avHeadingError
-        percentTraversed = (cellCounter / (math.ceil(gridCounter**2) * scalingFactor)) * 100.0  # turn our count into a percentage over how many cells we can visit
+        percentTraversed = (((sum(sum(Matrix,[]))) / len(Matrix[0])**2) * scalingFactor) * 100.0  # turn our count into a percentage over how many cells we can visit
 
         velocity = 0
         idealDistance = distanceFromStartToGoal
@@ -1854,7 +1849,7 @@ class mainClass:
         idealCumulativeDistance = 0.0
 
         sampleRate = (theTrial.datapointList[-1].gettime() - startTime)/(len(theTrial.datapointList) - 1)
-        while idealDistance > 5.0:
+        while idealDistance > math.ceil(float(goalDiam)/2):
             idealCumulativeDistance += idealDistance
             idealDistance = (idealDistance - velocity*sampleRate)
             if(idealCumulativeDistance > 10000):
@@ -1908,6 +1903,7 @@ class mainClass:
         chainingMaxCoverage = params.chainingMaxCoverage
         thigmoMinDistance = params.thigmoMinDistance
         directedSearchMaxDistance = params.directedSearchMaxDistance
+        headingIndirectMaxVal = params.headingIndirectMaxVal
 
 
         mazeRadius = 0.0
@@ -1984,7 +1980,7 @@ class mainClass:
         if aExperiment.hasAnimalNames:
             headersToWrite.append("Animal")
 
-        headersToWrite.extend(["Trial Code", "Strategy Type", "ipe", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage", "score", "initial heading error", "entropy"])
+        headersToWrite.extend(["Trial Code", "Strategy Type", "ipe", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage", "score", "initial heading error", "entropy", "Strategy (manual)"])
         writer.writerow(headersToWrite) # write to the csv
 
         dayNum = 0
@@ -2067,6 +2063,7 @@ class mainClass:
                 biggerWallZone, scalingFactor, mazeRadius, dayNum, goalDiamVar)
 
             strategyType = ""
+            strategyManual = ""
             # DIRECT SWIM
             if ipe <= ipeMaxVal and averageHeadingError <= headingMaxVal and useDirectPathV:  # direct path
                 directPathCount += 1.0
@@ -2085,7 +2082,7 @@ class mainClass:
                 score = 2
                 strategyType = "Directed Search"
             # Indirect Search
-            elif ipe < ipeIndirectMaxVal and useIndirectV:  # Near miss
+            elif ipe < ipeIndirectMaxVal and averageHeadingError < headingIndirectMaxVal and useIndirectV:  # Near miss
                 strategyType = "Indirect Search"
                 score = 2
                 indirectSearchCount += 1.0
@@ -2122,9 +2119,9 @@ class mainClass:
                     plotName = "Strategy " + str(strategyType) + " Animal " + str(animal) + "  Day " + str(dayNum) + " Trial " + str(trialNum[animal])
                     self.plotPoints(arrayX, arrayY, float(mazeDiamVar), float(mazeCentreX), float(mazeCentreY),
                                 float(goalX), float(goalY), float(scalingFactor), plotName,
-                                    ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(trialNum[animal])), float(platEstDiam))  # ask user for answer
+                                ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(trialNum[animal])), float(goalDiamVar))  # ask user for answer
                     root.wait_window(self.top2)  # we wait until the user responds
-                    strategyType = searchStrategyV  # update the strategyType to that of the user
+                    strategyManual = searchStrategyV  # update the strategyType to that of the user
                     try:  # try and kill the popup window
                         self.top2.destroy()
                     except:
@@ -2143,7 +2140,7 @@ class mainClass:
                                 float(goalX), float(goalY), float(scalingFactor), plotName,
                                 ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(trialNum[animal])), float(goalDiamVar))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
-                strategyType = searchStrategyV  # update the strategyType to that of the user
+                strategyManual = searchStrategyV  # update the strategyType to that of the user
 
             dataToWrite = []
             if aExperiment.hasDateInfo:
@@ -2162,13 +2159,13 @@ class mainClass:
             dataToWrite.extend(
                 [(str(animal) + " " + str(dayNum) + " " + str(trialNum[animal])), strategyType, round(ipe, 2), round(velocity, 2), round(totalDistance, 2), round(distanceAverage, 2),
                  round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2),
-                 round(corridorAverage, 2), score, initialHeadingError, round(entropyResult, 2)])
+                 round(corridorAverage, 2), score, initialHeadingError, round(entropyResult, 2), str(strategyManual)])
             writer.writerow(dataToWrite)  # writing to csv file
 
             f.flush()
 
         print("Direct Path: ", directPathCount, "| Directed Search: ", directSearchCount, "| Focal Search: ", focalSearchCount, "| Indirect Search: ", indirectSearchCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ", randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
-        if sys.goal.startswith('darwin'):
+        if sys.platform.startswith('darwin'):
             subprocess.call(('open', currentOutputFile))
         elif os.name == 'nt': # For Windows
             os.startfile(currentOutputFile)

@@ -98,7 +98,7 @@ class Experiment(object):
 
 
 class Parameters:
-    def __init__(self, name, ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal):
+    def __init__(self, name, ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal):
 
         self.name = name
         self.ipeMaxVal = ipeMaxVal
@@ -121,6 +121,7 @@ class Parameters:
         self.outerWallMaxVal = outerWallMaxVal
         self.ipeIndirectMaxVal = ipeIndirectMaxVal
         self.percentTraversedRandomMaxVal = percentTraversedRandomMaxVal
+        self.headingIndirectMaxVal = headingIndirectMaxVal
 
     def __str__(self):
         return self.name
@@ -268,9 +269,9 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 aTrial.setanimal(col1[0])
                 try:
                     aTrial.setdate(datetime.datetime.strptime(col2[0] + " " + col3[0], "%m/%d/%Y %H:%M %p"))
-                except:
+                except Exception as e:
                     aTrial.setdate(0)
-                    print("error setting date")
+                    print(e)
 
                 for xVal, yVal, timeVal in zip(col1[2:], col2[2:], col3[2:]):
                     logging.debug("Running through columns: " + str(timeVal) + str(xVal) + str(yVal))
