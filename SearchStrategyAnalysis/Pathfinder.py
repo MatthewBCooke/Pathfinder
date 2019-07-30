@@ -23,8 +23,12 @@ import numpy as np
 import pickle
 import datetime
 import scipy.ndimage as sp
-from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
-import SearchStrategyAnalysis.heatmap
+try:
+    from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
+    import SearchStrategyAnalysis.heatmap
+except:
+    from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
+    import heatmap
 from scipy.stats import norm
 import re
 import traceback
@@ -1847,8 +1851,12 @@ class mainClass:
                 velocity = 0
                 pass
         idealCumulativeDistance = 0.0
-
-        sampleRate = (theTrial.datapointList[-1].gettime() - startTime)/(len(theTrial.datapointList) - 1)
+        try:
+            sampleRate = (theTrial.datapointList[-1].gettime() - startTime)/(len(theTrial.datapointList) - 1)
+        except:
+            print("Error with sample rate calculation")
+            logging.info("Error with sample rate calculation")
+            sampleRate = 1
         while idealDistance > math.ceil(float(goalDiam)/2):
             idealCumulativeDistance += idealDistance
             idealDistance = (idealDistance - velocity*sampleRate)
