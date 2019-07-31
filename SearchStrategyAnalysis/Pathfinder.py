@@ -1339,21 +1339,36 @@ class mainClass:
 
             for aDatapoint in aTrial:
                 # Create data
-                if dayNum >= dayStartStop[0] and dayNum <= dayStartStop[1]:
-                    if trialNum[animal] >= trialStartStop[0] and trialNum[animal] <= trialStartStop[1]:
-                        if aDatapoint.getx() == "-" or aDatapoint.gety() == "-":
-                            continue
-                        x.append(float(aDatapoint.getx()))
-                        y.append(float(aDatapoint.gety()))
+                if dayNum != 0 and trialNum != 0:
+                    if dayNum >= dayStartStop[0] and dayNum <= dayStartStop[1]:
+                        if trialNum[animal] >= trialStartStop[0] and trialNum[animal] <= trialStartStop[1]:
+                            if aDatapoint.getx() == "-" or aDatapoint.gety() == "-":
+                                continue
+                            x.append(float(aDatapoint.getx()))
+                            y.append(float(aDatapoint.gety()))
 
-                        if aDatapoint.getx() < xMin:
-                            xMin = aDatapoint.getx()
-                        if aDatapoint.gety() < yMin:
-                            yMin = aDatapoint.gety()
-                        if aDatapoint.getx() > xMax:
-                            xMax = aDatapoint.getx()
-                        if aDatapoint.gety() > yMax:
-                            yMax = aDatapoint.gety()
+                            if aDatapoint.getx() < xMin:
+                                xMin = aDatapoint.getx()
+                            if aDatapoint.gety() < yMin:
+                                yMin = aDatapoint.gety()
+                            if aDatapoint.getx() > xMax:
+                                xMax = aDatapoint.getx()
+                            if aDatapoint.gety() > yMax:
+                                yMax = aDatapoint.gety()
+                else:
+                    if aDatapoint.getx() == "-" or aDatapoint.gety() == "-":
+                        continue
+                    x.append(float(aDatapoint.getx()))
+                    y.append(float(aDatapoint.gety()))
+
+                    if aDatapoint.getx() < xMin:
+                        xMin = aDatapoint.getx()
+                    if aDatapoint.gety() < yMin:
+                        yMin = aDatapoint.gety()
+                    if aDatapoint.getx() > xMax:
+                        xMax = aDatapoint.getx()
+                    if aDatapoint.gety() > yMax:
+                        yMax = aDatapoint.gety()
 
         # x = np.zeros(math.ceil(xMax-xMin+1))
         # y = np.zeros(math.ceil(yMax-yMin+1))
@@ -1707,6 +1722,7 @@ class mainClass:
         oldX = 0.0
         oldY = 0.0
         latencyCounter = 0.0
+        distanceFromStartToGoal = 0
         arrayX = []
         arrayY = []
         gridCellSize = float(mazeradius*2)/10.0
@@ -1714,9 +1730,9 @@ class mainClass:
 
         for aDatapoint in theTrial:  # for each row in our sheet
 
-            if dayNum == 9 or dayNum == 14:
-                if aDatapoint.gettime() > probeCutVar:
-                    continue
+            # if dayNum == 9 or dayNum == 14:
+            #     if aDatapoint.gettime() > probeCutVar:
+            #         continue
             if i == 0:
                 startX = aDatapoint.getx()
                 startY = aDatapoint.gety()
@@ -1782,9 +1798,14 @@ class mainClass:
 
         quadrantTotal = quadrantOne + quadrantTwo + quadrantThree + quadrantFour
 
-        xAv = xSummed / i  # get our average positions for the centroid
-        yAv = ySummed / i
-        swimPathCentroid = (xAv, yAv)
+        if i == 0:
+            i = 1
+        try:
+            xAv = xSummed / i  # get our average positions for the centroid
+            yAv = ySummed / i
+            swimPathCentroid = (xAv, yAv)
+        except:
+            swimPathCentroid = (0, 0)
 
 
         startPoint = np.array([startX,startY])
@@ -1801,9 +1822,9 @@ class mainClass:
         initialHeadingError = 0.0
         initialHeadingErrorCount = 0
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
-            if dayNum == 9 or dayNum == 14:
-                if aDatapoint.gettime() > probeCutVar:
-                    continue
+            # if dayNum == 9 or dayNum == 14:
+            #     if aDatapoint.gettime() > probeCutVar:
+            #         continue
             currentDistanceFromGoal = math.sqrt((goalX - aDatapoint.getx()) ** 2 + (goalY - aDatapoint.gety()) ** 2)*scalingFactor
             distanceToSwimPathCentroid = math.sqrt((xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2)*scalingFactor
             totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
@@ -1827,13 +1848,22 @@ class mainClass:
             totalHeadingError += currentHeadingError
             if truncateFlag and currentDistanceFromGoal < float(goalDiam)/2.0:
                 break
+        try:
+            corridorAverage = corridorCounter / i
+            distanceAverage = distanceFromGoalSummed / i  # calculate our average distances to landmarks
+            averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid / i
+            averageDistanceToOldGoal = totalDistanceToOldGoal / i
+            averageDistanceToCentre = totalDistanceToCenterOfMaze / i
+            averageHeadingError = totalHeadingError / i
+        except:
+            i = 1
+            corridorAverage = corridorCounter / i
+            distanceAverage = distanceFromGoalSummed / i  # calculate our average distances to landmarks
+            averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid / i
+            averageDistanceToOldGoal = totalDistanceToOldGoal / i
+            averageDistanceToCentre = totalDistanceToCenterOfMaze / i
+            averageHeadingError = totalHeadingError / i
 
-        corridorAverage = corridorCounter / i
-        distanceAverage = distanceFromGoalSummed / i  # calculate our average distances to landmarks
-        averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid / i
-        averageDistanceToOldGoal = totalDistanceToOldGoal / i
-        averageDistanceToCentre = totalDistanceToCenterOfMaze / i
-        averageHeadingError = totalHeadingError / i
         try:
             averageInitialHeadingError = initialHeadingError/initialHeadingErrorCount
         except:
@@ -1841,6 +1871,9 @@ class mainClass:
         cellCounter = 0.0  # initialize our cell counter
 
         percentTraversed = (((sum(sum(Matrix,[]))) / len(Matrix[0])**2) * scalingFactor) * 100.0  # turn our count into a percentage over how many cells we can visit
+
+        if percentTraversed > 1:
+            percentTraversed = 1
 
         velocity = 0
         idealDistance = distanceFromStartToGoal
@@ -2138,6 +2171,7 @@ class mainClass:
             totalTrialCount += 1.0
 
             n += 1
+            print(animal)
             print("ipe: ", ipe, "    Heading: ",averageHeadingError, " Entropy: ", entropyResult)
 
             if useManualForAllFlag:
