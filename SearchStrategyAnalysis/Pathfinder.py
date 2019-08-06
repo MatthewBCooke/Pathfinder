@@ -686,8 +686,8 @@ class mainClass:
 
         tempRois = zip(roiList,sizeList)
 
-        patternROI = re.compile("^[0-9]{1,9}([.][0-9]{1,9}){0,1}[,][0-9]{1,9}([.][0-9]{1,9}){0,1}$")
-        patternSize = re.compile("^[0-9]{1,9}([.][0-9]{1,9}){0,1}$")
+        patternROI = re.compile("^[0-9]{1,9}([.][0-9]{1,9})?[,][0-9]{1,9}([.][0-9]{1,9})?$")
+        patternSize = re.compile("^[0-9]{1,9}([.][0-9]{1,9})?$")
 
         for aTuple in tempRois:
             if aTuple[0] == 'Location (x,y)' or aTuple[1] == 'Diameter (cm)':
@@ -1370,16 +1370,7 @@ class mainClass:
                     if aDatapoint.gety() > yMax:
                         yMax = aDatapoint.gety()
 
-        # x = np.zeros(math.ceil(xMax-xMin+1))
-        # y = np.zeros(math.ceil(yMax-yMin+1))
 
-        # for aTrial in experiment:  # for all the files we find
-        #     for row in aTrial:
-        #         # Create data
-        #         if row.x == "-" or row.y == "-":
-        #             continue
-        #         x[math.floor(row.x)] += 1/len(experiment)
-        #         y[math.floor(row.y)] += 1/len(experiment)
 
         aFileName = "output/heatmaps/ " + "Day "+ dayValStringVar.get() + " Trial " + trialValStringVar.get() + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
         aTitle = fileDirectory
