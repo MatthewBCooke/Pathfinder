@@ -1419,7 +1419,6 @@ class mainClass:
         plt.savefig(photoName, dpi=300, figsize=(4,4))  # save the file
         plt.show()
 
-
     def updateTasks(self):  # called when we want to push an update to the GUI
         try:
             root.update_idletasks()
@@ -1648,9 +1647,11 @@ class mainClass:
         if platDiamFlag:
             platEstDiam = ((platMaxX-platMinX) + (platMaxY-platMinY))/2
             if platEstDiam > 50 or platEstDiam < 1:
-                platEstDiam = 10
+                platEstDiam = 10.0
+                print("Automatic goal diameter calculation failed. Defaulted to: " + str((math.ceil(float(platEstDiam)))))
+            else:
+                print("Automatic goal diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
             logging.info("Automatic goal diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
-            print("Automatic goal diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
         if diamFlag:  # automatic diameter
             mazeDiamEst = ((abs(absMaxX) + abs(absMinX)) + (abs(absMaxY) + abs(absMinY))) / 2
             logging.info("Automatic maze diameter calculated as: " + str(mazeDiamEst))
