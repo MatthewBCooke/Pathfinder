@@ -23,7 +23,7 @@ import numpy as np
 import pickle
 import datetime
 import scipy.ndimage as sp
-try:
+try: #Tries to import local dependencies
     from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
     import SearchStrategyAnalysis.heatmap
 except:
@@ -35,10 +35,10 @@ import traceback
 
 
 
-try:
+try: #Imports MATLAB engine if available
     import matlab.engine
     canUseMatlab = True
-except:
+except: #Notify user that MATLAB is unavailable
     print("MATLAB Engine Unavailable")
     canUseMatlab = False
 
@@ -383,7 +383,7 @@ class mainClass:
         self.mazeCentreE.grid(row=rowCount, column=1)
         self.mazeCentre.bind("<Enter>", partial(self.on_enter, "Maze Centre. Example: 0.0,0.0 or Auto"))
         self.mazeCentre.bind("<Leave>", self.on_leave)
-        rowCount = rowCount+1
+        rowCount = rowCount+  1
 
         self.headingError = Label(self.paramFrame, text="Angular Corridor Width (degrees):", bg="white")
         self.headingError.grid(row=rowCount, column=0, sticky=E)
@@ -1286,7 +1286,7 @@ class mainClass:
         Button(self.top3, text="Generate", command=lambda: self.heatmap(aExperiment), fg="black", bg="white").pack()
 
 
-    def heatmap(self, aExperiment):
+    def heatmap(self, aExperiment): #Generates heatmaps for inputted trial data
         logging.debug("Heatmap Called")
         theStatus.set("Generating Heatmap...")
         self.updateTasks()
@@ -1769,6 +1769,7 @@ class mainClass:
 
             a, b = 0, 0
 
+
             Matrix[int(aDatapoint.getx()/gridCellSize)][int(aDatapoint.gety()/gridCellSize)] = 1  # set matrix cells to 1 if we have visited them
 
             if (mazeCentreX - aX) != 0:
@@ -1863,9 +1864,8 @@ class mainClass:
         cellCounter = 0.0  # initialize our cell counter
 
         percentTraversed = (((sum(sum(Matrix,[]))) / len(Matrix[0])**2) * scalingFactor) * 100.0  # turn our count into a percentage over how many cells we can visit
-
-        if percentTraversed > 1:
-            percentTraversed = 1
+        if percentTraversed > 100:
+            percentTraversed = 100
 
         velocity = 0
         idealDistance = distanceFromStartToGoal
