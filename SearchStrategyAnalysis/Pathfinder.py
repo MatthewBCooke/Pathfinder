@@ -1662,7 +1662,7 @@ class mainClass:
         return (mazeCentreX,mazeCentreY,goalX,goalY,mazeDiamVar,mazeRadius,platEstDiam)
 
 
-    def calculateValues(self, theTrial, goalX, goalY, mazeCentreX, mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor, mazeradius, dayNum, goalDiam):
+    def calculateValues(self, theTrial, goalX, goalY, mazeCentreX, mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, outerWallZone, innerWallZone, scalingFactor, mazeradius, dayNum, goalDiam):
         global mazeCentreVar
         global useEntropyFlag
         global truncateFlag
@@ -1761,9 +1761,9 @@ class mainClass:
             oldX = aX
             oldY = aY
 
-            if distanceToCenterOfMaze > biggerWallZone:  # calculate if we are in zones
+            if distanceToCenterOfMaze > innerWallZone:  # calculate if we are in zones
                 innerWallCounter += 1.0
-            if distanceToCenterOfMaze > smallerWallZone:
+            if distanceToCenterOfMaze > outerWallZone:
                 outerWallCounter += 1.0
             if (distanceToCenterOfMaze >= annulusZoneInner) and (distanceToCenterOfMaze <= annulusZoneOuter):
                 annulusCounter += 1.0
