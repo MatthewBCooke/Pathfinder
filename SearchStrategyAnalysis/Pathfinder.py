@@ -1929,8 +1929,8 @@ class mainClass:
         percentTraversedMaxVal = params.percentTraversedMaxVal
         percentTraversedMinVal = params.percentTraversedMinVal
         distanceToCentreMaxVal = params.distanceToCentreMaxVal
-        innerWallMaxVal = params.innerWallMaxVal
         outerWallMaxVal = params.outerWallMaxVal
+        innerWallMaxVal = params.innerWallMaxVal
         ipeIndirectMaxVal = params.ipeIndirectMaxVal
         percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
         focalMinDistance = params.focalMinDistance
@@ -2015,7 +2015,7 @@ class mainClass:
         if aExperiment.hasAnimalNames:
             headersToWrite.append("Animal")
 
-        headersToWrite.extend(["Trial Code", "Strategy Type", "ipe", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage", "score", "initial heading error", "entropy", "distance to swim path centroid", "average distance to centre of maze", "percent in angular corridor", "percent in annulus zone", "percent in inner thigmotaxis zone", "percent in outer thigmotaxis zone", "Strategy (manual)"])
+        headersToWrite.extend(["Trial Code", "Strategy Type", "ipe", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage", "score", "initial heading error", "entropy", "distance to swim path centroid", "average distance to centre of maze", "percent in angular corridor", "percent in annulus zone", "percent in outer thigmotaxis zone", "percent in inner thigmotaxis zone", "Strategy (manual)"])
         writer.writerow(headersToWrite) # write to the csv
 
         dayNum = 0
@@ -2062,8 +2062,8 @@ class mainClass:
             totalDistanceToCenterOfMaze = 0.0
             averageDistanceToCentre = 0.0
 
-            innerWallCounter = 0.0
             outerWallCounter = 0.0
+            innerWallCounter = 0.0
             annulusCounter = 0.0
 
             distanceToSwimPathCentroid = 0.0
@@ -2092,7 +2092,7 @@ class mainClass:
             # Analyze the data ----------------------------------------------------------------------------------------------
 
 
-            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
+            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, outerWallCounter, innerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
                 aTrial, goalX, goalY, mazeCentreX,
                 mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
                 biggerWallZone, scalingFactor, mazeRadius, dayNum, goalDiamVar)
@@ -2134,7 +2134,7 @@ class mainClass:
                 score = 1
                 strategyType = "Scanning"
             # THIGMOTAXIS
-            elif innerWallCounter/i >= innerWallMaxVal and outerWallCounter/i >= outerWallMaxVal and totalDistance > thigmoMinDistance and useThigmoV:  # thigmotaxis
+            elif outerWallCounter/i >= outerWallMaxVal and innerWallCounter/i >= innerWallMaxVal and totalDistance > thigmoMinDistance and useThigmoV:  # thigmotaxis
                 thigmotaxisCount += 1.0
                 score = 0
                 strategyType = "Thigmotaxis"
@@ -2195,7 +2195,7 @@ class mainClass:
             dataToWrite.extend(
                 [(str(animal) + " " + str(dayNum) + " " + str(trialNum[animal])), strategyType, round(ipe, 2), round(velocity, 2), round(totalDistance, 2), round(distanceAverage, 2),
                  round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2),
-                 round(corridorAverage, 2), score, initialHeadingError, round(entropyResult, 2), round(averageDistanceToSwimPathCentroid,2), round(averageDistanceToCentre,2), round(corridorAverage,2), round(annulusCounter/i, 2), round(outerWallCounter/i,2), round(innerWallCounter/i,2), str(strategyManual)])
+                 round(corridorAverage, 2), score, initialHeadingError, round(entropyResult, 2), round(averageDistanceToSwimPathCentroid,2), round(averageDistanceToCentre,2), round(corridorAverage,2), round(annulusCounter/i, 2), round(innerWallCounter/i,2), round(outerWallCounter/i,2), str(strategyManual)])
             writer.writerow(dataToWrite)  # writing to csv file
 
             f.flush()
