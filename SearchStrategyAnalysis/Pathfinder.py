@@ -100,9 +100,8 @@ defaultParams = Parameters(name="Default", ipeMaxVal=125, headingMaxVal=40, dist
                            annulusCounterMaxVal=0.90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=20,
                            percentTraversedMinVal=5, distanceToCentreMaxVal=0.6, thigmoMinDistance=400, innerWallMaxVal=0.65,
                            outerWallMaxVal=0.35, ipeIndirectMaxVal=300, percentTraversedRandomMaxVal=10, headingIndirectMaxVal=70)
-
+global params
 params = defaultParams
-
 ipeMaxVal = params.ipeMaxVal
 headingMaxVal = params.headingMaxVal
 distanceToSwimMaxVal = params.distanceToSwimMaxVal
@@ -930,7 +929,7 @@ class mainClass:
 
         rowCount+=1
 
-        headingIndirectCustomL = Label(self.top, text="Heading error [maximum]: ", bg="white")
+        headingIndirectCustomL = Label(self.top, text="Average Heading error [maximum]: ", bg="white")
         headingIndirectCustomL.grid(row=rowCount, column=0, sticky=E)
         headingIndirectCustomE = Entry(self.top, textvariable=self.headingIndirectCustom, bg="white")
         headingIndirectCustomE.grid(row=rowCount, column=1)
@@ -1000,14 +999,14 @@ class mainClass:
 
         rowCount+=1
 
-        innerWallCustomL = Label(self.top, text="Time in larger thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        innerWallCustomL = Label(self.top, text="Time in inner thigmotaxis zone [minimum, % of trial]: ", bg="white")
         innerWallCustomL.grid(row=rowCount, column=0, sticky=E)
         innerWallCustomE = Entry(self.top, textvariable=self.innerWallCustom)
         innerWallCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        outerWallCustomL = Label(self.top, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        outerWallCustomL = Label(self.top, text="Time in outer thigmotaxis zone [minimum, % of trial]: ", bg="white")
         outerWallCustomL.grid(row=rowCount, column=0, sticky=E)
         outerWallCustomE = Entry(self.top, textvariable=self.outerWallCustom, bg="white")
         outerWallCustomE.grid(row=rowCount, column=1)
@@ -1051,6 +1050,7 @@ class mainClass:
         global useRandom
         global useIndirect
         global useThigmo
+        global params
 
         global useDirectPathV
         global useFocalSearchV
@@ -1087,7 +1087,7 @@ class mainClass:
                             distanceToPlatMaxVal=float(self.distanceToPlatCustom.get())/100, corridorAverageMinVal=float(self.corridorAverageCustom.get()) / 100, directedSearchMaxDistance=float(self.directedSearchMaxDistanceCustom.get()), focalMinDistance=float(self.focalMinDistanceCustom.get()), focalMaxDistance=float(self.focalMaxDistanceCustom.get()), corridoripeMaxVal=float(self.corridorJslsCustom.get()),
                             annulusCounterMaxVal=float(self.annulusCustom.get())/100, quadrantTotalMaxVal=float(self.quadrantTotalCustom.get()), chainingMaxCoverage=float(self.chainingMaxCoverageCustom.get()), percentTraversedMaxVal=float(self.percentTraversedCustom.get()),
                             percentTraversedMinVal=float(self.percentTraversedMinCustom.get()), distanceToCentreMaxVal=float(self.distanceToCentreCustom.get())/100, thigmoMinDistance = float(self.thigmoMinDistanceCustom.get()), innerWallMaxVal=float(self.innerWallCustom.get())/100,
-                            outerWallMaxVal=float(self.outerWallCustom.get())/100, ipeIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get(), headingIndirectMaxVal=float(self.headingIndirectCustom.get())))
+                            outerWallMaxVal=float(self.outerWallCustom.get())/100, ipeIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get()), headingIndirectMaxVal=float(self.headingIndirectCustom.get()))
 
         useDirectPathV = self.useDirectPath.get()
         useFocalSearchV = self.useFocalSearch.get()
@@ -1109,6 +1109,7 @@ class mainClass:
 
     def resetCustom(self):
         result = messagebox.askquestion("Reset", "Are You Sure?", icon='warning')
+        global params
         if result == 'yes':
             logging.debug("Resetting custom parameters")
             params = defaultParams
@@ -1901,6 +1902,7 @@ class mainClass:
 
     def mainCalculate(self, goalPosVar=goalPosVar, goalDiamVar=goalDiamVar):
         global softwareStringVar
+        global params
         logging.debug("Calculate Called")
         self.updateTasks()
         theStatus.set("Initializing")
@@ -2013,7 +2015,7 @@ class mainClass:
         if aExperiment.hasAnimalNames:
             headersToWrite.append("Animal")
 
-        headersToWrite.extend(["Trial Code", "Strategy Type", "ipe", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage", "score", "initial heading error", "entropy", "Strategy (manual)"])
+        headersToWrite.extend(["Trial Code", "Strategy Type", "ipe", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage", "score", "initial heading error", "entropy", "distance to swim path centroid", "average distance to centre of maze", "percent in angular corridor", "percent in annulus zone", "percent in inner thigmotaxis zone", "percent in outer thigmotaxis zone", "Strategy (manual)"])
         writer.writerow(headersToWrite) # write to the csv
 
         dayNum = 0
@@ -2132,7 +2134,7 @@ class mainClass:
                 score = 1
                 strategyType = "Scanning"
             # THIGMOTAXIS
-            elif innerWallCounter >= innerWallMaxVal * i and outerWallCounter >= i * outerWallMaxVal and totalDistance > thigmoMinDistance and useThigmoV:  # thigmotaxis
+            elif innerWallCounter/i >= innerWallMaxVal and outerWallCounter/i >= outerWallMaxVal and totalDistance > thigmoMinDistance and useThigmoV:  # thigmotaxis
                 thigmotaxisCount += 1.0
                 score = 0
                 strategyType = "Thigmotaxis"
@@ -2164,7 +2166,7 @@ class mainClass:
 
             n += 1
             print(animal)
-            print("ipe: ", ipe, "    Heading: ",averageHeadingError, " Entropy: ", entropyResult)
+            print("strategy: ", strategyType, "    ipe: ", round(ipe,2), "    Heading: ",round(averageHeadingError,2), "    Entropy: ", entropyResult)
 
             if useManualForAllFlag:
                 print("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "ipe", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage")
@@ -2193,7 +2195,7 @@ class mainClass:
             dataToWrite.extend(
                 [(str(animal) + " " + str(dayNum) + " " + str(trialNum[animal])), strategyType, round(ipe, 2), round(velocity, 2), round(totalDistance, 2), round(distanceAverage, 2),
                  round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2),
-                 round(corridorAverage, 2), score, initialHeadingError, round(entropyResult, 2), str(strategyManual)])
+                 round(corridorAverage, 2), score, initialHeadingError, round(entropyResult, 2), round(averageDistanceToSwimPathCentroid,2), round(averageDistanceToCentre,2), round(corridorAverage,2), round(annulusCounter/i, 2), round(outerWallCounter/i,2), round(innerWallCounter/i,2), str(strategyManual)])
             writer.writerow(dataToWrite)  # writing to csv file
 
             f.flush()

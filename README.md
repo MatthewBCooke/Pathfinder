@@ -12,7 +12,7 @@ The Pathfinder package is a search strategy analysis tool for the Morris Water M
 
 ## Usage Example
 
-1. The program can be opened by calling `pathfinder` if installed through PyPi or by navigating to your install location and calling `python pathfinder.py` in a terminal window. See [**Installation**](https://github.com/MatthewBCooke/Pathfinder/wiki/Installation) for install instructions.
+1. The program can be opened by calling `pathfinder` (type `pathfinder` into a terminal window) if installed through PyPi or by navigating to your install location and calling (typing into terminal) `python pathfinder.py` in a terminal window. See [**Installation**](https://github.com/MatthewBCooke/Pathfinder/wiki/Installation) for install instructions.
 
 2. This will open up the main GUI window.
 
