@@ -2015,7 +2015,7 @@ class mainClass:
         if aExperiment.hasAnimalNames:
             headersToWrite.append("Animal")
 
-        headersToWrite.extend(["Trial Code", "Strategy Type", "ipe", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage", "score", "initial heading error", "entropy", "distance to swim path centroid", "average distance to centre of maze", "percent in angular corridor", "percent in annulus zone", "percent in outer thigmotaxis zone", "percent in inner thigmotaxis zone", "Strategy (manual)"])
+        headersToWrite.extend(["Trial Code", "Strategy", "IPE", "Velocity", "Distance covered", "Average distance to goal", "Average heading error", "Percent of maze traversed", "Latency", "Sccore", "Initial heading error", "Entropy", "Distance to swim path centroid", "Average distance to centre of maze", "Percent in angular corridor", "Percent in annulus zone", "Percent in outer thigmotaxis zone", "Percent in inner thigmotaxis zone", "Strategy (manual)"])
         writer.writerow(headersToWrite) # write to the csv
 
         dayNum = 0
@@ -2025,20 +2025,22 @@ class mainClass:
             animal = aTrial.animal
             if aExperiment.hasAnimalNames:
                 animal = aTrial.animal.replace("*", "")
-                animal = animal.replace("Jan","1")
-                animal = animal.replace("Feb","2")
-                animal = animal.replace("Mar","3")
-                animal = animal.replace("Apr","4")
-                animal = animal.replace("May","5")
-                animal = animal.replace("Jun","6")
-                animal = animal.replace("Jul","7")
-                animal = animal.replace("Aug","8")
-                animal = animal.replace("Sep","9")
-                animal = animal.replace("Oct","10")
-                animal = animal.replace("Nov","11")
-                animal = animal.replace("Dec","12")
-
-            if aExperiment.hasDateInfo and aTrial.date.date() != curDate:
+                # animal = animal.replace("Jan","1")
+                # animal = animal.replace("Feb","2")
+                # animal = animal.replace("Mar","3")
+                # animal = animal.replace("Apr","4")
+                # animal = animal.replace("May","5")
+                # animal = animal.replace("Jun","6")
+                # animal = animal.replace("Jul","7")
+                # animal = animal.replace("Aug","8")
+                # animal = animal.replace("Sep","9")
+                # animal = animal.replace("Oct","10")
+                # animal = animal.replace("Nov","11")
+                # animal = animal.replace("Dec","12")
+            if aExperiment.hasTrialNames:
+                dayNum = aTrial.day
+                trialNum[animal] = aTrial.trial
+            elif aExperiment.hasDateInfo and aTrial.date.date() != curDate:
                 dayNum += 1
                 curDate = aTrial.date.date()
                 trialNum = {}
@@ -2099,6 +2101,7 @@ class mainClass:
 
             strategyType = ""
             strategyManual = ""
+
             # DIRECT SWIM
             if ipe <= ipeMaxVal and averageHeadingError <= headingMaxVal and useDirectPathV:  # direct path
                 directPathCount += 1.0
@@ -2128,7 +2131,7 @@ class mainClass:
                 score = 1
                 strategyType = "Chaining"
             # SCANNING
-            elif percentTraversedMinVal <= percentTraversed >= percentTraversedMaxVal and averageDistanceToCentre <= (
+            elif percentTraversedMinVal <= percentTraversed and percentTraversedMaxVal > percentTraversed and averageDistanceToCentre <= (
                     distanceToCentreMaxVal * mazeRadius) and useScanningV:  # scanning
                 scanningCount += 1.0
                 score = 1
@@ -2194,8 +2197,7 @@ class mainClass:
 
             dataToWrite.extend(
                 [(str(animal) + " " + str(dayNum) + " " + str(trialNum[animal])), strategyType, round(ipe, 2), round(velocity, 2), round(totalDistance, 2), round(distanceAverage, 2),
-                 round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2),
-                 round(corridorAverage, 2), score, initialHeadingError, round(entropyResult, 2), round(averageDistanceToSwimPathCentroid,2), round(averageDistanceToCentre,2), round(corridorAverage,2), round(annulusCounter/i, 2), round(innerWallCounter/i,2), round(outerWallCounter/i,2), str(strategyManual)])
+                 round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2), score, initialHeadingError, round(entropyResult, 2), round(averageDistanceToSwimPathCentroid,2), round(averageDistanceToCentre,2), round(corridorAverage,2), round(annulusCounter/i, 2), round(innerWallCounter/i,2), round(outerWallCounter/i,2), str(strategyManual)])
             writer.writerow(dataToWrite)  # writing to csv file
 
             f.flush()

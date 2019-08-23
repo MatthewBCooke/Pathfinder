@@ -36,6 +36,7 @@ class Trial(object):  # an object for our row values
         self.name = None
         self.animal = None
         self.date = None
+        self.day = None
         self.trial = None
         self.corruptedData = False
 
@@ -50,6 +51,9 @@ class Trial(object):  # an object for our row values
 
     def settrial(self, trial):
         self.trial = trial
+
+    def setday(self, day):
+        self.day = day
 
     def markDataAsCorrupted(self):
         self.corruptedData = True
@@ -183,6 +187,10 @@ def saveFileAsExperiment(software, filename, filedirectory):
                         aTrial.setdate(datetime.datetime.strptime(sheet.cell(row, 1).value, "%d/%m/%Y %H:%M:%S"))
                     elif sheet.cell(row, 0).value.upper() == 'ANIMAL ID':
                         aTrial.setanimal(sheet.cell(row, 1).value)
+                    elif sheet.cell(row, 0).value.upper() == 'DAY':
+                        aTrial.setday(sheet.cell(row, 1).value)
+                    elif sheet.cell(row, 0).value.upper() == 'TRIAL':
+                        aTrial.settrial(int(sheet.cell(row, 1).value))
 
                 for row in range(headerLines, number_of_rows):  # for each row
                     time = sheet.cell(row, 1).value
