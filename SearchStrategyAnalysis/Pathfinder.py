@@ -296,6 +296,7 @@ class mainClass:
         self.menu.add_cascade(label="Help", menu=self.helpMenu)
         self.helpMenu.add_command(label="Help", command=self.getHelp)
         self.helpMenu.add_command(label="About", command=self.about)
+        self.helpMenu.add_command(label="Update", command=self.updatePathfinder)
 
         rowCount = 0
         # ******* Software Type *******
@@ -549,6 +550,11 @@ class mainClass:
     def getHelp(self):  # go to readme
         logging.debug("Called help")
         webbrowser.open('https://github.com/MatthewBCooke/Pathfinder/wiki')
+
+    def updatePathfinder(self):
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-U',
+            'jsl-pathfinder'])
+        exit(0)
 
     def tryQuit(self):  # tries to stop threads
         logging.debug("trying to quit")
@@ -999,14 +1005,14 @@ class mainClass:
 
         rowCount+=1
 
-        innerWallCustomL = Label(self.top, text="Time in inner thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        innerWallCustomL = Label(self.top, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg="white")
         innerWallCustomL.grid(row=rowCount, column=0, sticky=E)
         innerWallCustomE = Entry(self.top, textvariable=self.innerWallCustom)
         innerWallCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        outerWallCustomL = Label(self.top, text="Time in outer thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        outerWallCustomL = Label(self.top, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg="white")
         outerWallCustomL.grid(row=rowCount, column=0, sticky=E)
         outerWallCustomE = Entry(self.top, textvariable=self.outerWallCustom, bg="white")
         outerWallCustomE.grid(row=rowCount, column=1)
@@ -2015,7 +2021,7 @@ class mainClass:
         if aExperiment.hasAnimalNames:
             headersToWrite.append("Animal")
 
-        headersToWrite.extend(["Trial Code", "Strategy", "IPE", "Velocity", "Distance covered", "Average distance to goal", "Average heading error", "Percent of maze traversed", "Latency", "Sccore", "Initial heading error", "Entropy", "Distance to swim path centroid", "Average distance to centre of maze", "Percent in angular corridor", "Percent in annulus zone", "Percent in outer thigmotaxis zone", "Percent in inner thigmotaxis zone", "Strategy (manual)"])
+        headersToWrite.extend(["Trial Code", "Strategy", "IPE", "Velocity", "Distance covered", "Average distance to goal", "Average heading error", "Percent of maze traversed", "Latency", "Sccore", "Initial heading error", "Entropy", "Distance to swim path centroid", "Average distance to centre of maze", "Percent in angular corridor", "Percent in annulus zone", "Percent in smaller thigmotaxis zone", "Percent in full thigmotaxis zone", "Strategy (manual)"])
         writer.writerow(headersToWrite) # write to the csv
 
         dayNum = 0
