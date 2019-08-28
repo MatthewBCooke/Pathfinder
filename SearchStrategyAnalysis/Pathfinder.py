@@ -33,8 +33,6 @@ from scipy.stats import norm
 import re
 import traceback
 
-
-
 try: #Imports MATLAB engine if available
     import matlab.engine
     canUseMatlab = True

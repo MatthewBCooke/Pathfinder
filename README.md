@@ -10,6 +10,10 @@ For a more detailed overview of Pathfinder please visit our [**Wiki**](https://g
 
 The Pathfinder package is a search strategy analysis tool for the Morris Water Maze, and can be expanded for other spatial navigation tasks. The program analyses X-Y coordinate data exported from commercially available tracking software. Pathfinder currently supports outputs from: Ethovision, Anymazy, WaterMaze, and ezTrack. We then calculate the best-fit search strategy for the trial. Trials are fit into one of: Direct Swim, Directed Search, Focal Search, Spatial indirect, Chaining, Scanning, Thigmotaxis, and Random Search.
 
+## Citing
+
+If you use Pathfinder, please cite: Cooke MB, O'Leary TP, Harris P et al. (2019) Pathfinder: open source software for analyzing spatial navigation search strategies. F1000Research, 8:1521. https://doi.org/10.12688/f1000research.20352.1
+
 ## Usage Example
 
 1. The program can be opened by calling `pathfinder` (type `pathfinder` into a terminal window) if installed through PyPi or by navigating to your install location and calling (typing into terminal) `python pathfinder.py` in a terminal window. See [**Installation**](https://github.com/MatthewBCooke/Pathfinder/wiki/Installation) for install instructions.
