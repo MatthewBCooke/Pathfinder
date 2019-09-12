@@ -24,10 +24,10 @@ import pickle
 import datetime
 import scipy.ndimage as sp
 try: #Tries to import local dependencies
-    from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
+    from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, defineOwnSoftware
     import SearchStrategyAnalysis.heatmap
 except:
-    from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
+    from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, defineOwnSoftware
     import heatmap
 from scipy.stats import norm
 import re
@@ -39,7 +39,6 @@ try: #Imports MATLAB engine if available
 except: #Notify user that MATLAB is unavailable
     print("MATLAB Engine Unavailable")
     canUseMatlab = False
-
 
 if sys.version_info<(3,0,0):  # tkinter names for python 2
     print("Update to Python3 for best results... You may encounter errors")
@@ -174,14 +173,14 @@ useScaling.set(False)
 scale = False
 rois = []
 
-def show_error(text):  # popup box with error text
-    logging.debug("Displaying Error")
+def show_message(text):  # popup box with message text
+    logging.debug("Displaying message")
     try:
         top = Toplevel(root)  # show as toplevel
         Label(top, text=text).pack()   # label set to text
         Button(top, text="OK", command=top.destroy).pack(pady=5)   # add ok button
     except:
-        logging.info("Couldn't Display error "+text)
+        logging.info("Couldn't Display message "+text)
 
 class EntryWithPlaceholder(Entry):
     def __init__(self, master=None, placeholder="PLACEHOLDER", color='grey'):
@@ -256,7 +255,7 @@ class mainClass:
             accelC = "Ctrl+C"
             accelV = "Ctrl+V"
 
-        root.geometry('{}x{}'.format( 700, 500 ))
+        root.geometry('{}x{}'.format( 800, 500 ))
 
         self.menu = Menu(root)  # create a menu
         root.config(menu=self.menu, bg="white")  # set up the config
@@ -315,6 +314,8 @@ class mainClass:
         self.eztrackRadio = Radiobutton(self.softwareBar, text="ezTrack", variable=softwareStringVar,
                                           value="eztrack", indicatoron=1, width=15, bg="white")
         self.eztrackRadio.grid(row=rowCount, column=3, padx=5, sticky='NW')
+        self.defineSoftware = Button(self.softwareBar, text="Define..", command=self.callDefineOwnSoftware, width=15, bg="white")
+        self.defineSoftware.grid(row=rowCount, column=4, padx=5, sticky='NW')
         self.softwareBar.pack(side=TOP, fill=X, pady =5)
 
         self.ethovisionRadio.bind("<Enter>", partial(self.on_enter, "Click if you used Ethovision to generate your data"))
@@ -325,6 +326,8 @@ class mainClass:
         self.watermazeRadio.bind("<Leave>", self.on_leave)
         self.eztrackRadio.bind("<Enter>", partial(self.on_enter, "Click if you used ezTrack to generate your data"))
         self.eztrackRadio.bind("<Leave>", self.on_leave)
+        self.defineSoftware.bind("<Enter>", partial(self.on_enter, "Click if your software does not match a preset"))
+        self.defineSoftware.bind("<Leave>", self.on_leave)
 
         # ******* STATUS BAR *******
         self.status = Label(root, textvariable=theStatus, bd=1, relief=SUNKEN, anchor=W, bg="white")  # setup the status bar
@@ -563,7 +566,6 @@ class mainClass:
         except:
             root.destroy()
             return
-
         root.destroy()
 
     def enterManual(self, event):  # called when shift enter is pressed in the GUI
@@ -1003,14 +1005,14 @@ class mainClass:
 
         rowCount+=1
 
-        innerWallCustomL = Label(self.top, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        innerWallCustomL = Label(self.top, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg="white")
         innerWallCustomL.grid(row=rowCount, column=0, sticky=E)
         innerWallCustomE = Entry(self.top, textvariable=self.innerWallCustom)
         innerWallCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        outerWallCustomL = Label(self.top, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        outerWallCustomL = Label(self.top, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg="white")
         outerWallCustomL.grid(row=rowCount, column=0, sticky=E)
         outerWallCustomE = Entry(self.top, textvariable=self.outerWallCustom, bg="white")
         outerWallCustomE.grid(row=rowCount, column=1)
@@ -1142,6 +1144,10 @@ class mainClass:
                 if fnmatch.fnmatch(basename, pattern):
                     filename = os.path.join(root, basename)
                     yield filename
+
+    def callDefineOwnSoftware(self):
+        messagebox.showinfo(None,"Please select a sample input file")
+        defineOwnSoftware()
 
     def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, scalingFactor, name, title, platEstDiam):  # function to graph the data for the not recognized trials
         wallsX = []
@@ -1979,7 +1985,7 @@ class mainClass:
         try:
             aExperiment = saveFileAsExperiment(software, theFile, fileDirectory)
         except Exception:
-            show_error("No Input")
+            show_message("No Input")
             print("Unexpected Error loading experiment")
             traceback.print_exc()
             return
@@ -2105,7 +2111,7 @@ class mainClass:
 
             strategyType = ""
             strategyManual = ""
-
+            print(outerWallMaxVal, innerWallMaxVal, outerWallCounter/i, innerWallCounter/i)
             # DIRECT SWIM
             if ipe <= ipeMaxVal and averageHeadingError <= headingMaxVal and useDirectPathV:  # direct path
                 directPathCount += 1.0

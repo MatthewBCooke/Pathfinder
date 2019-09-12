@@ -9,6 +9,7 @@ import fnmatch
 import datetime
 from collections import defaultdict
 from xlrd import open_workbook
+from tkinter import filedialog
 
 class Datapoint(object):
     def __init__(self, time: float, x: float, y: float):
@@ -130,7 +131,6 @@ class Parameters:
     def __str__(self):
         return self.name
 
-
 def find_files(directory, pattern):  # searches for our files in the directory
         logging.debug("Finding files in the directory")
         for root, dirs, files in os.walk(directory):
@@ -139,6 +139,115 @@ def find_files(directory, pattern):  # searches for our files in the directory
                     filename = os.path.join(root, basename)
                     yield filename
 
+def openFile():  # opens a dialog to get a single file
+    logging.debug("Open File...")
+    theFile = filedialog.askopenfilename()
+    return theFile
+
+
+def defineOwnSoftware():
+    filename = ""
+    file_extension = ""
+    filename = openFile()
+    if filename == "":
+        logging.error("Please select a file")
+        print("Please select a file")
+        return
+    else:
+        print("TODO")
+        return
+        filename, file_extension = os.path.splitext(filename)
+
+
+
+'''
+def heatmapSettings(self, top3):
+	        global softwareStringVar
+	        software = softwareStringVar.get()
+	        if software != "ethovision":
+	            return
+	        global canvas
+	        global xscrollbar
+	        global vsb
+	        global frame
+	        global fileDirectory
+	        global heatValues
+	        global flags
+	        global labels
+	
+	        heatValues = []
+	        flags = []
+	        labels = []
+	
+	        extensionType = r"*.xlsx"
+	        try:  # we try to delete a canvas (if one exists this will execute)
+	            deleteCanvas()
+	            logging.info("Canvas destroyed")
+	        except:
+	            logging.debug("Didn't kill canvas, could be first call")
+	
+	        logging.debug("heatmapSettings")
+	
+	        try:
+	
+	            canvas = Canvas(top3, borderwidth=0, width=350, height=800, bg="white")  # we create the canvas
+	            frame = Frame(canvas)  # we place a frame in the canvas
+	            frame.configure(bg="white")
+	            xscrollbar = Scrollbar(top3, orient=HORIZONTAL, command=canvas.xview)  # we add a horizontal scroll bar
+	            xscrollbar.pack(side=BOTTOM, fill=X)  # we put the horizontal scroll bar on the bottom
+	            vsb = Scrollbar(top3, orient="vertical", command=canvas.yview)  # vertical scroll bar
+	            vsb.pack(side="right", fill="y")  # put on right
+	
+	            canvas.pack(side="left", fill="both", expand=True)  # we pack in the canvas
+	            canvas.create_window((4, 4), window=frame, anchor="nw")  # we create the window for the results
+	
+	            canvas.configure(yscrollcommand=vsb.set)  # we set the commands for the scroll bars
+	            canvas.configure(xscrollcommand=xscrollbar.set)
+	            frame.bind("<Configure>", lambda event, canvas=canvas: self.onFrameConfigure(canvas))   # we bind on frame configure
+	        except:
+	            logging.critical("Couldn't create the CSV canvas")
+	
+	        try:  # we try and fill the canvas
+	            logging.debug("Populating the canvas")
+	            for aFile in self.find_files(fileDirectory, extensionType):
+	                try:
+	                    wb = open_workbook(aFile)
+	                    logging.debug("Opened" + aFile)
+	                except:
+	                    logging.error("Could not open excel file: " + aFile)
+	                    continue
+	
+	                for sheet in wb.sheets():  # for all sheets in the workbook
+	                    for row in range(38):  # GET CONDITION TREATMENT AND DAY VALUES
+	                        for col in range(2):
+	                            if str(sheet.cell(row, 0).value) != "":
+	                                if col == 0:
+	                                    labels.append(str(sheet.cell(row, 0).value))
+	                                    heatmapValueFlag = BooleanVar()
+	                                    heatmapValueFlag.set(False)
+	                                    button = Checkbutton(frame, width=30, height=1, \
+	                                                    text=str(sheet.cell(row, col).value), relief=RAISED, bg="white", variable=heatmapValueFlag)
+	                                    button.grid(row=row, column=col)
+	                                    flags.append(heatmapValueFlag)
+	                                else:
+	                                    value = StringVar()
+	                                    value.set(str(sheet.cell(row, col).value))
+	                                    label = Entry(frame, width=30, textvariable=value)
+	                                    label.grid(row=row, column=col)
+	                                    heatValues.append(value)
+	                return
+	
+	        except Exception:  # if we can't fill
+	            logging.critical("Fatal error in populate")
+	
+
+'''
+
+
+
+
+
+
 def saveFileAsExperiment(software, filename, filedirectory):
     trialList = []
     filenameList = []
@@ -146,6 +255,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
     if filename == "":
         if filedirectory == "":
             logging.error("No files selected")
+            print("Please select a file or directory first")
             return
         else:
             if software == "ethovision":

@@ -70,8 +70,6 @@ def heatmap(self, experiment):
             if row.y > yMax:
                 yMax = row.y
 
-
-
     aFileName = "heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
     aTitle = fileDirectory
 
