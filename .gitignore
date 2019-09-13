@@ -7,10 +7,16 @@
 *.csv
 *.xlsx
 *.png
+*.docx
+/Users/matthewcooke/Documents/Work/JSLSSA/Pathfinder/Pathfinder
 
 logs/
 results/
 heatmaps/
 plots/
+dist/
+build/
+jsl_pathfinder.egg-info/
+jslssa.egg-info/
 
 __pycache__/

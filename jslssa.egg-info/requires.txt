@@ -1,4 +1,0 @@
-xlrd
-plotly
-pillow
-matplotlib

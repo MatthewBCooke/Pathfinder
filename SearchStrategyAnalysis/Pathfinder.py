@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-"""searchStrategyAnalysis.py: GUI + analyses ethovision exported xlsx files to determine which search strategy animals follow during
-Morris Water Maze trials."""
+"""Pathfinder.py"""
 
 from __future__ import print_function
 import csv
@@ -24,14 +23,22 @@ import numpy as np
 import pickle
 import datetime
 import scipy.ndimage as sp
-from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint
-import heatmap
-from scipy.stats import norm
-
-try:
-    import matlab.engine
+try: #Tries to import local dependencies
+    from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, defineOwnSoftware
+    import SearchStrategyAnalysis.heatmap
 except:
-    print("matlab engine unavailable")
+    from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, defineOwnSoftware
+    import heatmap
+from scipy.stats import norm
+import re
+import traceback
+
+try: #Imports MATLAB engine if available
+    import matlab.engine
+    canUseMatlab = True
+except: #Notify user that MATLAB is unavailable
+    print("MATLAB Engine Unavailable")
+    canUseMatlab = False
 
 if sys.version_info<(3,0,0):  # tkinter names for python 2
     print("Update to Python3 for best results... You may encounter errors")
@@ -51,83 +58,71 @@ import matplotlib.pyplot as plt
 from matplotlib import cm as CM
 
 __author__ = "Matthew Cooke"
-__copyright__ = "Copyright 2018, Jason Snyder Lab, The University of British Columbia"
+__copyright__ = "Copyright 2019, Jason Snyder Lab, The University of British Columbia"
 __credits__ = ["Matthew Cooke", "Tim O'Leary", "Phelan Harris"]
 __email__ = "mbcooke@mail.ubc.ca"
 
-if not os.path.exists("logs"):
-    os.makedirs("logs")
-if not os.path.exists("results"):
-    os.makedirs("results")
-if not os.path.exists("plots"):
-    os.makedirs("plots")
-if not os.path.exists("heatmaps"):
-    os.makedirs("heatmaps")
+if not os.path.exists("output"):
+    os.makedirs("output")
+if not os.path.exists("output/logs"):
+    os.makedirs("output/logs")
+if not os.path.exists("output/results"):
+    os.makedirs("output/results")
+if not os.path.exists("output/plots"):
+    os.makedirs("output/plots")
+if not os.path.exists("output/heatmaps"):
+    os.makedirs("output/heatmaps")
 
-logfilename = "logs/logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
-logging.basicConfig(filename=logfilename,level=logging.INFO)  # set the default log type to INFO, can be set to DEBUG for more detailed information
-csvfilename = "results/results " + str(
-    strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".csv"  # name of the default results file
+logfilename = "output/logs/logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
+logging.basicConfig(filename=logfilename,level=logging.DEBUG)  # set the default log type to INFO, can be set to DEBUG for more detailed information
+csvfilename = "output/results/results " + str(
+    strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the default results file
 theFile = ""
 fileDirectory = ""
-platformPosVar = "Auto"
-poolDiamVar = "Auto"
-platformPosVar = "Auto"  # -21,31
-platformDiamVar = "Auto"
-poolDiamVar = "Auto"  # 180.0
+goalPosVar = "Auto"
+mazeDiamVar = "Auto"
+goalPosVar = "Auto"
+goalDiamVar = "Auto"
+mazeDiamVar = "Auto"
 corridorWidthVar = "40"
-poolCentreVar = "Auto"
-oldPlatformPosVar = ""
+mazeCentreVar = "Auto"
 chainingRadiusVar = "35"
 thigmotaxisZoneSizeVar = "15"
 outputFile = csvfilename
 fileFlag = 0
+probeCutVar = math.inf #stop probe trials at X seconds, inf = no cutoff
 
-defaultParams = Parameters(name="Default", cseMaxVal=125, headingMaxVal=40, distanceToSwimMaxVal=0.3,
-                           distanceToPlatMaxVal=0.3, corridorAverageMinVal=0.7, directedSearchMaxDistance=400, focalMinDistance=100, focalMaxDistance=400, corridorCseMaxVal=1500,
-                           annulusCounterMaxVal=0.90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=35,
-                           percentTraversedMinVal=5, distanceToCentreMaxVal=0.7, thigmoMinDistance=400, innerWallMaxVal=0.65,
-                           outerWallMaxVal=0.35, cseIndirectMaxVal=300, percentTraversedRandomMaxVal=10)
-
-relaxedParams = Parameters(name="Relaxed", cseMaxVal=150, headingMaxVal=45, distanceToSwimMaxVal=0.4,
-                           distanceToPlatMaxVal=0.4, corridorAverageMinVal=0.65, directedSearchMaxDistance=500, focalMinDistance=100, focalMaxDistance=500, corridorCseMaxVal=1500,
-                           annulusCounterMaxVal=0.85, quadrantTotalMaxVal=3, chainingMaxCoverage=40, percentTraversedMaxVal=35,
-                           percentTraversedMinVal=5, distanceToCentreMaxVal=0.7, thigmoMinDistance=400, innerWallMaxVal=0.65,
-                           outerWallMaxVal=0.35, cseIndirectMaxVal=350, percentTraversedRandomMaxVal=10)
-
-strictParams = Parameters(name="Strict", cseMaxVal=100, headingMaxVal=35, distanceToSwimMaxVal=0.3,
-                           distanceToPlatMaxVal=0.3, corridorAverageMinVal=0.7, directedSearchMaxDistance=400, focalMinDistance=100, focalMaxDistance=400, corridorCseMaxVal=1500,
-                           annulusCounterMaxVal=0.90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=35,
-                           percentTraversedMinVal=5, distanceToCentreMaxVal=0.7, thigmoMinDistance=400, innerWallMaxVal=0.65,
-                           outerWallMaxVal=0.35, cseIndirectMaxVal=250, percentTraversedRandomMaxVal=15)
-
+defaultParams = Parameters(name="Default", ipeMaxVal=125, headingMaxVal=40, distanceToSwimMaxVal=0.3,
+                           distanceToPlatMaxVal=0.3, corridorAverageMinVal=0.7, directedSearchMaxDistance=400, focalMinDistance=100, focalMaxDistance=400, corridoripeMaxVal=1500,
+                           annulusCounterMaxVal=0.90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=20,
+                           percentTraversedMinVal=5, distanceToCentreMaxVal=0.6, thigmoMinDistance=400, fullThigmoMinVal=0.65,
+                           smallThigmoMinVal=0.35, ipeIndirectMaxVal=300, percentTraversedRandomMaxVal=10, headingIndirectMaxVal=70)
+global params
 params = defaultParams
-
-cseMaxVal = params.cseMaxVal
+ipeMaxVal = params.ipeMaxVal
 headingMaxVal = params.headingMaxVal
 distanceToSwimMaxVal = params.distanceToSwimMaxVal
 distanceToPlatMaxVal = params.distanceToPlatMaxVal
 corridorAverageMinVal = params.corridorAverageMinVal
-corridorCseMaxVal = params.corridorCseMaxVal
+corridoripeMaxVal = params.corridoripeMaxVal
 annulusCounterMaxVal = params.annulusCounterMaxVal
 quadrantTotalMaxVal = params.quadrantTotalMaxVal
 percentTraversedMaxVal = params.percentTraversedMaxVal
 percentTraversedMinVal = params.percentTraversedMinVal
 distanceToCentreMaxVal = params.distanceToCentreMaxVal
-innerWallMaxVal = params.innerWallMaxVal
-outerWallMaxVal = params.outerWallMaxVal
-cseIndirectMaxVal = params.cseIndirectMaxVal
+smallThigmoMinVal = params.smallThigmoMinVal
+fullThigmoMinVal = params.fullThigmoMinVal
+ipeIndirectMaxVal = params.ipeIndirectMaxVal
 percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
 directedSearchMaxDistance = params.directedSearchMaxDistance
 focalMinDistance = params.focalMinDistance
 focalMaxDistance = params.focalMaxDistance
 chainingMaxCoverage = params.chainingMaxCoverage
 thigmoMinDistanceCustom = params.thigmoMinDistance
+headingIndirectMaxVal = params.headingIndirectMaxVal
 
-
-isRuediger = False
 customFlag = False
-useDirectSwimV = True
+useDirectPathV = True
 useFocalSearchV = True
 useDirectedSearchV = True
 useScanningV = True
@@ -139,18 +134,16 @@ useThigmoV = True
 root = Tk()  # set up the root
 theStatus = StringVar()  # create the status bar text
 theStatus.set('Waiting for user input...')  # set status bar text
-platformPosStringVar = StringVar()  # setup all the gui variables (different from normal variables)
-platformPosStringVar.set(platformPosVar)
-platformDiamStringVar = StringVar()
-platformDiamStringVar.set(platformDiamVar)
-poolDiamStringVar = StringVar()
-poolDiamStringVar.set(poolDiamVar)
+goalPosStringVar = StringVar()  # setup all the gui variables (different from normal variables)
+goalPosStringVar.set(goalPosVar)
+goalDiamStringVar = StringVar()
+goalDiamStringVar.set(goalDiamVar)
+mazeDiamStringVar = StringVar()
+mazeDiamStringVar.set(mazeDiamVar)
 corridorWidthStringVar = StringVar()
 corridorWidthStringVar.set(corridorWidthVar)
-poolCentreStringVar = StringVar()
-poolCentreStringVar.set(poolCentreVar)
-oldPlatformPosStringVar = StringVar()
-oldPlatformPosStringVar.set(oldPlatformPosVar)
+mazeCentreStringVar = StringVar()
+mazeCentreStringVar.set(mazeCentreVar)
 chainingRadiusStringVar = StringVar()
 chainingRadiusStringVar.set(chainingRadiusVar)
 thigmotaxisZoneSizeStringVar = StringVar()
@@ -161,6 +154,10 @@ outputFileStringVar = StringVar()
 outputFileStringVar.set(outputFile)
 maxValStringVar = StringVar()
 maxValStringVar.set("Auto")
+dayValStringVar = StringVar()
+dayValStringVar.set("All")
+trialValStringVar = StringVar()
+trialValStringVar.set("All")
 gridSizeStringVar = StringVar()
 gridSizeStringVar.set("70")
 useManual = BooleanVar()
@@ -169,25 +166,55 @@ useManualForAll = BooleanVar()
 useManualForAll.set(False)
 useEntropy = BooleanVar()
 useEntropy.set(False)
+truncate = BooleanVar()
+truncate.set(False)
 useScaling = BooleanVar()
 useScaling.set(False)
 scale = False
+rois = []
 
-def show_error(text):  # popup box with error text
-    logging.debug("Displaying Error")
+def show_message(text):  # popup box with message text
+    logging.debug("Displaying message")
     try:
         top = Toplevel(root)  # show as toplevel
         Label(top, text=text).pack()   # label set to text
         Button(top, text="OK", command=top.destroy).pack(pady=5)   # add ok button
     except:
-        logging.info("Couldn't Display error "+text)
+        logging.info("Couldn't Display message "+text)
+
+class EntryWithPlaceholder(Entry):
+    def __init__(self, master=None, placeholder="PLACEHOLDER", color='grey'):
+        super().__init__(master)
+
+        self.placeholder = placeholder
+        self.placeholder_color = color
+        self.default_fg_color = self['fg']
+
+        self.bind("<FocusIn>", self.foc_in)
+        self.bind("<FocusOut>", self.foc_out)
+
+        self.put_placeholder()
+
+    def put_placeholder(self):
+        self.insert(0, self.placeholder)
+        self['fg'] = self.placeholder_color
+
+    def foc_in(self, *args):
+        if self['fg'] == self.placeholder_color:
+            self.delete('0', 'end')
+            self['fg'] = self.default_fg_color
+
+    def foc_out(self, *args):
+        if not self.get():
+            self.put_placeholder()
 
 class mainClass:
     def __init__(self, root):  # init is called on runtime
         logging.debug("Initiating Main program")
         try:
             self.buildGUI(root)
-        except:
+        except Exception:
+            traceback.print_exc()
             logging.fatal("Couldn't build GUI")
             self.tryQuit()
             return
@@ -196,18 +223,18 @@ class mainClass:
     def buildGUI(self, root):  # Called in the __init__ to build the GUI window
         root.wm_title("Pathfinder")
 
-        global platformPosVar
-        global platformDiamVar
-        global poolDiamVar
+        global goalPosVar
+        global goalDiamVar
+        global mazeDiamVar
         global corridorWidthVar
-        global poolCentreVar
-        global oldPlatformPosVar
+        global mazeCentreVar
         global chainingRadiusVar
         global thigmotaxisZoneSizeVar
         global outputFile
         global manualFlag
         global useManualForAllFlag
         global useEntropyFlag
+        global truncateFlag
         global softwareStringVar
         global softwareScalingFactorStringVar
 
@@ -228,7 +255,7 @@ class mainClass:
             accelC = "Ctrl+C"
             accelV = "Ctrl+V"
 
-        root.geometry('{}x{}'.format( 700, 500 ))
+        root.geometry('{}x{}'.format( 800, 500 ))
 
         self.menu = Menu(root)  # create a menu
         root.config(menu=self.menu, bg="white")  # set up the config
@@ -266,54 +293,29 @@ class mainClass:
         self.menu.add_cascade(label="Help", menu=self.helpMenu)
         self.helpMenu.add_command(label="Help", command=self.getHelp)
         self.helpMenu.add_command(label="About", command=self.about)
+        self.helpMenu.add_command(label="Update", command=self.updatePathfinder)
 
-        # ****** TOOLBAR ******
-        self.toolbar = Frame(root)  # add a toolbar to the frame
-        self.toolbar.config(bg="white")
-
-        ttk.Style().configure('selected.TButton', foreground='red', background='white')  # have two button styles
-        ttk.Style().configure('default.TButton', foreground='black',
-                              background='white')  # note: we are using TKK buttons not tk buttons because tk buttons don't support style changes on mac
-
-        self.defaultButton = ttk.Button(self.toolbar, text="Default", command=self.defaultButtonFunc,
-                                        style='selected.TButton')  # add snyder button
-        self.defaultButton.grid(row=0, ipadx=2, pady=2, padx=2)
-        self.strictButton = ttk.Button(self.toolbar, text="Relaxed", command=self.strictButtonFunc,
-                                        style='default.TButton')  # add reudiger button
-        self.strictButton.grid(row=0, column=1, ipadx=2, pady=2, padx=2)
-        self.relaxedButton = ttk.Button(self.toolbar, text="Strict", command=self.relaxedButtonFunc,
-                                       style='default.TButton')  # add garthe button
-        self.relaxedButton.grid(row=0, column=2, ipadx=2, pady=2, padx=2)
-        self.customButton = ttk.Button(self.toolbar, text="Custom...", command=self.custom, style='default.TButton')
-        self.customButton.grid(row=0, column=3, ipadx=2, pady=2, padx=2)  # add custom button
-        self.toolbar.pack(side=TOP, fill=X)  # place the toolbar
-        self.defaultButton.bind("<Enter>", partial(self.on_enter, "Use preset values from our paper"))
-        self.defaultButton.bind("<Leave>", self.on_leave)
-        self.relaxedButton.bind("<Enter>", partial(self.on_enter, "Use preset values relaxed"))
-        self.relaxedButton.bind("<Leave>", self.on_leave)
-        self.strictButton.bind("<Enter>", partial(self.on_enter, "Use preset values strict"))
-        self.strictButton.bind("<Leave>", self.on_leave)
-        self.customButton.bind("<Enter>", partial(self.on_enter, "Choose your own values (please disable scaling)"))
-        self.customButton.bind("<Leave>", self.on_leave)
-
+        rowCount = 0
         # ******* Software Type *******
         self.softwareBar = Frame(root)  # add a toolbar to the frame
         self.softwareBar.config(bg="white")
         self.ethovisionRadio = Radiobutton(self.softwareBar, text="Ethovision", variable=softwareStringVar,
                                            value="ethovision",
                                            indicatoron=1, width=15, bg="white")
-        self.ethovisionRadio.grid(row=0, column=0, padx=5, sticky='NW')  # add the radiobuttons for selection
+        self.ethovisionRadio.grid(row=rowCount, column=0, padx=5, sticky='NW')  # add the radiobuttons for selection
 
         self.anymazeRadio = Radiobutton(self.softwareBar, text="Anymaze", variable=softwareStringVar,
                                         value="anymaze",
                                         indicatoron=1, width=15, bg="white")
-        self.anymazeRadio.grid(row=0, column=1, padx=5, sticky='NW')
+        self.anymazeRadio.grid(row=rowCount, column=1, padx=5, sticky='NW')
         self.watermazeRadio = Radiobutton(self.softwareBar, text="Watermaze", variable=softwareStringVar,
                                           value="watermaze", indicatoron=1, width=15, bg="white")
-        self.watermazeRadio.grid(row=0, column=2, padx=5, sticky='NW')
+        self.watermazeRadio.grid(row=rowCount, column=2, padx=5, sticky='NW')
         self.eztrackRadio = Radiobutton(self.softwareBar, text="ezTrack", variable=softwareStringVar,
                                           value="eztrack", indicatoron=1, width=15, bg="white")
-        self.eztrackRadio.grid(row=0, column=3, padx=5, sticky='NW')
+        self.eztrackRadio.grid(row=rowCount, column=3, padx=5, sticky='NW')
+        self.defineSoftware = Button(self.softwareBar, text="Define..", command=self.callDefineOwnSoftware, width=15, bg="white")
+        self.defineSoftware.grid(row=rowCount, column=4, padx=5, sticky='NW')
         self.softwareBar.pack(side=TOP, fill=X, pady =5)
 
         self.ethovisionRadio.bind("<Enter>", partial(self.on_enter, "Click if you used Ethovision to generate your data"))
@@ -324,6 +326,8 @@ class mainClass:
         self.watermazeRadio.bind("<Leave>", self.on_leave)
         self.eztrackRadio.bind("<Enter>", partial(self.on_enter, "Click if you used ezTrack to generate your data"))
         self.eztrackRadio.bind("<Leave>", self.on_leave)
+        self.defineSoftware.bind("<Enter>", partial(self.on_enter, "Click if your software does not match a preset"))
+        self.defineSoftware.bind("<Leave>", self.on_leave)
 
         # ******* STATUS BAR *******
         self.status = Label(root, textvariable=theStatus, bd=1, relief=SUNKEN, anchor=W, bg="white")  # setup the status bar
@@ -335,12 +339,11 @@ class mainClass:
 
         try:
             with open('mainobjs.pickle', 'rb') as f:
-                platformPosVar, platformDiamVar, poolDiamVar, poolCentreVar, oldPlatformPosVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar = pickle.load(f)
-                platformPosStringVar.set(platformPosVar)
-                platformDiamStringVar.set(platformDiamVar)
-                poolDiamStringVar.set(poolDiamVar)
-                poolCentreStringVar.set(poolCentreVar)
-                oldPlatformPosStringVar.set(oldPlatformPosVar)
+                goalPosVar, goalDiamVar, mazeDiamVar, mazeCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar = pickle.load(f)
+                goalPosStringVar.set(goalPosVar)
+                goalDiamStringVar.set(goalDiamVar)
+                mazeDiamStringVar.set(mazeDiamVar)
+                mazeCentreStringVar.set(mazeCentreVar)
                 corridorWidthStringVar.set(corridorWidthVar)
                 chainingRadiusStringVar.set(chainingRadiusVar)
                 thigmotaxisZoneSizeStringVar.set(thigmotaxisZoneSizeVar)
@@ -348,85 +351,77 @@ class mainClass:
         except:
             pass
 
+        rowCount = rowCount+1
+        self.goalPos = Label(self.paramFrame, text="Goal Position (x,y):", bg="white")  # add different items (Position)
+        self.goalPos.grid(row=rowCount, column=0, sticky=E)  # place this in row 0 column 0
+        self.goalPosE = Entry(self.paramFrame, textvariable=goalPosStringVar)  # add an entry text box
+        self.goalPosE.grid(row=rowCount, column=1)  # place this in row 0 column 1
+        self.goalPos.bind("<Enter>", partial(self.on_enter, "Goal position. Example: 2.5,-3.72 or Auto"))
+        self.goalPos.bind("<Leave>", self.on_leave)
+        self.otherROIButton = Button(self.paramFrame, text="Add Goal...", command=self.otherROI, fg="black")
+        self.otherROIButton.grid(row=rowCount, column=2)  # add custom button
+        self.otherROIButton.bind("<Enter>", partial(self.on_enter, "Add more Regions of Interest to be considered in strategy calculation"))
+        self.otherROIButton.bind("<Leave>", self.on_leave)
+        self.otherROIButton.config(width = 10)
+        rowCount = rowCount+1
+        self.goalDiam = Label(self.paramFrame, text="Goal Diameter (cm):", bg="white")
+        self.goalDiam.grid(row=rowCount, column=0, sticky=E)
+        self.goalDiamE = Entry(self.paramFrame, textvariable=goalDiamStringVar)
+        self.goalDiamE.grid(row=rowCount, column=1)
+        self.goalDiam.bind("<Enter>", partial(self.on_enter, "Goal diameter. Use the same unit as the data"))
+        self.goalDiam.bind("<Leave>", self.on_leave)
+        rowCount = rowCount+1
+        self.mazeDiam = Label(self.paramFrame, text="Maze Diameter (cm):", bg="white")
+        self.mazeDiam.grid(row=rowCount, column=0, sticky=E)
+        self.mazeDiamE = Entry(self.paramFrame, textvariable=mazeDiamStringVar)
+        self.mazeDiamE.grid(row=rowCount, column=1)
+        self.mazeDiam.bind("<Enter>", partial(self.on_enter, "The diameter of the maze. Use the same unit as the data"))
+        self.mazeDiam.bind("<Leave>", self.on_leave)
+        rowCount = rowCount+1
+        self.mazeCentre = Label(self.paramFrame, text="Maze Centre (x,y):", bg="white")
+        self.mazeCentre.grid(row=rowCount, column=0, sticky=E)
+        self.mazeCentreE = Entry(self.paramFrame, textvariable=mazeCentreStringVar)
+        self.mazeCentreE.grid(row=rowCount, column=1)
+        self.mazeCentre.bind("<Enter>", partial(self.on_enter, "Maze Centre. Example: 0.0,0.0 or Auto"))
+        self.mazeCentre.bind("<Leave>", self.on_leave)
+        rowCount = rowCount+  1
 
-        self.platformPos = Label(self.paramFrame, text="Platform Position (x,y):", bg="white")  # add different items (Position)
-        self.platformPos.grid(row=0, column=0, sticky=E)  # place this in row 0 column 0
-        self.platformPosE = Entry(self.paramFrame, textvariable=platformPosStringVar)  # add an entry text box
-        self.platformPosE.grid(row=0, column=1)  # place this in row 0 column 1
-        self.platformPos.bind("<Enter>", partial(self.on_enter, "Platform position. Example: 2.5,-3.72 or Auto"))
-        self.platformPos.bind("<Leave>", self.on_leave)
-
-        self.platformDiam = Label(self.paramFrame, text="Platform Diameter (cm):", bg="white")
-        self.platformDiam.grid(row=1, column=0, sticky=E)
-        self.platformDiamE = Entry(self.paramFrame, textvariable=platformDiamStringVar)
-        self.platformDiamE.grid(row=1, column=1)
-        self.platformDiam.bind("<Enter>", partial(self.on_enter, "Platform diameter. Use the same unit as the data"))
-        self.platformDiam.bind("<Leave>", self.on_leave)
-
-        self.poolDiam = Label(self.paramFrame, text="Pool Diameter (cm):", bg="white")
-        self.poolDiam.grid(row=2, column=0, sticky=E)
-        self.poolDiamE = Entry(self.paramFrame, textvariable=poolDiamStringVar)
-        self.poolDiamE.grid(row=2, column=1)
-        self.poolDiam.bind("<Enter>", partial(self.on_enter, "The diameter of the MWM. Use the same unit as the data"))
-        self.poolDiam.bind("<Leave>", self.on_leave)
-
-        self.poolCentre = Label(self.paramFrame, text="Pool Centre (x,y):", bg="white")
-        self.poolCentre.grid(row=3, column=0, sticky=E)
-        self.poolCentreE = Entry(self.paramFrame, textvariable=poolCentreStringVar)
-        self.poolCentreE.grid(row=3, column=1)
-        self.poolCentre.bind("<Enter>", partial(self.on_enter, "Pool Centre. Example: 0.0,0.0 or Auto"))
-        self.poolCentre.bind("<Leave>", self.on_leave)
-
-        self.oldPlatformPos = Label(self.paramFrame, text="Old Platform Position (x,y):", bg="white")
-        self.oldPlatformPos.grid(row=4, column=0, sticky=E)
-        self.oldPlatformPosE = Entry(self.paramFrame, textvariable=oldPlatformPosStringVar)
-        self.oldPlatformPosE.grid(row=4, column=1)
-        self.oldPlatformPos.bind("<Enter>", partial(self.on_enter, "Not currently used"))
-        self.oldPlatformPos.bind("<Leave>", self.on_leave)
-
-        self.headingError = Label(self.paramFrame, text="Corridor Width (degrees):", bg="white")
-        self.headingError.grid(row=5, column=0, sticky=E)
+        self.headingError = Label(self.paramFrame, text="Angular Corridor Width (degrees):", bg="white")
+        self.headingError.grid(row=rowCount, column=0, sticky=E)
         self.headingErrorE = Entry(self.paramFrame, textvariable=corridorWidthStringVar)
-        self.headingErrorE.grid(row=5, column=1)
+        self.headingErrorE.grid(row=rowCount, column=1)
         self.headingError.bind("<Enter>", partial(self.on_enter, "This is an angular corridor (in degrees) in which the animal must face"))
         self.headingError.bind("<Leave>", self.on_leave)
+        rowCount = rowCount+1
 
-
-        self.chainingRadius = Label(self.paramFrame, text="Chaining Width (cm):", bg="white")
-        self.chainingRadius.grid(row=6, column=0, sticky=E)
+        self.chainingRadius = Label(self.paramFrame, text="Chaining Annulus Width (cm):", bg="white")
+        self.chainingRadius.grid(row=rowCount, column=0, sticky=E)
         self.chainingRadiusE = Entry(self.paramFrame, textvariable=chainingRadiusStringVar)
-        self.chainingRadiusE.grid(row=6, column=1)
-        self.chainingRadius.bind("<Enter>", partial(self.on_enter, "The diameter of the ring in which chaining is considered (centered on platform)"))
+        self.chainingRadiusE.grid(row=rowCount, column=1)
+        self.chainingRadius.bind("<Enter>", partial(self.on_enter, "The diameter of the ring in which chaining is considered (centered on goal)"))
         self.chainingRadius.bind("<Leave>", self.on_leave)
 
-
+        rowCount = rowCount+1
         self.thigmotaxisZoneSize = Label(self.paramFrame, text="Thigmotaxis Zone Size (cm):", bg="white")
-        self.thigmotaxisZoneSize.grid(row=7, column=0, sticky=E)
+        self.thigmotaxisZoneSize.grid(row=rowCount, column=0, sticky=E)
         self.thigmotaxisZoneSizeE = Entry(self.paramFrame, textvariable=thigmotaxisZoneSizeStringVar)
-        self.thigmotaxisZoneSizeE.grid(row=7, column=1)
+        self.thigmotaxisZoneSizeE.grid(row=rowCount, column=1)
         self.thigmotaxisZoneSize.bind("<Enter>", partial(self.on_enter, "Size of the zone in which thigmotaxis is considered (from the outer wall)"))
         self.thigmotaxisZoneSize.bind("<Leave>", self.on_leave)
+        rowCount = rowCount+1
 
-
-
-        self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm (for scaling):", bg="white")
-        self.softwareScalingFactor.grid(row=7, column=0, sticky=E)
+        self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm for scaling:", bg="white")
+        self.softwareScalingFactor.grid(row=rowCount, column=0, sticky=E)
         self.softwareScalingFactorE = Entry(self.paramFrame, textvariable=softwareScalingFactorStringVar)
-        self.softwareScalingFactorE.grid(row=7, column=1)
-        self.softwareScalingFactor.bind("<Enter>", partial(self.on_enter, "This is used to convert from Pixels to cm"))
-
-        self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm (for Anymaze and Watermaze):", bg="white")
-        self.softwareScalingFactor.grid(row=8, column=0, sticky=E)
-        self.softwareScalingFactorE = Entry(self.paramFrame, textvariable=softwareScalingFactorStringVar)
-        self.softwareScalingFactorE.grid(row=8, column=1)
+        self.softwareScalingFactorE.grid(row=rowCount, column=1)
         self.softwareScalingFactor.bind("<Enter>", partial(self.on_enter, "This is used to convert Anymaze and Watermaze from Pixels to cm"))
         self.softwareScalingFactor.bind("<Leave>", self.on_leave)
 
-
+        rowCount = rowCount+1
         self.saveDirectory = Label(self.paramFrame, text="Output File (.csv):", bg="white")
-        self.saveDirectory.grid(row=9, column=0, sticky=E)
+        self.saveDirectory.grid(row=rowCount, column=0, sticky=E)
         self.saveDirectoryE = Entry(self.paramFrame, textvariable=outputFileStringVar)
-        self.saveDirectoryE.grid(row=9, column=1)
+        self.saveDirectoryE.grid(row=rowCount, column=1)
         self.saveDirectory.bind("<Enter>", partial(self.on_enter, "The csv file to store the results"))
         self.saveDirectory.bind("<Leave>", self.on_leave)
 
@@ -437,45 +432,61 @@ class mainClass:
         manualFlag = False  # a flag that lets us know if we want to use manual categorization
         useManualForAllFlag = False
         useEntropyFlag = False
-
-        self.scalingTickL = Label(self.paramFrame, text="Scale values: ", bg="white")  # label for the tickbox
-        self.scalingTickL.grid(row=14, column=0, sticky=E)  # placed here
+        truncateFlag = False
+        rowCount = rowCount+1
+        self.scalingTickL = Label(self.paramFrame, text="Scale values (convert pixels to cm): ", bg="white")  # label for the tickbox
+        self.scalingTickL.grid(row=rowCount, column=0, sticky=E)  # placed here
         self.scalingTickC = Checkbutton(self.paramFrame, variable=useScaling, bg="white")  # the actual tickbox
-        self.scalingTickC.grid(row=14, column=1)
-        self.scalingTickL.bind("<Enter>", partial(self.on_enter, "Check if you want to scale the values to fit your pool"))
+        self.scalingTickC.grid(row=rowCount, column=1)
+        self.scalingTickL.bind("<Enter>", partial(self.on_enter, "Check if you want to scale the values to fit your maze"))
         self.scalingTickL.bind("<Leave>", self.on_leave)
 
 
         scale = useScaling.get()
-
+        rowCount = rowCount+1
         self.manualTickL = Label(self.paramFrame, text="Manual categorization for uncategorized trials: ", bg="white")  # label for the tickbox
-        self.manualTickL.grid(row=15, column=0, sticky=E)  # placed here
+        self.manualTickL.grid(row=rowCount, column=0, sticky=E)  # placed here
         self.manualTickC = Checkbutton(self.paramFrame, variable=useManual, bg="white")  # the actual tickbox
-        self.manualTickC.grid(row=15, column=1)
+        self.manualTickC.grid(row=rowCount, column=1)
         self.manualTickL.bind("<Enter>", partial(self.on_enter, "Unrecognized strategies will popup so you can manually categorize them"))
         self.manualTickL.bind("<Leave>", self.on_leave)
+        rowCount = rowCount+1
         self.manualForAllL = Label(self.paramFrame, text="Manual categorization for all trials: ", bg="white")  # label for the tickbox
-        self.manualForAllL.grid(row=16, column=0, sticky=E)  # placed here
+        self.manualForAllL.grid(row=rowCount, column=0, sticky=E)  # placed here
         self.manualForAllC = Checkbutton(self.paramFrame, variable=useManualForAll, bg="white")  # the actual tickbox
-        self.manualForAllC.grid(row=16, column=1)
+        self.manualForAllC.grid(row=rowCount, column=1)
         self.manualForAllL.bind("<Enter>", partial(self.on_enter, "All trials will popup so you can manually categorize them"))
         self.manualForAllL.bind("<Leave>", self.on_leave)
-        self.entropyL = Label(self.paramFrame, text="Run entropy calculation (requires matlab): ", bg="white")  # label for the tickbox
-        self.entropyL.grid(row=17, column=0, sticky=E)  # placed here
-        self.entropyC = Checkbutton(self.paramFrame, variable=useEntropy, bg="white")  # the actual tickbox
-        self.entropyC.grid(row=17, column=1)
-        self.entropyL.bind("<Enter>", partial(self.on_enter, "Calculates the entropy of the trial (slow)"))
-        self.entropyL.bind("<Leave>", self.on_leave)
+        rowCount = rowCount+1
+
+        if canUseMatlab:
+            self.entropyL = Label(self.paramFrame, text="Run entropy calculation: ", bg="white")  # label for the tickbox
+            self.entropyL.grid(row=rowCount, column=0, sticky=E)  # placed here
+            self.entropyC = Checkbutton(self.paramFrame, variable=useEntropy, bg="white")  # the actual tickbox
+            self.entropyC.grid(row=rowCount, column=1)
+            self.entropyL.bind("<Enter>", partial(self.on_enter, "Calculates the entropy of the trial (slow)"))
+            self.entropyL.bind("<Leave>", self.on_leave)
+            rowCount = rowCount+1
+
+        self.truncateL = Label(self.paramFrame, text="Truncate trials when animal reaches goal location: ", bg="white")  # label for the tickbox
+        self.truncateL.grid(row=rowCount, column=0, sticky=E)  # placed here
+        self.truncateC = Checkbutton(self.paramFrame, variable=truncate, bg="white")  # the actual tickbox
+        self.truncateC.grid(row=rowCount, column=1)
+        self.truncateL.bind("<Enter>", partial(self.on_enter, "Will end the trial onces the animal reaches the goal location."))
+        self.truncateL.bind("<Leave>", self.on_leave)
 
         useManualForAllFlag = useManualForAll.get()
         useEntropyFlag = useEntropy.get()
         manualFlag = useManual.get()  # get the value of the tickbox
-
+        trunacteFlag = truncate.get()
+        rowCount = rowCount+1
         self.calculateButton = Button(self.paramFrame, text="Calculate", fg="black",
-                                      command=self.manual)  # add a button that says calculate
-        self.calculateButton.grid(row=18, column=0, columnspan=3)
-
-
+                                      command=self.mainHelper)  # add a button that says calculate
+        self.calculateButton.grid(row=rowCount, column=1, columnspan=1)
+        self.settingsButton = Button(self.paramFrame, text="Settings", command=self.settings, fg="black")
+        self.settingsButton.grid(row=rowCount, column=0, columnspan=1)  # add custom button
+        self.calculateButton.config(width = 10)
+        self.settingsButton.config(width = 10)
 
         if _platform == "darwin":
             root.bind('<Command-d>', self.ctrlDir)
@@ -535,11 +546,16 @@ class mainClass:
 
     def about(self):  # go to README
         logging.debug("Called about")
-        webbrowser.open('https://github.com/Norton50/JSL/blob/master/README.md')
+        webbrowser.open('https://github.com/MatthewBCooke/Pathfinder')
 
     def getHelp(self):  # go to readme
         logging.debug("Called help")
-        webbrowser.open('https://github.com/Norton50/JSL/blob/master/README.md')
+        webbrowser.open('https://github.com/MatthewBCooke/Pathfinder/wiki')
+
+    def updatePathfinder(self):
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-U',
+            'jsl-pathfinder'])
+        exit(0)
 
     def tryQuit(self):  # tries to stop threads
         logging.debug("trying to quit")
@@ -550,11 +566,10 @@ class mainClass:
         except:
             root.destroy()
             return
-
         root.destroy()
 
     def enterManual(self, event):  # called when shift enter is pressed in the GUI
-        self.manual()
+        self.mainHelper()
 
     def ctrlDir(self, event):  # called when CTRL D is pressed
         self.openDir()
@@ -592,66 +607,121 @@ class mainClass:
     def enterSave(self, event):
         self.saveStrat()
 
-    def manual(self):  # function that checks for the manual flag and runs the program
+    def mainHelper(self):  # function that checks for the manual flag and runs the program
         global manualFlag
         global useManualForAllFlag
         global useEntropyFlag
+        global truncateFlag
         manualFlag = useManual.get()
         useManualForAllFlag = useManualForAll.get()
         useEntropyFlag = useEntropy.get()
-        if manualFlag or useManualForAllFlag:  # if we want manual we can't use threading
-            self.mainCalculate()
-        else:  # else start the threads
-            self.mainThreader()
+        truncateFlag = truncate.get()
+        goalPosVar = goalPosStringVar.get()
+        goalDiamVar = goalDiamStringVar.get()
+        mazeDiamVar = mazeDiamStringVar.get()
+        mazeCentreVar = mazeCentreStringVar.get()
+        corridorWidthVar = corridorWidthStringVar.get()
+        chainingRadiusVar = chainingRadiusStringVar.get()
+        thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()  # get important values
+        softwareScalingFactorVar = softwareScalingFactorStringVar.get()
 
-    def defaultButtonFunc(self):  # actions on button press (snyder button)
-        logging.debug("Default selected")
-        self.defaultButton.configure(style='selected.TButton')  # change the style of the selected
-        self.strictButton.configure(style='default.TButton')  # and non-selected buttons
-        self.relaxedButton.configure(style='default.TButton')
-        self.customButton.configure(style='default.TButton')
-        params = defaultParams
+        try:
+            with open('mainobjs.pickle', 'wb') as f:
+                pickle.dump([goalPosVar, goalDiamVar, mazeDiamVar, mazeCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar], f)
+        except:
+            pass
 
-    def strictButtonFunc(self):  # see snyder
-        logging.debug("Strict selected")
-        self.defaultButton.configure(style='default.TButton')
-        self.strictButton.configure(style='selected.TButton')
-        self.relaxedButton.configure(style='default.TButton')
-        self.customButton.configure(style='default.TButton')
-        params = strictParams
+        self.mainCalculate(goalPosVar,goalDiamVar)
 
-    def relaxedButtonFunc(self):  # see snyder
-        logging.debug("Relaxed selected")
-        self.defaultButton.configure(style='default.TButton')
-        self.strictButton.configure(style='default.TButton')
-        self.relaxedButton.configure(style='selected.TButton')
-        self.customButton.configure(style='default.TButton')
-        params = relaxedParams
+        for roi in rois:
+            print("Running for ROI: " + roi[0])
+            self.mainCalculate(roi[0],roi[1])
 
-    def custom(self):
+
+    def otherROI(self):
+        logging.debug("Opening ROI menu")
+        self.entries = []
+        number = 0
+        self.top4 = Toplevel(root)  # we set this to be the top
+        self.canvas = Canvas(self.top4, width=500, height=200)
+        self.vsb = Scrollbar(self.top4, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(bg="white", yscrollcommand=self.vsb.set)
+        self.add_button = Button(self.top4, text="Add Goal", command=self.addROI)
+        self.saveButton = Button(self.top4, text="Save", command=self.saveROI)
+        self.saveButton.config(width = 10)
+        self.add_button.config(width = 10)
+        self.container = Frame(self.top4)
+        self.canvas.create_window(0,0,anchor="nw",window=self.container)
+        Label(self.top4, text="Settings", bg="white", fg="red").pack(side="top") # we title it
+        self.add_button.pack(side="top")
+        self.vsb.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.saveButton.pack(side="bottom")
+
+    def addROI(self):
+        labelText = "ROI #" + str(int((len(self.entries))/2+2))
+        label = Label(self.container,text=labelText)
+        label.grid(row=int(((len(self.entries))/2)),column=0)
+        entry1 = EntryWithPlaceholder(self.container, "Location (x,y)")
+        entry1.grid(row=int(((len(self.entries))/2)),column=1)
+        entry2 = EntryWithPlaceholder(self.container, "Diameter (cm)")
+        entry2.grid(row=int(((len(self.entries))/2)),column=2)
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        self.entries.append(entry1)
+        self.entries.append(entry2)
+
+    def saveROI(self):
+        roiError = False
+        roiList = []
+        sizeList = []
+        try:
+            rois.clear()
+            sizeList.clear()
+            roiList.clear()
+        except:
+            pass
+
+        count = 0
+        for entry in self.entries:
+            if count % 2 == 0:
+                roiList.append(entry.get())
+            else:
+                sizeList.append(entry.get())
+            count = count + 1
+
+        tempRois = zip(roiList,sizeList)
+
+        patternROI = re.compile("^[0-9]{1,9}([.][0-9]{1,9})?[,][0-9]{1,9}([.][0-9]{1,9})?$")
+        patternSize = re.compile("^[0-9]{1,9}([.][0-9]{1,9})?$")
+
+        for aTuple in tempRois:
+            if aTuple[0] == 'Location (x,y)' or aTuple[1] == 'Diameter (cm)':
+                continue
+            if patternROI.match(aTuple[0]) == None:
+                messagebox.showwarning('Input Error',
+                                   'Please verify your ROI input')
+                rois.clear()
+                roiError = True
+            elif patternSize.match(aTuple[1]) == None:
+                messagebox.showwarning('Input Error',
+                                   'Please verify your size input')
+                rois.clear()
+                roiError = True
+            else:
+                rois.append(aTuple)
+
+        for aTuple in rois:
+            print("Goal set at " + aTuple[0] + " and size set at " + aTuple[1])
+        if roiError == False:
+            try:
+                self.top4.destroy()
+            except:
+                pass
+
+    def settings(self):
         logging.debug("Getting custom values")
-        # global cseMaxVal
-        # global headingMaxVal
-        # global distanceToSwimMaxVal
-        # global distanceToPlatMaxVal
-        # global corridorAverageMinVal
-        # global annulusCounterMaxVal
-        # global quadrantTotalMaxVal
-        # global corridorCseMaxVal
-        # global percentTraversedMaxVal
-        # global percentTraversedMinVal
-        # global distanceToCentreMaxVal
-        # global innerWallMaxVal
-        # global outerWallMaxVal
-        # global cseIndirectMaxVal
-        # global percentTraversedRandomMaxVal
-        # global directedSearchMaxDistance
-        # global focalMinDistance
-        # global focalMaxDistance
-        # global chainingMaxCoverage
-        # global thigmoMinDistance
 
-        global useDirectSwimV
+        global useDirectPathV
         global useFocalSearchV
         global useDirectedSearchV
         global useScanningV
@@ -660,7 +730,7 @@ class mainClass:
         global useIndirectV
         global useThigmoV
 
-        self.useDirectSwim = BooleanVar()
+        self.useDirectPath = BooleanVar()
         self.useFocalSearch = BooleanVar()
         self.useDirectedSearch = BooleanVar()
         self.useScanning = BooleanVar()
@@ -668,11 +738,6 @@ class mainClass:
         self.useRandom = BooleanVar()
         self.useIndirect = BooleanVar()
         self.useThigmo = BooleanVar()
-
-        self.defaultButton.configure(style='default.TButton')
-        self.strictButton.configure(style='default.TButton')
-        self.relaxedButton.configure(style='default.TButton')
-        self.customButton.configure(style='selected.TButton')
 
         self.jslsMaxCustom = StringVar()
         self.headingErrorCustom = StringVar()
@@ -685,8 +750,8 @@ class mainClass:
         self.percentTraversedCustom = StringVar()
         self.percentTraversedMinCustom = StringVar()
         self.distanceToCentreCustom = StringVar()
-        self.innerWallCustom = StringVar()
-        self.outerWallCustom = StringVar()
+        self.smallThigmoCustom = StringVar()
+        self.fullThigmoCustom = StringVar()
         self.jslsIndirectCustom = StringVar()
         self.percentTraversedRandomCustom = StringVar()
         self.directedSearchMaxDistanceCustom = StringVar()
@@ -694,11 +759,12 @@ class mainClass:
         self.focalMaxDistanceCustom = StringVar()
         self.chainingMaxCoverageCustom = StringVar()
         self.thigmoMinDistanceCustom = StringVar()
+        self.headingIndirectCustom = StringVar()
 
         try:
             with open('customobjs.pickle', 'rb') as f:
-                cseMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridorCseMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, cseIndirectMaxVal, percentTraversedRandomMaxVal, useDirectSwimV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV = pickle.load(f)
-                self.useDirectSwim.set(useDirectSwimV)
+                ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV = pickle.load(f)
+                self.useDirectPath.set(useDirectPathV)
                 self.useFocalSearch.set(useFocalSearchV)
                 self.useDirectedSearch.set(useDirectedSearchV)
                 self.useScanning.set(useScanningV)
@@ -708,12 +774,13 @@ class mainClass:
                 self.useThigmo.set(useThigmoV)
 
         except:
-            cseMaxVal = params.cseMaxVal
+            params = defaultParams
+            ipeMaxVal = params.ipeMaxVal
             headingMaxVal = params.headingMaxVal
             distanceToSwimMaxVal = params.distanceToSwimMaxVal
             distanceToPlatMaxVal = params.distanceToPlatMaxVal
             corridorAverageMinVal = params.corridorAverageMinVal
-            corridorCseMaxVal = params.corridorCseMaxVal
+            corridoripeMaxVal = params.corridoripeMaxVal
             annulusCounterMaxVal = params.annulusCounterMaxVal
             quadrantTotalMaxVal = params.quadrantTotalMaxVal
             percentTraversedMaxVal = params.percentTraversedMaxVal
@@ -721,15 +788,16 @@ class mainClass:
             distanceToCentreMaxVal = params.distanceToCentreMaxVal
             innerWallMaxVal = params.innerWallMaxVal
             outerWallMaxVal = params.outerWallMaxVal
-            cseIndirectMaxVal = params.cseIndirectMaxVal
+            ipeIndirectMaxVal = params.ipeIndirectMaxVal
             percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
             directedSearchMaxDistance = params.directedSearchMaxDistance
             focalMinDistance = params.focalMinDistance
             focalMaxDistance = params.focalMaxDistance
             chainingMaxCoverage = params.chainingMaxCoverage
             thigmoMinDistance = params.thigmoMinDistance
+            headingIndirectMaxVal = params.headingIndirectMaxVal
 
-            self.useDirectSwim.set(True)
+            self.useDirectPath.set(True)
             self.useFocalSearch.set(True)
             self.useDirectedSearch.set(True)
             self.useScanning.set(True)
@@ -740,49 +808,50 @@ class mainClass:
 
 
 
-        self.jslsMaxCustom.set(cseMaxVal)
+        self.jslsMaxCustom.set(ipeMaxVal)
         self.headingErrorCustom.set(headingMaxVal)
         self.distanceToSwimCustom.set(distanceToSwimMaxVal * 100)
         self.distanceToPlatCustom.set(distanceToPlatMaxVal * 100)
         self.corridorAverageCustom.set(corridorAverageMinVal * 100)
-        self.corridorJslsCustom.set(corridorCseMaxVal)
+        self.corridorJslsCustom.set(corridoripeMaxVal)
         self.annulusCustom.set(annulusCounterMaxVal * 100)
         self.quadrantTotalCustom.set(quadrantTotalMaxVal)
         self.percentTraversedCustom.set(percentTraversedMaxVal)
         self.percentTraversedMinCustom.set(percentTraversedMinVal)
         self.distanceToCentreCustom.set(distanceToCentreMaxVal * 100)
-        self.innerWallCustom.set(innerWallMaxVal * 100)
-        self.outerWallCustom.set(outerWallMaxVal * 100)
-        self.jslsIndirectCustom.set(cseIndirectMaxVal)
+        self.smallThigmoCustom.set(innerWallMaxVal * 100)
+        self.fullThigmoCustom.set(outerWallMaxVal * 100)
+        self.jslsIndirectCustom.set(ipeIndirectMaxVal)
         self.percentTraversedRandomCustom.set(percentTraversedRandomMaxVal)
         self.directedSearchMaxDistanceCustom.set(directedSearchMaxDistance)
         self.focalMinDistanceCustom.set(focalMinDistance)
         self.focalMaxDistanceCustom.set(focalMaxDistance)
         self.chainingMaxCoverageCustom.set(chainingMaxCoverage)
         self.thigmoMinDistanceCustom.set(thigmoMinDistance)
+        self.headingIndirectCustom.set(headingIndirectMaxVal)
         # all of the above is the same as in snyder, plus the creation of variables to hold values from the custom menu
 
         self.top = Toplevel(root)  # we set this to be the top
         self.top.configure(bg="white")
-        Label(self.top, text="Custom Values", bg="white", fg="red").grid(row=0, column=0, columnspan=2)  # we title it
+        Label(self.top, text="Settings", bg="white", fg="red").grid(row=0, column=0, columnspan=2)  # we title it
 
         rowCount = 1
 
-        useDirectSwimL = Label(self.top, text="Direct Swim: ", bg="white")  # we add a direct swim label
-        useDirectSwimL.grid(row=rowCount, column=0, sticky=E)  # stick it to row 1
-        useDirectSwimC = Checkbutton(self.top, variable=self.useDirectSwim, bg="white")  # we add a direct swim checkbox
-        useDirectSwimC.grid(row=rowCount, column=1)  # put it beside the label
+        useDirectPathL = Label(self.top, text="Direct Path: ", bg="white")  # we add a direct path label
+        useDirectPathL.grid(row=rowCount, column=0, sticky=E)  # stick it to row 1
+        useDirectPathC = Checkbutton(self.top, variable=self.useDirectPath, bg="white")  # we add a direct path checkbox
+        useDirectPathC.grid(row=rowCount, column=1)  # put it beside the label
 
         rowCount+=1
 
-        jslsMaxCustomL = Label(self.top, text="Cumulative Search Error [maximum]: ", bg="white")  # label for JSLs
+        jslsMaxCustomL = Label(self.top, text="Ideal Path Error [maximum]: ", bg="white")  # label for JSLs
         jslsMaxCustomL.grid(row=rowCount, column=0, sticky=E)  # row 2
         jslsMaxCustomE = Entry(self.top, textvariable=self.jslsMaxCustom)  # entry field
         jslsMaxCustomE.grid(row=rowCount, column=1)  # right beside
 
         rowCount+=1
 
-        headingErrorCustomL = Label(self.top, text="Heading degree error [maximum]: ", bg="white")
+        headingErrorCustomL = Label(self.top, text="Heading error [maximum, degrees]: ", bg="white")
         headingErrorCustomL.grid(row=rowCount, column=0, sticky=E)
         headingErrorCustomE = Entry(self.top, textvariable=self.headingErrorCustom)
         headingErrorCustomE.grid(row=rowCount, column=1)
@@ -796,28 +865,28 @@ class mainClass:
 
         rowCount+=1
 
-        distanceToSwimCustomL = Label(self.top, text="Distance to swim path centroid [% of radius]: ", bg="white")
+        distanceToSwimCustomL = Label(self.top, text="Distance to swim path centroid [maximum, % of radius]: ", bg="white")
         distanceToSwimCustomL.grid(row=rowCount, column=0, sticky=E)
         distanceToSwimCustomE = Entry(self.top, textvariable=self.distanceToSwimCustom)
         distanceToSwimCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        distanceToPlatCustomL = Label(self.top, text="Distance to platform [% of radius]: ", bg="white")
+        distanceToPlatCustomL = Label(self.top, text="Distance to goal [maximum, % of radius]: ", bg="white")
         distanceToPlatCustomL.grid(row=rowCount, column=0, sticky=E)
         distanceToPlatCustomE = Entry(self.top, textvariable=self.distanceToPlatCustom)
         distanceToPlatCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        focalMinDistanceCustomL = Label(self.top, text="Minimum distance covered (cm): ", bg="white")
+        focalMinDistanceCustomL = Label(self.top, text="Distance covered (minimum, cm): ", bg="white")
         focalMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
         focalMinDistanceCustomE = Entry(self.top, textvariable=self.focalMinDistanceCustom)
         focalMinDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        focalMaxDistanceCustomL = Label(self.top, text="Maximum distance covered (cm): ", bg="white")
+        focalMaxDistanceCustomL = Label(self.top, text="Distance covered (maximum, cm): ", bg="white")
         focalMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
         focalMaxDistanceCustomE = Entry(self.top, textvariable=self.focalMaxDistanceCustom)
         focalMaxDistanceCustomE.grid(row=rowCount, column=1)
@@ -831,38 +900,45 @@ class mainClass:
 
         rowCount+=1
 
-        corridorAverageCustomL = Label(self.top, text="Angular corridor minimum [% of time]: ", bg="white")
+        corridorAverageCustomL = Label(self.top, text="Time in angular corridor [minimum, % of trial]: ", bg="white")
         corridorAverageCustomL.grid(row=rowCount, column=0, sticky=E)
         corridorAverageCustomE = Entry(self.top, textvariable=self.corridorAverageCustom)
         corridorAverageCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        directedSearchMaxDistanceCustomL = Label(self.top, text="Maximum distance covered (cm): ", bg="white")
+        directedSearchMaxDistanceCustomL = Label(self.top, text="Distance covered (maximum, cm): ", bg="white")
         directedSearchMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
         directedSearchMaxDistanceCustomE = Entry(self.top, textvariable=self.directedSearchMaxDistanceCustom)
         directedSearchMaxDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        corridorJslsCustomL = Label(self.top, text="Cumulative Search Error [maximum]: ", bg="white")
+        corridorJslsCustomL = Label(self.top, text="Ideal Path Error [maximum]: ", bg="white")
         corridorJslsCustomL.grid(row=rowCount, column=0, sticky=E)
         corridorJslsCustomE = Entry(self.top, textvariable=self.corridorJslsCustom)
         corridorJslsCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        useIndirectL = Label(self.top, text="Spatial Indirect: ", bg="white")
+        useIndirectL = Label(self.top, text="Indirect Search: ", bg="white")
         useIndirectL.grid(row=rowCount, column=0, sticky=E)
         useIndirectC = Checkbutton(self.top, variable=self.useIndirect, bg="white")
         useIndirectC.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        jslsIndirectCustomL = Label(self.top, text="Cumulative Search Error [maximum]: ", bg="white")
+        jslsIndirectCustomL = Label(self.top, text="Ideal Path Error [maximum]: ", bg="white")
         jslsIndirectCustomL.grid(row=rowCount, column=0, sticky=E)
         jslsIndirectCustomE = Entry(self.top, textvariable=self.jslsIndirectCustom)
         jslsIndirectCustomE.grid(row=rowCount, column=1)
+
+        rowCount+=1
+
+        headingIndirectCustomL = Label(self.top, text="Average Heading error [maximum]: ", bg="white")
+        headingIndirectCustomL.grid(row=rowCount, column=0, sticky=E)
+        headingIndirectCustomE = Entry(self.top, textvariable=self.headingIndirectCustom, bg="white")
+        headingIndirectCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
@@ -873,7 +949,7 @@ class mainClass:
 
         rowCount+=1
 
-        annulusCustomL = Label(self.top, text="Time in annulus zone [% of time]: ", bg="white")
+        annulusCustomL = Label(self.top, text="Time in annulus zone [minimum, % of trial]: ", bg="white")
         annulusCustomL.grid(row=rowCount, column=0, sticky=E)
         annulusCustomE = Entry(self.top, textvariable=self.annulusCustom)
         annulusCustomE.grid(row=rowCount, column=1)
@@ -887,7 +963,7 @@ class mainClass:
 
         rowCount+=1
 
-        chainingMaxCoverageCustomL = Label(self.top, text="Maximum pool coverage (%): ", bg="white")
+        chainingMaxCoverageCustomL = Label(self.top, text="Area of maze traversed (maximum, % of maze): ", bg="white")
         chainingMaxCoverageCustomL.grid(row=rowCount, column=0, sticky=E)
         chainingMaxCoverageCustomE = Entry(self.top, textvariable=self.chainingMaxCoverageCustom)
         chainingMaxCoverageCustomE.grid(row=rowCount, column=1)
@@ -901,21 +977,21 @@ class mainClass:
 
         rowCount+=1
 
-        percentTraversedCustomL = Label(self.top, text="Area traversed [maximum]: ", bg="white")
+        percentTraversedCustomL = Label(self.top, text="Area of maze traversed [maximum, % of maze]: ", bg="white")
         percentTraversedCustomL.grid(row=rowCount, column=0, sticky=E)
         percentTraversedCustomE = Entry(self.top, textvariable=self.percentTraversedCustom)
         percentTraversedCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        percentTraversedMinCustomL = Label(self.top, text="Area traversed [minimum]: ", bg="white")
+        percentTraversedMinCustomL = Label(self.top, text="Area of maze traversed [minimum, % of maze]: ", bg="white")
         percentTraversedMinCustomL.grid(row=rowCount, column=0, sticky=E)
         percentTraversedMinCustomE = Entry(self.top, textvariable=self.percentTraversedMinCustom)
         percentTraversedMinCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        distanceToCentreCustomL = Label(self.top, text="Average distance to center [% of radius]: ", bg="white")
+        distanceToCentreCustomL = Label(self.top, text="Average distance to maze centre [maximum, % of radius]: ", bg="white")
         distanceToCentreCustomL.grid(row=rowCount, column=0, sticky=E)
         distanceToCentreCustomE = Entry(self.top, textvariable=self.distanceToCentreCustom)
         distanceToCentreCustomE.grid(row=rowCount, column=1)
@@ -929,21 +1005,21 @@ class mainClass:
 
         rowCount+=1
 
-        innerWallCustomL = Label(self.top, text="Inner wall zone [% of time]: ", bg="white")
-        innerWallCustomL.grid(row=rowCount, column=0, sticky=E)
-        innerWallCustomE = Entry(self.top, textvariable=self.innerWallCustom)
-        innerWallCustomE.grid(row=rowCount, column=1)
+        fullThigmoCustomL = Label(self.top, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        fullThigmoCustomL.grid(row=rowCount, column=0, sticky=E)
+        fullThigmoCustomE = Entry(self.top, textvariable=self.fullThigmoCustom, bg="white")
+        fullThigmoCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        outerWallCustomL = Label(self.top, text="Outer wall zone [% of time]: ", bg="white")
-        outerWallCustomL.grid(row=rowCount, column=0, sticky=E)
-        outerWallCustomE = Entry(self.top, textvariable=self.outerWallCustom, bg="white")
-        outerWallCustomE.grid(row=rowCount, column=1)
+        smallThigmoCustomL = Label(self.top, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        smallThigmoCustomL.grid(row=rowCount, column=0, sticky=E)
+        smallThigmoCustomE = Entry(self.top, textvariable=self.smallThigmoCustom)
+        smallThigmoCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        thigmoMinDistanceCustomL = Label(self.top, text="Minimum distance covered (cm): ", bg="white")
+        thigmoMinDistanceCustomL = Label(self.top, text="Total distance covered (minimum, cm): ", bg="white")
         thigmoMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
         thigmoMinDistanceCustomE = Entry(self.top, textvariable=self.thigmoMinDistanceCustom, bg="white")
         thigmoMinDistanceCustomE.grid(row=rowCount, column=1)
@@ -957,7 +1033,7 @@ class mainClass:
 
         rowCount+=1
 
-        percentTraversedRandomCustomL = Label(self.top, text="Area traversed [% minimum]: ", bg="white")
+        percentTraversedRandomCustomL = Label(self.top, text="Area of maze traversed [minimum, % of maze]: ", bg="white")
         percentTraversedRandomCustomL.grid(row=rowCount, column=0, sticky=E)
         percentTraversedRandomCustomE = Entry(self.top, textvariable=self.percentTraversedRandomCustom)
         percentTraversedRandomCustomE.grid(row=rowCount, column=1)
@@ -967,26 +1043,12 @@ class mainClass:
         rowCount+=1
 
         Button(self.top, text="Save", command=self.saveCuston).grid(row=rowCount, column=0, columnspan=2)  # button to save
+        rowCount+=1
+        Button(self.top, text="Reset", command=self.resetCustom).grid(row=rowCount, column=0, columnspan=2)  # button to save
 
     def saveCuston(self):  # save the custom values
         logging.debug("Saving custom parameters")
-        # global cseMaxVal
-        # global headingMaxVal
-        # global distanceToSwimMaxVal
-        # global distanceToPlatMaxVal
-        # global corridorAverageMinVal
-        # global annulusCounterMaxVal
-        # global quadrantTotalMaxVal
-        # global corridorCseMaxVal
-        # global percentTraversedMaxVal
-        # global percentTraversedMinVal
-        # global distanceToCentreMaxVal
-        # global innerWallMaxVal
-        # global outerWallMaxVal
-        # global cseIndirectMaxVal
-        # global percentTraversedRandomMaxVal
-
-        global useDirectSwim
+        global useDirectPath
         global useFocalSearch
         global useDirectedSearch
         global useScanning
@@ -994,8 +1056,9 @@ class mainClass:
         global useRandom
         global useIndirect
         global useThigmo
+        global params
 
-        global useDirectSwimV
+        global useDirectPathV
         global useFocalSearchV
         global useDirectedSearchV
         global useScanningV
@@ -1004,34 +1067,34 @@ class mainClass:
         global useIndirectV
         global useThigmoV
 
-        cseMaxVal = float(self.jslsMaxCustom.get())
+        ipeMaxVal = float(self.jslsMaxCustom.get())
         headingMaxVal = float(self.headingErrorCustom.get())
         distanceToSwimMaxVal = float(self.distanceToSwimCustom.get())/100
         distanceToPlatMaxVal = float(self.distanceToPlatCustom.get())/100
         corridorAverageMinVal = float(self.corridorAverageCustom.get()) / 100
-        corridorCseMaxVal = float(self.corridorJslsCustom.get())
+        corridoripeMaxVal = float(self.corridorJslsCustom.get())
         annulusCounterMaxVal = float(self.annulusCustom.get())/100
         quadrantTotalMaxVal = float(self.quadrantTotalCustom.get())
         percentTraversedMaxVal = float(self.percentTraversedCustom.get())
         percentTraversedMinVal = float(self.percentTraversedMinCustom.get())
         distanceToCentreMaxVal = float(self.distanceToCentreCustom.get())/100
-        innerWallMaxVal = float(self.innerWallCustom.get())/100
-        outerWallMaxVal = float(self.outerWallCustom.get())/100
-        cseIndirectMaxVal = float(self.jslsIndirectCustom.get())
+        smallThigmoMinVal = float(self.smallThigmoCustom.get()) / 100
+        fullThigmoMinVal = float(self.fullThigmoCustom.get()) / 100
+        ipeIndirectMaxVal = float(self.jslsIndirectCustom.get())
         percentTraversedRandomMaxVal = float(self.percentTraversedRandomCustom.get())
         directedSearchMaxDistance = float(self.directedSearchMaxDistanceCustom.get())
         focalMinDistance = float(self.focalMinDistanceCustom.get())
         focalMaxDistance = float(self.focalMaxDistanceCustom.get())
         chainingMaxCoverage = float(self.chainingMaxCoverageCustom.get())
         thigmoMinDistance = float(self.thigmoMinDistanceCustom.get())
+        headingIndirectMaxVal = float(self.headingIndirectCustom.get())
 
-        params = Parameters(name="custom", cseMaxVal=float(self.jslsMaxCustom.get()), headingMaxVal=float(self.headingErrorCustom.get()), distanceToSwimMaxVal=float(self.distanceToSwimCustom.get())/100,
-                            distanceToPlatMaxVal=float(self.distanceToPlatCustom.get())/100, corridorAverageMinVal=float(self.corridorAverageCustom.get()) / 100, directedSearchMaxDistance=float(self.directedSearchMaxDistanceCustom.get()), focalMinDistance=float(self.focalMinDistanceCustom.get()), focalMaxDistance=float(self.focalMaxDistanceCustom.get()), corridorCseMaxVal=float(self.corridorJslsCustom.get()),
+        params = Parameters(name="Custom", ipeMaxVal=float(self.jslsMaxCustom.get()), headingMaxVal=float(self.headingErrorCustom.get()), distanceToSwimMaxVal=float(self.distanceToSwimCustom.get())/100,
+                            distanceToPlatMaxVal=float(self.distanceToPlatCustom.get())/100, corridorAverageMinVal=float(self.corridorAverageCustom.get()) / 100, directedSearchMaxDistance=float(self.directedSearchMaxDistanceCustom.get()), focalMinDistance=float(self.focalMinDistanceCustom.get()), focalMaxDistance=float(self.focalMaxDistanceCustom.get()), corridoripeMaxVal=float(self.corridorJslsCustom.get()),
                             annulusCounterMaxVal=float(self.annulusCustom.get())/100, quadrantTotalMaxVal=float(self.quadrantTotalCustom.get()), chainingMaxCoverage=float(self.chainingMaxCoverageCustom.get()), percentTraversedMaxVal=float(self.percentTraversedCustom.get()),
-                            percentTraversedMinVal=float(self.percentTraversedMinCustom.get()), distanceToCentreMaxVal=float(self.distanceToCentreCustom.get())/100, thigmoMinDistance = float(self.thigmoMinDistanceCustom.get()), innerWallMaxVal=float(self.innerWallCustom.get())/100,
-                            outerWallMaxVal=float(self.outerWallCustom.get())/100, cseIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get()))
+                            percentTraversedMinVal=float(self.percentTraversedMinCustom.get()), distanceToCentreMaxVal=float(self.distanceToCentreCustom.get())/100, thigmoMinDistance = float(self.thigmoMinDistanceCustom.get()), fullThigmoMinVal=float(self.fullThigmoCustom.get()) / 100, smallThigmoMinVal=float(self.smallThigmoCustom.get()) / 100, ipeIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get()), headingIndirectMaxVal=float(self.headingIndirectCustom.get()))
 
-        useDirectSwimV = self.useDirectSwim.get()
+        useDirectPathV = self.useDirectPath.get()
         useFocalSearchV = self.useFocalSearch.get()
         useDirectedSearchV = self.useDirectedSearch.get()
         useScanningV = self.useScanning.get()
@@ -1041,7 +1104,7 @@ class mainClass:
         useThigmoV = self.useThigmo.get()
         try:
             with open('customobjs.pickle', 'wb') as f:
-                pickle.dump([cseMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridorCseMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, cseIndirectMaxVal, percentTraversedRandomMaxVal, useDirectSwimV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
+                pickle.dump([ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, smallThigmoMinVal, fullThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
         except:
             pass
         try:
@@ -1049,30 +1112,29 @@ class mainClass:
         except:
             pass
 
-    def mainThreader(self):  # start the threaded execution
-        logging.debug("Threading")
-
-        try:
-            t1 = threading.Thread(target=self.mainCalculate)  # create a thread for the main function
-            t1.start()  # start that thread
-            logging.debug("Threading mainCalculate thread started")
-        except Exception:
-            logging.critical("Fatal error in mainCalculate")  # couldnt be started
-        try:
-            t2 = threading.Thread(target=self.progressBar)  # create a thread for the progressBar
-            t2.start()  # start that thread
-            logging.debug("Threading progressBar thread started")
-        except Exception:
-            logging.critical("Fatal error in progressBar")  # couldn't be started
-
-    def progressBar(self):  # create a progressbar
-        logging.debug("ProgressBar")
-        try:
-            self.progress = ttk.Progressbar(orient="vertical", length=200, mode="determinate")  # create the bar
-            self.progress.pack(side=LEFT)  # pack it left
-            self.progress.start()  # start the bar
-        except:
-            logging.info("Couldn't generate a progressBar")
+    def resetCustom(self):
+        result = messagebox.askquestion("Reset", "Are You Sure?", icon='warning')
+        global params
+        if result == 'yes':
+            logging.debug("Resetting custom parameters")
+            params = defaultParams
+            useDirectPathV = True
+            useFocalSearchV = True
+            useDirectedSearchV = True
+            useScanningV = True
+            useChainingV = True
+            useRandomV = True
+            useIndirectV = True
+            useThigmoV = True
+            try:
+                with open('customobjs.pickle', 'wb') as f:
+                    pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.smallThigmoMinVal, params.fullThigmoMinVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, params.headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
+            except:
+                pass
+            try:
+                self.top.destroy()
+            except:
+                pass
 
     def find_files(self, directory, pattern):  # searches for our files in the directory
         logging.debug("Finding files in the directory")
@@ -1082,28 +1144,32 @@ class mainClass:
                     filename = os.path.join(root, basename)
                     yield filename
 
-    def plotPoints(self, x, y, poolDiam, centreX, centreY, platX, platY, scalingFactor, name, title, platEstDiam):  # function to graph the data for the not recognized trials
+    def callDefineOwnSoftware(self):
+        messagebox.showinfo(None,"Please select a sample input file")
+        defineOwnSoftware()
+
+    def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, scalingFactor, name, title, platEstDiam):  # function to graph the data for the not recognized trials
         wallsX = []
         wallsY = []
         platWallsX = []
         platWallsY = []
         for theta in range(0,360):
-            wallsX.append(centreX + ((math.ceil(poolDiam) / 2)) * math.cos(math.radians(theta)))
-            wallsY.append(centreY + ((math.ceil(poolDiam) / 2)) * math.sin(math.radians(theta)))
+            wallsX.append(centreX + ((math.ceil(mazeDiam) / 2)) * math.cos(math.radians(theta)))
+            wallsY.append(centreY + ((math.ceil(mazeDiam) / 2)) * math.sin(math.radians(theta)))
 
         for theta in range(0,360):
             platWallsX.append(platX + ((math.ceil(platEstDiam) / 2)+1) * math.cos(math.radians(theta)))
             platWallsY.append(platY + ((math.ceil(platEstDiam) / 2)+1) * math.sin(math.radians(theta)))
 
-        plotName = "plots/" + name + " " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # the name will be Animal id followed by the date and time
+        plotName = "output/plots/" + name + " " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # the name will be Animal id followed by the date and time
         plt.scatter(x, y, s=15, c='r', alpha=1.0)  # we plot the XY position of animal
         plt.scatter(x[0],y[0], s=100, c='b', alpha=1, marker='s')  # we plot the start point
-        plt.scatter(platWallsX, platWallsY, s=1, c='black', alpha=1.0)  # we plot the platform
+        plt.scatter(platWallsX, platWallsY, s=1, c='black', alpha=1.0)  # we plot the goal
         plt.scatter(centreX, centreY, s=100, c='g', alpha=1.0)  # we plot the centre
         plt.scatter(wallsX, wallsY, s=15, c='black', alpha=0.3)
         plt.title(title)  # add the title
-        plt.xlim(centreX-poolDiam/2-15, centreX+poolDiam/2+15)  # set the size to be the center + radius + 30
-        plt.ylim(centreY-poolDiam/2-15, centreY+poolDiam/2+15)
+        plt.xlim(centreX-mazeDiam/2-15, centreX+mazeDiam/2+15)  # set the size to be the center + radius + 30
+        plt.ylim(centreY-mazeDiam/2-15, centreY+mazeDiam/2+15)
 
         try:
             plt.gca().set_aspect('equal')
@@ -1130,36 +1196,36 @@ class mainClass:
         photoimg.grid(row=1, column=0, columnspan=7)  # place the photo in the window
 
         Label(self.top2, text="Start position", bg="blue", fg="white", width=15).grid(row=2, column=1, padx=3)
-        Label(self.top2, text="Platform and Walls", bg="black", fg="white", width=15).grid(row=2, column=2, padx=3)
-        Label(self.top2, text="Pool centre", bg="green", fg="white", width=15).grid(row=2, column=3, padx=3)
+        Label(self.top2, text="Goal and Walls", bg="black", fg="white", width=15).grid(row=2, column=2, padx=3)
+        Label(self.top2, text="Maze centre", bg="green", fg="white", width=15).grid(row=2, column=3, padx=3)
         Label(self.top2, text="Path", bg="red", fg="white", width=15).grid(row=2, column=4, padx=3)
 
-        self.directRadio = Radiobutton(self.top2, text="(1) Direct Swim", variable=searchStrategyStringVar, value="Direct swim (m)",
+        self.directRadio = Radiobutton(self.top2, text="(1) Direct Path", variable=searchStrategyStringVar, value="Direct path",
                                        indicatoron=0, width=15, bg="white")
         self.directRadio.grid(row=3, column=0, columnspan = 7, pady=3)  # add the radiobuttons for selection
 
-        self.focalRadio = Radiobutton(self.top2, text="(2) Focal Search", variable=searchStrategyStringVar, value="Focal Search (m)",
+        self.focalRadio = Radiobutton(self.top2, text="(2) Focal Search", variable=searchStrategyStringVar, value="Focal Search",
                                       indicatoron=0, width=15, bg="white")
         self.focalRadio.grid(row=4, column=0, columnspan = 7, pady=3)
         self.directedRadio = Radiobutton(self.top2, text="(3) Directed Search", variable=searchStrategyStringVar,
                                          value="Directed Search (m)", indicatoron=0, width=15, bg="white")
         self.directedRadio.grid(row=5, column=0, columnspan = 7, pady=3)
-        self.spatialRadio = Radiobutton(self.top2, text="(4) Spatial Indirect", variable=searchStrategyStringVar,
-                                        value="Spatial Indirect (m)", indicatoron=0, width=15, bg="white")
+        self.spatialRadio = Radiobutton(self.top2, text="(4) Indirect Search", variable=searchStrategyStringVar,
+                                        value="Indirect Search", indicatoron=0, width=15, bg="white")
         self.spatialRadio.grid(row=6, column=0, columnspan = 7, pady=3)
-        self.chainingRadio = Radiobutton(self.top2, text="(5) Chaining", variable=searchStrategyStringVar, value="Chaining (m)",
+        self.chainingRadio = Radiobutton(self.top2, text="(5) Chaining", variable=searchStrategyStringVar, value="Chaining",
                                          indicatoron=0, width=15, bg="white")
         self.chainingRadio.grid(row=7, column=0, columnspan = 7, pady=3)
-        self.scanningRadio = Radiobutton(self.top2, text="(6) Scanning", variable=searchStrategyStringVar, value="Scanning (m)",
+        self.scanningRadio = Radiobutton(self.top2, text="(6) Scanning", variable=searchStrategyStringVar, value="Scanning",
                                          indicatoron=0, width=15, bg="white")
         self.scanningRadio.grid(row=8, column=0, columnspan = 7, pady=3)
-        self.randomRadio = Radiobutton(self.top2, text="(7) Random Search", variable=searchStrategyStringVar, value="Random Search (m)",
+        self.randomRadio = Radiobutton(self.top2, text="(7) Random Search", variable=searchStrategyStringVar, value="Random Search",
                                        indicatoron=0, width=15, bg="white")
         self.randomRadio.grid(row=9, column=0, columnspan = 7, pady=3)
-        self.thigmoRadio = Radiobutton(self.top2, text="(8) Thigmotaxis", variable=searchStrategyStringVar, value="Thigmotaxis (m)",
+        self.thigmoRadio = Radiobutton(self.top2, text="(8) Thigmotaxis", variable=searchStrategyStringVar, value="Thigmotaxis",
                                        indicatoron=0, width=15, bg="white")
         self.thigmoRadio.grid(row=10, column=0, columnspan=7, pady=3)
-        self.notRecognizedRadio = Radiobutton(self.top2, text="(9) Not Recognized", variable=searchStrategyStringVar, value="Not Recognized (m)",
+        self.notRecognizedRadio = Radiobutton(self.top2, text="(9) Not Recognized", variable=searchStrategyStringVar, value="Not Recognized",
                                               indicatoron=0, width=15, bg="white")
         self.notRecognizedRadio.grid(row=11, column=0, columnspan = 7, pady=3)
 
@@ -1200,11 +1266,11 @@ class mainClass:
         except:
             pass
 
-    def guiHeatmap(self, experiment):
+    def guiHeatmap(self, aExperiment):
 
         self.top3 = Toplevel(root)  # create a new toplevel window
         self.top3.configure(bg="white")
-        self.top3.geometry('{}x{}'.format( 500, 1000 ))
+        self.top3.geometry('{}x{}'.format( 500, 500 ))
         Label(self.top3, text="Heatmap Parameters", bg="white", fg="black", width=15).pack()  # add a title
 
         self.gridSizeL = Label(self.top3, text="Grid Size:", bg="white")
@@ -1217,10 +1283,20 @@ class mainClass:
         self.maxValE = Entry(self.top3, textvariable=maxValStringVar)
         self.maxValE.pack(side=TOP)
 
-        Button(self.top3, text="Generate", command=lambda: self.heatmap(experiment), fg="black", bg="white").pack()
+        self.dayValL = Label(self.top3, text="Day(s) to consider:", bg="white")
+        self.dayValL.pack(side=TOP)
+        self.dayValE = Entry(self.top3, textvariable=dayValStringVar)
+        self.dayValE.pack(side=TOP)
+
+        self.trialValL = Label(self.top3, text="Trial(s) to consider:", bg="white")
+        self.trialValL.pack(side=TOP)
+        self.trialValE = Entry(self.top3, textvariable=trialValStringVar)
+        self.trialValE.pack(side=TOP)
+
+        Button(self.top3, text="Generate", command=lambda: self.heatmap(aExperiment), fg="black", bg="white").pack()
 
 
-    def heatmap(self, experiment):
+    def heatmap(self, aExperiment): #Generates heatmaps for inputted trial data
         logging.debug("Heatmap Called")
         theStatus.set("Generating Heatmap...")
         self.updateTasks()
@@ -1232,37 +1308,81 @@ class mainClass:
         yMin = 0.0
         xMax = 0.0
         yMax = 0.0
+        dayStartStop = []
+        trialStartStop = []
+        dayVal = dayValStringVar.get()
+        trialVal = trialValStringVar.get()
+        dayNum = 0
+        trialNum = {}
+        curDate = None
 
-        for aTrial in experiment:  # for all the files we find
+        if dayVal == "All" or dayVal == "all" or dayVal == "":
+            dayStartStop = [1,float(math.inf)]
+        elif "-" in dayVal:
+            dayStartStop = dayVal.split("-",1)
+            dayStartStop = [int(dayStartStop[0]),int(dayStartStop[1])]
+        else:
+            dayStartStop = [int(dayVal),int(dayVal)]
+
+        if trialVal == "All" or trialVal == "all" or trialVal == "":
+            trialStartStop = [1,float(math.inf)]
+        elif "-" in trialVal:
+            trialStartStop = trialVal.split("-",1)
+            trialStartStop = [int(trialStartStop[0]),int(trialStartStop[1])]
+        else:
+            trialStartStop = [int(trialVal),int(trialVal)]
+
+        for aTrial in aExperiment:  # for all the files we find
             theStatus.set("Running " + theFile)
-            for row in aTrial:
+            animal = ""
+            if aExperiment.hasAnimalNames:
+                animal = aTrial.animal.replace("*", "")
+            if aExperiment.hasDateInfo and aTrial.date.date() != curDate:
+                dayNum += 1
+                curDate = aTrial.date.date()
+                trialNum = {}
+                trialNum[animal] = 1
+            elif animal in trialNum:
+                trialNum[animal] += 1
+            else:
+                trialNum[animal] = 1
+
+            for aDatapoint in aTrial:
                 # Create data
-                if row.x == "-" or row.y == "-":
-                    continue
-                x.append(float(row.x))
-                y.append(float(row.y))
+                if dayNum != 0 and trialNum != 0:
+                    if dayNum >= dayStartStop[0] and dayNum <= dayStartStop[1]:
+                        if trialNum[animal] >= trialStartStop[0] and trialNum[animal] <= trialStartStop[1]:
+                            if aDatapoint.getx() == "-" or aDatapoint.gety() == "-":
+                                continue
+                            x.append(float(aDatapoint.getx()))
+                            y.append(float(aDatapoint.gety()))
 
-                if row.x < xMin:
-                    xMin = row.x
-                if row.y < yMin:
-                    yMin = row.y
-                if row.x > xMax:
-                    xMax = row.x
-                if row.y > yMax:
-                    yMax = row.y
+                            if aDatapoint.getx() < xMin:
+                                xMin = aDatapoint.getx()
+                            if aDatapoint.gety() < yMin:
+                                yMin = aDatapoint.gety()
+                            if aDatapoint.getx() > xMax:
+                                xMax = aDatapoint.getx()
+                            if aDatapoint.gety() > yMax:
+                                yMax = aDatapoint.gety()
+                else:
+                    if aDatapoint.getx() == "-" or aDatapoint.gety() == "-":
+                        continue
+                    x.append(float(aDatapoint.getx()))
+                    y.append(float(aDatapoint.gety()))
 
-        # x = np.zeros(math.ceil(xMax-xMin+1))
-        # y = np.zeros(math.ceil(yMax-yMin+1))
+                    if aDatapoint.getx() < xMin:
+                        xMin = aDatapoint.getx()
+                    if aDatapoint.gety() < yMin:
+                        yMin = aDatapoint.gety()
+                    if aDatapoint.getx() > xMax:
+                        xMax = aDatapoint.getx()
+                    if aDatapoint.gety() > yMax:
+                        yMax = aDatapoint.gety()
 
-        # for aTrial in experiment:  # for all the files we find
-        #     for row in aTrial:
-        #         # Create data
-        #         if row.x == "-" or row.y == "-":
-        #             continue
-        #         x[math.floor(row.x)] += 1/len(experiment)
-        #         y[math.floor(row.y)] += 1/len(experiment)
 
-        aFileName = "heatmaps/heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
+
+        aFileName = "output/heatmaps/ " + "Day "+ dayValStringVar.get() + " Trial " + trialValStringVar.get() + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
         aTitle = fileDirectory
         """
         mu = 0
@@ -1280,8 +1400,7 @@ class mainClass:
 
         X = sp.filters.gaussian_filter(x, sigma=2, order=0)
         Y = sp.filters.gaussian_filter(y, sigma=2, order=0)
-        heatmap, xedges, yedges = np.histogram2d(X, Y, bins=(30, 30))
-        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+        heatmap, xedges, yedges = np.histogram2d(X, Y)
 
         # Plot heatmap
         maxVal = maxValStringVar.get()
@@ -1296,8 +1415,6 @@ class mainClass:
                 theStatus.set("Waiting for user input...")
                 return
 
-
-        plt.axis([xMin, xMax, yMin, yMax])
         try:
             plt.gca().set_aspect('equal')
         except:
@@ -1306,12 +1423,11 @@ class mainClass:
         theStatus.set("Waiting for user input...")
         self.updateTasks()
 
-        plt.title(aTitle)
+        plt.title("Day: " + dayValStringVar.get() + " Trial: "+ trialValStringVar.get())
         cb = plt.colorbar()
         photoName = aFileName + ".png"  # image name the same as plotname
-        plt.savefig(photoName, dpi=300, figsize=(3,3))  # save the file
+        plt.savefig(photoName, dpi=300, figsize=(4,4))  # save the file
         plt.show()
-
 
     def updateTasks(self):  # called when we want to push an update to the GUI
         try:
@@ -1319,27 +1435,6 @@ class mainClass:
             root.update()  # update the gui
         except:
             logging.info("Couldn't update the GUI")
-
-    def killBar(self):  # called when we want to kill the progressBar
-        try:
-            self.progress.stop()
-            self.progress.destroy()
-        except:
-            logging.info("Couldn't destroy the progressBar")
-
-    def csvDestroy(self):
-        try:  # try to remove the csv display (for second run)
-            theStatus.set('Loading...')
-            self.updateTasks()
-            frame.grid_forget()
-            canvas.grid_forget()
-            frame.destroy()
-            canvas.destroy()
-            vsb.destroy()
-            xscrollbar.destroy()
-            logging.info("Loaded")
-        except:
-            logging.debug("Failed to load")
 
     def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
@@ -1355,7 +1450,7 @@ class mainClass:
         v2_u = self.unit_vector(v2)
         return np.degrees(np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
 
-    def calculateEntropy(self, theTrial, platformX, platformY):
+    def calculateEntropy(self, theTrial, goalX, goalY):
         xList = []
         yList = []
         try:
@@ -1367,10 +1462,10 @@ class mainClass:
             xList.append(float(aDatapoint.getx()))
             yList.append(float(aDatapoint.gety()))
 
-        entropyResult = eng.Entropy(xList,yList,platformX,platformY)
+        entropyResult = eng.Entropy(xList,yList,goalX,goalY)
         return entropyResult
 
-    def getAutoLocations(self, theExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, software):
+    def getAutoLocations(self, theExperiment, goalX, goalY, goalPosVar, mazeCentreX, mazeCentreY, mazeCentreVar, mazeDiamVar, software, goalDiamVar):
         platEstX = 0.0
         platEstY = 0.0
         maxX = 0.0
@@ -1385,9 +1480,9 @@ class mainClass:
         absMaxY = 0.0
         absMinX = 0.0
         absMinY = 0.0
-        poolCentreEstX = 0.0
-        poolCentreEstY = 0.0
-        poolRadius = 0.0
+        mazeCentreEstX = 0.0
+        mazeCentreEstY = 0.0
+        mazeRadius = 0.0
         count = 0.0
         centreCount = 0.0
         lastX = 0.0
@@ -1404,28 +1499,27 @@ class mainClass:
         diamFlag = False
         autoParams = []
 
-        if platformPosVar != "Auto" and platformPosVar != "auto" and platformPosVar != "automatic" and platformPosVar != "Automatic" and platformPosVar != "":  # if we want manual platform
-            platformX, platformY = platformPosVar.split(",")
-            platformX = float(platformX)
-            platformY = float(platformY)
-            logging.debug("Platform position set manually: "+str(platformPosVar))
+
+        if goalPosVar != "Auto" and goalPosVar != "auto" and goalPosVar != "automatic" and goalPosVar != "Automatic" and goalPosVar != "":  # if we want manual goal
+            goalX, goalY = goalPosVar.split(",")
+            goalX = float(goalX)
+            goalY = float(goalY)
+            logging.debug("Goal position set manually: "+str(goalPosVar))
         elif fileFlag == 1 and software != "watermaze":  # if we only chose 1 trial
-            logging.error("Cannot get platform position from single trial")
-            self.killBar()
+            logging.error("Cannot get goal position from single trial")
             theStatus.set('Waiting for user input...')
             self.updateTasks()
             messagebox.showwarning('File Error',
                                    'You must enter values for a single trial')
             return
-        else:  # automatic platform calculation
+        else:  # automatic goal calculation
             platFlag = True
-            autoParams.append("platform position")
+            autoParams.append("goal position")
 
-        if platformDiamVar != "Auto" and platformDiamVar != "auto" and platformDiamVar != "automatic" and platformDiamVar != "Automatic" and platformDiamVar != "":  # if we want manual platform diameter
-            platEstDiam = platformDiamVar
+        if goalDiamVar != "Auto" and goalDiamVar != "auto" and goalDiamVar != "automatic" and goalDiamVar != "Automatic" and goalDiamVar != "":  # if we want manual goal diameter
+            platEstDiam = goalDiamVar
         elif fileFlag == 1 and software != "watermaze":  # if we only chose 1 trial
-            logging.error("Cannot get platform position from single trial")
-            self.killBar()
+            logging.error("Cannot get goal position from single trial")
             theStatus.set('Waiting for user input...')
             self.updateTasks()
             messagebox.showwarning('File Error',
@@ -1433,32 +1527,30 @@ class mainClass:
             return
         else:
             platDiamFlag = True
-            autoParams.append("platform diameter")
+            autoParams.append("goal diameter")
 
 
-        if poolCentreVar != "Auto" and poolCentreVar != "auto" and poolCentreVar != "automatic" and poolCentreVar != "Automatic" and poolCentreVar != "":  # manual pool center
-            poolCentreX, poolCentreY = poolCentreVar.split(",")
-            poolCentreX = float(poolCentreX)
-            poolCentreY = float(poolCentreY)
-            logging.debug("Pool centre set manually: "+str(poolCentreVar))
+        if mazeCentreVar != "Auto" and mazeCentreVar != "auto" and mazeCentreVar != "automatic" and mazeCentreVar != "Automatic" and mazeCentreVar != "":  # manual maze center
+            mazeCentreX, mazeCentreY = mazeCentreVar.split(",")
+            mazeCentreX = float(mazeCentreX)
+            mazeCentreY = float(mazeCentreY)
+            logging.debug("Maze centre set manually: "+str(mazeCentreVar))
         elif fileFlag == 1 and software != "watermaze":  # if we only chose 1 trial
-            logging.error("Cannot get pool centre from single trial")
-            self.killBar()
+            logging.error("Cannot get maze centre from single trial")
             theStatus.set('Waiting for user input...')
             self.updateTasks()
             messagebox.showwarning('File Error',
                                    'You must enter values for a single trial')
             return
-        else:  # automatic pool centre
+        else:  # automatic maze centre
             centreFlag = True
             autoParams.append("centre position")
 
-        if poolDiamVar != "Auto" and poolDiamVar != "auto" and poolDiamVar != "automatic" and poolDiamVar != "Automatic" and poolDiamVar != "":  # manual diameter
-            poolRadius = float(poolDiamVar) / 2.0
-            logging.debug("Pool diameter set manually: " + str(poolDiamVar))
+        if mazeDiamVar != "Auto" and mazeDiamVar != "auto" and mazeDiamVar != "automatic" and mazeDiamVar != "Automatic" and mazeDiamVar != "":  # manual diameter
+            mazeRadius = float(mazeDiamVar) / 2.0
+            logging.debug("Maze diameter set manually: " + str(mazeDiamVar))
         elif fileFlag == 1 and software != "watermaze":  # if we only chose 1 trial
             logging.error("Tried to get diameter from single trial")
-            self.killBar()
             theStatus.set('Waiting for user input...')
             self.updateTasks()
             messagebox.showwarning('File Error',
@@ -1466,14 +1558,13 @@ class mainClass:
             return
         else:  # automatic diameter
             diamFlag = True
-            autoParams.append("pool diameter")
+            autoParams.append("maze diameter")
 
         if len(autoParams) > 0:  # update the status bar depending on choice
             loggingText = "Getting " + " and ".join(autoParams)
             theStatus.set(loggingText + "...")
             logging.debug(loggingText)
             self.updateTasks()
-
             for aTrial in theExperiment:
                 for aDatapoint in aTrial:
                     if aDatapoint.getx() == "-" or aDatapoint.getx() == "":  # throw out missing data
@@ -1525,25 +1616,23 @@ class mainClass:
                                            'Unable to determine a centre position. Compatible trials')
                 elif centreFlag and diamFlag:
                     logging.error(
-                        "Unable to determine a centre position and pool diameter. Compatible trials: 0")
+                        "Unable to determine a centre position and maze diameter. Compatible trials: 0")
                     messagebox.showwarning('Centre and Diameter Error',
-                                           'We were unable to determine a centre position or pool diameter from the trials')
+                                           'We were unable to determine a centre position or maze diameter from the trials')
                 elif diamFlag:
-                    logging.error("Unable to determine the pool diameter. Compatible trials: 0")
+                    logging.error("Unable to determine the maze diameter. Compatible trials: 0")
                     messagebox.showwarning('Diameter Error',
                                            'We were unable to determine a diameter from the trials')
                 theStatus.set('Waiting for user input...')
                 self.updateTasks()
-                self.killBar()
                 return
 
         if count < 1 and platFlag:
-            logging.error("Unable to determine a platform posititon. Compatible trials: " + str(count))
-            messagebox.showwarning('Platform Error',
-                                   'We were unable to determine a platform position from the trials')
+            logging.error("Unable to determine a goal posititon. Compatible trials: " + str(count))
+            messagebox.showwarning('Goal Error',
+                                   'We were unable to determine a goal position from the trials')
             theStatus.set('Waiting for user input...')
             self.updateTasks()
-            self.killBar()
             return
 
         if centreFlag:  # if we want an automatic centre position
@@ -1551,71 +1640,74 @@ class mainClass:
             avMaxY = avMaxY / centreCount  # max Y
             avMinX = avMinX / centreCount  # min X
             avMinY = avMinY / centreCount  # min Y
-            poolCentreEstX = (avMaxX + avMinX) / 2  # estmiate the centre
-            poolCentreEstY = (avMaxY + avMinY) / 2
-            poolCentreX = poolCentreEstX
-            poolCentreY = poolCentreEstY
-            logging.info("Automatic pool centre calculated as: " + str(poolCentreEstX) + ", " + str(poolCentreEstY))
-            print("Automatic pool centre calculated as: " + str(poolCentreEstX) + ", " + str(poolCentreEstY))
+            mazeCentreEstX = (avMaxX + avMinX) / 2  # estmiate the centre
+            mazeCentreEstY = (avMaxY + avMinY) / 2
+            mazeCentreX = mazeCentreEstX
+            mazeCentreY = mazeCentreEstY
+            logging.info("Automatic maze centre calculated as: " + str(mazeCentreEstX) + ", " + str(mazeCentreEstY))
+            print("Automatic maze centre calculated as: " + str(mazeCentreEstX) + ", " + str(mazeCentreEstY))
 
-        if platFlag:  # automatic platform
+        if platFlag:  # automatic goal
             platEstX = platEstX / count
             platEstY = platEstY / count
-            platformX = platEstX
-            platformY = platEstY
-            logging.info("Automatic platform position calculated as: " + str(platEstX) + ", " + str(platEstY))
-            print("Automatic platform position calculated as: " + str(platEstX) + ", " + str(platEstY))
+            goalX = platEstX
+            goalY = platEstY
+            logging.info("Automatic goal position calculated as: " + str(platEstX) + ", " + str(platEstY))
+            print("Automatic goal position calculated as: " + str(platEstX) + ", " + str(platEstY))
         if platDiamFlag:
             platEstDiam = ((platMaxX-platMinX) + (platMaxY-platMinY))/2
-            logging.info("Automatic platform diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
-            print("Automatic platform diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
+            if platEstDiam > 50 or platEstDiam < 1:
+                platEstDiam = 10.0
+                print("Automatic goal diameter calculation failed. Defaulted to: " + str((math.ceil(float(platEstDiam)))))
+            else:
+                print("Automatic goal diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
+            logging.info("Automatic goal diameter calculated as: " + str((math.ceil(float(platEstDiam)))))
         if diamFlag:  # automatic diameter
-            poolDiamEst = ((abs(absMaxX) + abs(absMinX)) + (abs(absMaxY) + abs(absMinY))) / 2
-            logging.info("Automatic pool diameter calculated as: " + str(poolDiamEst))
-            print("Automatic pool diameter calculated as: " + str(poolDiamEst))
-            poolDiamVar = poolDiamEst
-            poolRadius = float(poolDiamVar) / 2
-        print("Pool Centre calculated as: ",poolCentreX,poolCentreY)
-        return (poolCentreX,poolCentreY,platformX,platformY,poolDiamVar,poolRadius, platEstDiam)
+            mazeDiamEst = ((abs(absMaxX) + abs(absMinX)) + (abs(absMaxY) + abs(absMinY))) / 2
+            logging.info("Automatic maze diameter calculated as: " + str(mazeDiamEst))
+            print("Automatic maze diameter calculated as: " + str(mazeDiamEst))
+            mazeDiamVar = mazeDiamEst
+            mazeRadius = float(mazeDiamVar) / 2
+        return (mazeCentreX,mazeCentreY,goalX,goalY,mazeDiamVar,mazeRadius,platEstDiam)
 
 
-    def calculateValues(self, theTrial, platformX, platformY, poolCentreX, poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone, biggerWallZone, scalingFactor, poolradius):
-        global oldPlatformPosVar
-        global poolCentreVar
+    def calculateValues(self, theTrial, goalX, goalY, mazeCentreX, mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, fullThigmoZone, smallThigmoZone, scalingFactor, mazeradius, dayNum, goalDiam):
+        global mazeCentreVar
         global useEntropyFlag
+        global truncateFlag
         theStatus.set("Calculating Search Strategies: " + str(theTrial))
 
         i = 0
         totalDistance = 0.0
-        latency = 0.0
+        latency = 1
         mainLatency = 0.0
         xSummed = 0.0
         ySummed = 0.0
         xAv = 0.0
         yAv = 0.0
-        currentDistanceFromPlatform = 0.0
-        distanceFromPlatformSummed = 0.0
+        currentDistanceFromGoal = 0.0
+        distanceFromGoalSummed = 0.0
         distanceAverage = 0.0
         aX = 0.0
         aY = 0.0
 
         missingData = 0
 
-        distanceToCenterOfPool = 0.0
-        totalDistanceToCenterOfPool = 0.0
+        distanceToCenterOfMaze = 0.0
+        totalDistanceToCenterOfMaze = 0.0
         averageDistanceToCentre = 0.0
 
-        innerWallCounter = 0.0
-        outerWallCounter = 0.0
+        smallThigmoCounter = 0.0
+        fullThigmoCounter = 0.0
         annulusCounter = 0.0
         currentHeadingError = 0.0
         distanceToSwimPathCentroid = 0.0
         totalDistanceToSwimPathCentroid = 0.0
         averageDistanceToSwimPathCentroid = 0.0
 
-        distanceToOldPlatform = 0.0
-        totalDistanceToOldPlatform = 0.0
-        averageDistanceToOldPlatform = 0.0
+        distanceToOldGoal = 0.0
+        totalDistanceToOldGoal = 0.0
+        averageDistanceToOldGoal = 0.0
 
         startX = 0.0
         startY = 0.0
@@ -1632,99 +1724,100 @@ class mainClass:
         oldX = 0.0
         oldY = 0.0
         latencyCounter = 0.0
+        distanceFromStartToGoal = 0
         arrayX = []
         arrayY = []
-        theGridSize = float(poolradius*2)/10.0
-        Matrix = [[0 for x in range(0, math.ceil(theGridSize)+1)] for y in range(0, math.ceil(theGridSize)+1)]
+        gridCellSize = float(mazeradius*2)/10.0
+        Matrix = [[0 for x in range(0, math.ceil(gridCellSize)+1)] for y in range(0, math.ceil(gridCellSize)+1)]
 
         for aDatapoint in theTrial:  # for each row in our sheet
+
+            # if dayNum == 9 or dayNum == 14:
+            #     if aDatapoint.gettime() > probeCutVar:
+            #         continue
             if i == 0:
                 startX = aDatapoint.getx()
                 startY = aDatapoint.gety()
                 startTime = aDatapoint.gettime()
 
+
             # Swim Path centroid
             i += 1.0
-            mainLatency = aDatapoint.gettime()
             xSummed += float(aDatapoint.getx())
             ySummed += float(aDatapoint.gety())
             aX = float(aDatapoint.getx())
             aY = float(aDatapoint.gety())
+
             arrayX.append(aX)
             arrayY.append(aY)
-            # Average Distance
-            currentDistanceFromPlatform = math.sqrt((platformX - aX) ** 2 + (platformY - aY) ** 2)*scalingFactor
 
-            #print(currentDistanceFromPlatform)
+            # Average Distance
+            currentDistanceFromGoal = math.sqrt((goalX - aX) ** 2 + (goalY - aY) ** 2)*scalingFactor
+
 
 
             # in zones
-            distanceCenterToPlatform = math.sqrt((poolCentreX - platformX) ** 2 + (poolCentreY - platformY) ** 2)*scalingFactor
-            annulusZoneInner = distanceCenterToPlatform - (chainingRadius / 2)
-            annulusZoneOuter = distanceCenterToPlatform + (chainingRadius / 2)
-            distanceToCenterOfPool = math.sqrt((poolCentreX - aX) ** 2 + (poolCentreY - aY) ** 2)*scalingFactor
-            totalDistanceToCenterOfPool += distanceToCenterOfPool
-            distanceFromStartToPlatform = math.sqrt((platformX - startX) ** 2 + (platformY - startY) ** 2)*scalingFactor
+            distanceCenterToGoal = math.sqrt((mazeCentreX - goalX) ** 2 + (mazeCentreY - goalY) ** 2)*scalingFactor
+            annulusZoneInner = distanceCenterToGoal - (chainingRadius / 2)
+            annulusZoneOuter = distanceCenterToGoal + (chainingRadius / 2)
+            distanceToCenterOfMaze = math.sqrt((mazeCentreX - aX) ** 2 + (mazeCentreY - aY) ** 2)*scalingFactor
+            totalDistanceToCenterOfMaze += distanceToCenterOfMaze
+            distanceFromStartToGoal = math.sqrt((goalX - startX) ** 2 + (goalY - startY) ** 2)*scalingFactor
 
             distance = math.sqrt(abs(oldX - aX) ** 2 + abs(oldY - aY) ** 2)*scalingFactor
-            distanceFromPlatformSummed += currentDistanceFromPlatform
+            distanceFromGoalSummed += currentDistanceFromGoal
             totalDistance += distance
             oldX = aX
             oldY = aY
 
-            if distanceToCenterOfPool > biggerWallZone:  # calculate if we are in zones
-                innerWallCounter += 1.0
-            if distanceToCenterOfPool > smallerWallZone:
-                outerWallCounter += 1.0
-            if (distanceToCenterOfPool >= annulusZoneInner) and (distanceToCenterOfPool <= annulusZoneOuter):
+            if distanceToCenterOfMaze > smallThigmoZone:  # calculate if we are in zones
+                smallThigmoCounter += 1.0
+            if distanceToCenterOfMaze > fullThigmoZone:
+                fullThigmoCounter += 1.0
+            if (distanceToCenterOfMaze >= annulusZoneInner) and (distanceToCenterOfMaze <= annulusZoneOuter):
                 annulusCounter += 1.0
 
             a, b = 0, 0
 
-            # grid creation
-            # x values
-            # <editor-fold desc="Grid">
-            gridCounter = 0
-            storeX = aDatapoint.getx()
-            storeY = aDatapoint.gety()
 
-            for step in range(-math.ceil(theGridSize/2),math.ceil(theGridSize/2)):
-                if storeX >= poolCentreX+(step*theGridSize/2) and storeX <= poolCentreX+((step+1)*theGridSize/2):
-                    a = gridCounter
-                if storeY >= poolCentreY+(step*theGridSize/2) and storeY <= poolCentreY+((step+1)*theGridSize/2):
-                    b = gridCounter
-                gridCounter += 1
+            Matrix[int(aDatapoint.getx()/gridCellSize)][int(aDatapoint.gety()/gridCellSize)] = 1  # set matrix cells to 1 if we have visited them
 
-            Matrix[a][b] = 1  # set matrix cells to 1 if we have visited them
-            if (poolCentreX - aX) != 0:
-                centerArcTangent = math.degrees(math.atan((poolCentreY - aY) / (poolCentreX - aX)))
+            if (mazeCentreX - aX) != 0:
+                centerArcTangent = math.degrees(math.atan((mazeCentreY - aY) / (mazeCentreX - aX)))
 
-            # print centerArcTangent
-            if aDatapoint.getx() >= poolCentreX and aDatapoint.gety() >= poolCentreY:
+
+            if aDatapoint.getx() >= mazeCentreX and aDatapoint.gety() >= mazeCentreY:
                 quadrantOne = 1
-            elif aDatapoint.getx() < poolCentreX and aDatapoint.gety() >= poolCentreY:
+            elif aDatapoint.getx() < mazeCentreX and aDatapoint.gety() >= mazeCentreY:
                 quadrantTwo = 1
-            elif aDatapoint.getx() >= poolCentreX and aDatapoint.gety() < poolCentreY:
+            elif aDatapoint.getx() >= mazeCentreX and aDatapoint.gety() < mazeCentreY:
                 quadrantThree = 1
-            elif aDatapoint.getx() < poolCentreX and aDatapoint.gety() < poolCentreY:
+            elif aDatapoint.getx() < mazeCentreX and aDatapoint.gety() < mazeCentreY:
                 quadrantFour = 1
 
-            latency = aDatapoint.gettime()
+            latency = aDatapoint.gettime() - startTime
+            if truncateFlag and currentDistanceFromGoal < float(goalDiam)/2.0:
+                break
 
         quadrantTotal = quadrantOne + quadrantTwo + quadrantThree + quadrantFour
 
-        xAv = xSummed / i  # get our average positions for the centroid
-        yAv = ySummed / i
-        swimPathCentroid = (xAv, yAv)
+        if i == 0:
+            i = 1
+        try:
+            xAv = xSummed / i  # get our average positions for the centroid
+            yAv = ySummed / i
+            swimPathCentroid = (xAv, yAv)
+        except:
+            swimPathCentroid = (0, 0)
 
 
         startPoint = np.array([startX,startY])
-        platformPoint = np.array([platformX,platformY])
+        goalPoint = np.array([goalX,goalY])
 
-        startToPlatVector = platformPoint-startPoint
+        startToPlatVector = goalPoint-startPoint
 
 
-        aArcTangent = math.degrees(math.atan((platformY - startY) / (platformX - startX)))
+        aArcTangent = math.degrees(math.atan((goalY - startY) / (goalX - startX)))
         upperCorridor = aArcTangent + corridorWidth
         lowerCorridor = aArcTangent - corridorWidth
         corridorWidth = 0.0
@@ -1732,12 +1825,16 @@ class mainClass:
         initialHeadingError = 0.0
         initialHeadingErrorCount = 0
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
+            # if dayNum == 9 or dayNum == 14:
+            #     if aDatapoint.gettime() > probeCutVar:
+            #         continue
+            currentDistanceFromGoal = math.sqrt((goalX - aDatapoint.getx()) ** 2 + (goalY - aDatapoint.gety()) ** 2)*scalingFactor
             distanceToSwimPathCentroid = math.sqrt((xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2)*scalingFactor
             totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
             distanceFromStartToCurrent = math.sqrt((aDatapoint.getx() - startX) **2 + (aDatapoint.gety() - startY)**2)*scalingFactor
 
             if oldItemX!=0 and aDatapoint.getx() - oldItemX != 0 and aDatapoint.getx() - startX != 0:
-                currentToPlat = np.subtract(np.array([platformX, platformY]),np.array([aDatapoint.getx(), aDatapoint.gety()]))
+                currentToPlat = np.subtract(np.array([goalX, goalY]),np.array([aDatapoint.getx(), aDatapoint.gety()]))
                 oldToCurrent = np.subtract(np.array([aDatapoint.getx(), aDatapoint.gety()]),np.array([oldItemX,oldItemY]))
                 currentHeadingError = abs(self.angle_between(currentToPlat,oldToCurrent))
                 withinCorridor = math.degrees(math.atan((aDatapoint.gety() - startY) / (aDatapoint.getx() - startX)))
@@ -1752,39 +1849,36 @@ class mainClass:
             oldItemX = aDatapoint.getx()
             oldItemY = aDatapoint.gety()
             totalHeadingError += currentHeadingError
-        # </editor-fold>
-        # <editor-fold desc="Take Averages">
-        corridorAverage = corridorCounter / i
-        distanceAverage = distanceFromPlatformSummed / i  # calculate our average distances to landmarks
-        averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid / i
-        averageDistanceToOldPlatform = totalDistanceToOldPlatform / i
-        averageDistanceToCentre = totalDistanceToCenterOfPool / i
-        averageHeadingError = totalHeadingError / i
+            if truncateFlag and currentDistanceFromGoal < float(goalDiam)/2.0:
+                break
+        try:
+            corridorAverage = corridorCounter / i
+            distanceAverage = distanceFromGoalSummed / i  # calculate our average distances to landmarks
+            averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid / i
+            averageDistanceToOldGoal = totalDistanceToOldGoal / i
+            averageDistanceToCentre = totalDistanceToCenterOfMaze / i
+            averageHeadingError = totalHeadingError / i
+        except:
+            i = 1
+            corridorAverage = corridorCounter / i
+            distanceAverage = distanceFromGoalSummed / i  # calculate our average distances to landmarks
+            averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid / i
+            averageDistanceToOldGoal = totalDistanceToOldGoal / i
+            averageDistanceToCentre = totalDistanceToCenterOfMaze / i
+            averageHeadingError = totalHeadingError / i
+
         try:
             averageInitialHeadingError = initialHeadingError/initialHeadingErrorCount
         except:
             averageInitialHeadingError = 0
-        ''' for the next 3 weeks work harder, be impressive, you're good at this and can make it work
-        
-        corridorAverage = corridorCounter /i
-        distance Average - distance From PlatformSummed/i
-        averageDistanceToSwimPathCentroid = totalDistanceToSwimPathCentroid/i
-        averageInitialHeadingError'''
         cellCounter = 0.0  # initialize our cell counter
 
-        for k in range(0, math.ceil(theGridSize)+1):  # count how many cells we have visited
-            for j in range(0, math.ceil(theGridSize)+1):
-                try:
-                    if Matrix[k][j] == 1:
-                        cellCounter += 1.0
-                except:
-                    continue
+        percentTraversed = (((sum(sum(Matrix,[]))) / len(Matrix[0])**2) * scalingFactor) * 100.0  # turn our count into a percentage over how many cells we can visit
+        if percentTraversed > 100:
+            percentTraversed = 100
 
-        # print distanceTotal/(i/25), avHeadingError
-        percentTraversed = (cellCounter / (math.ceil(gridCounter**2) * scalingFactor)) * 100.0  # turn our count into a percentage over how many cells we can visit
-
-
-        idealDistance = distanceFromStartToPlatform
+        velocity = 0
+        idealDistance = distanceFromStartToGoal
         if latency != 0:
             try:
                 velocity = (totalDistance/latency)
@@ -1792,81 +1886,82 @@ class mainClass:
                 velocity = 0
                 pass
         idealCumulativeDistance = 0.0
-
-        sampleRate = (theTrial.datapointList[-1].gettime() - startTime)/(len(theTrial.datapointList) - 1)
-        while idealDistance > 10.0:
+        try:
+            sampleRate = (theTrial.datapointList[-1].gettime() - startTime)/(len(theTrial.datapointList) - 1)
+        except:
+            print("Error with sample rate calculation")
+            logging.info("Error with sample rate calculation")
+            sampleRate = 1
+        while idealDistance > math.ceil(float(goalDiam)/2):
             idealCumulativeDistance += idealDistance
             idealDistance = (idealDistance - velocity*sampleRate)
             if(idealCumulativeDistance > 10000):
                 break
-        cse = float(distanceFromPlatformSummed - idealCumulativeDistance)*sampleRate
+
+        ipe = float(distanceFromGoalSummed - idealCumulativeDistance)*sampleRate
+
+        if ipe<0:
+            ipe = 0
 
         if useEntropyFlag:
-            entropyResult = self.calculateEntropy(theTrial,platformX,platformY)
+            entropyResult = self.calculateEntropy(theTrial,goalX,goalY)
         else:
             entropyResult = False
-        return corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, mainLatency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, cse, averageInitialHeadingError, entropyResult
-    def mainCalculate(self):
+        return corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, fullThigmoCounter, smallThigmoCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, averageInitialHeadingError, entropyResult
+
+    def mainCalculate(self, goalPosVar=goalPosVar, goalDiamVar=goalDiamVar):
         global softwareStringVar
+        global params
         logging.debug("Calculate Called")
         self.updateTasks()
-        self.csvDestroy()
         theStatus.set("Initializing")
 
-        platformPosVar = platformPosStringVar.get()
-        platformDiamVar = platformDiamStringVar.get()
-        poolDiamVar = poolDiamStringVar.get()
-        poolCentreVar = poolCentreStringVar.get()
-        oldPlatformPosVar = oldPlatformPosStringVar.get()
+        print("Running: " + str(goalPosVar) + " with diamater " + str(goalDiamVar))
+
+        mazeDiamVar = mazeDiamStringVar.get()
+        mazeCentreVar = mazeCentreStringVar.get()
         corridorWidthVar = corridorWidthStringVar.get()
         chainingRadiusVar = chainingRadiusStringVar.get()
         thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()  # get important values
         softwareScalingFactorVar = softwareScalingFactorStringVar.get()
-
-        try:
-            with open('mainobjs.pickle', 'wb') as f:
-                pickle.dump([platformPosVar, platformDiamVar, poolDiamVar, poolCentreVar, oldPlatformPosVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar], f)
-        except:
-            pass
-
         # basic setup
 
-        cseMaxVal = params.cseMaxVal
+
+        ipeMaxVal = params.ipeMaxVal
         headingMaxVal = params.headingMaxVal
         distanceToSwimMaxVal = params.distanceToSwimMaxVal
         distanceToPlatMaxVal = params.distanceToPlatMaxVal
         corridorAverageMinVal = params.corridorAverageMinVal
-        corridorCseMaxVal = params.corridorCseMaxVal
+        corridoripeMaxVal = params.corridoripeMaxVal
         annulusCounterMaxVal = params.annulusCounterMaxVal
         quadrantTotalMaxVal = params.quadrantTotalMaxVal
         percentTraversedMaxVal = params.percentTraversedMaxVal
         percentTraversedMinVal = params.percentTraversedMinVal
         distanceToCentreMaxVal = params.distanceToCentreMaxVal
-        innerWallMaxVal = params.innerWallMaxVal
-        outerWallMaxVal = params.outerWallMaxVal
-        cseIndirectMaxVal = params.cseIndirectMaxVal
+        fullThigmoMinVal = params.fullThigmoMinVal
+        smallThigmoMinVal = params.smallThigmoMinVal
+        ipeIndirectMaxVal = params.ipeIndirectMaxVal
         percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
         focalMinDistance = params.focalMinDistance
         focalMaxDistance = params.focalMaxDistance
         chainingMaxCoverage = params.chainingMaxCoverage
         thigmoMinDistance = params.thigmoMinDistance
         directedSearchMaxDistance = params.directedSearchMaxDistance
+        headingIndirectMaxVal = params.headingIndirectMaxVal
 
 
-        poolRadius = 0.0
+        mazeRadius = 0.0
         thigmotaxisZoneSize = 0.0
         corridorWidth = 0.0
-        platformX = 0.0
-        platformY = 0.0
+        goalX = 0.0
+        goalY = 0.0
         oldDay = ""
-        oldPlatformX = platformX
-        oldPlatformY = platformY
         chainingRadius = 0.0
-        poolCentre = (0.0, 0.0)
-        poolRadius = 0.0
-        smallerWallZone = 0.0
-        biggerWallZone = 0.0
-        distanceCenterToPlatform = 0.0
+        mazeCentre = (0.0, 0.0)
+        mazeRadius = 0.0
+        fullThigmoZone = 0.0
+        smallThigmoZone = 0.0
+        distanceCenterToGoal = 0.0
         totalTrialCount = 0.0
         thigmotaxisCount = 0.0
         randomCount = 0.0
@@ -1874,12 +1969,12 @@ class mainClass:
         chainingCount = 0.0
         directSearchCount = 0.0
         focalSearchCount = 0.0
-        directSwimCount = 0.0
-        spatialIndirectCount = 0.0
+        directPathCount = 0.0
+        indirectSearchCount = 0.0
         notRecognizedCount = 0.0
         n = 0
         numOfRows = 0
-        poolCentreX, poolCentreY = poolCentre
+        mazeCentreX, mazeCentreY = mazeCentre
         flag = False
         dayFlag = False
         autoFlag = False
@@ -1888,24 +1983,13 @@ class mainClass:
 
         try:
             aExperiment = saveFileAsExperiment(software, theFile, fileDirectory)
-        except Exception as e:
-            show_error("No Input")
-            print("Unexpected Error: " + str(e))
+        except Exception:
+            show_message("No Input")
+            print("Unexpected Error loading experiment")
+            traceback.print_exc()
             return
-        if software == "ethovision":
-            logging.info("Extension set to xlsx")
-            extensionType = r'*.xlsx'
-            softwareScalingFactorVar = 1.0
-        elif software == "anymaze":
-            extensionType = r'*.csv'
-            logging.info("Extension set to csv")
-            softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
-        elif software == "watermaze":
-            extensionType = r'*.csv'
-            logging.info("Extension set to csv")
-            softwareScalingFactorVar = 1.0/float(softwareScalingFactorVar)
 
-        poolCentreX, poolCentreY, platformX, platformY, poolDiamVar, poolRadius, platEstDiam = self.getAutoLocations(aExperiment, platformX, platformY, platformPosVar, poolCentreX, poolCentreY, poolCentreVar, poolDiamVar, software)
+        mazeCentreX, mazeCentreY, goalX, goalY, mazeDiamVar, mazeRadius, goalDiamVar = self.getAutoLocations(aExperiment, goalX, goalY, goalPosVar, mazeCentreX, mazeCentreY, mazeCentreVar, mazeDiamVar, software, goalDiamVar)
         if scale:
             scalingFactor = softwareScalingFactorVar
         else:
@@ -1915,19 +1999,19 @@ class mainClass:
         chainingRadius = float(chainingRadiusVar) * scalingFactor # update the chaining radius
         corridorWidth = (int(corridorWidthVar) / 2) * scalingFactor # update the corridor width
 
-        smallerWallZone = poolRadius - math.ceil(thigmotaxisZoneSize / 2)  # update the smaller wall zone
-        biggerWallZone = poolRadius - thigmotaxisZoneSize  # and bigger wall zone
+        fullThigmoZone = mazeRadius - math.ceil(thigmotaxisZoneSize / 2)  # update the smaller wall zone
+        smallThigmoZone = mazeRadius - thigmotaxisZoneSize  # and bigger wall zone
 
         theStatus.set('Calculating Search Strategies...')  # update status bar
         self.updateTasks()
-
+        currentOutputFile = outputFile+str(goalPosVar)+".csv"
         logging.debug("Calculating search strategies")
         try:  # try to open a csv file for output
-            f = open(outputFile, 'wt')
+            f = open(currentOutputFile, 'wt')
             writer = csv.writer(f, delimiter=',', quotechar='"')
-        except:
-            logging.error("Cannot write to " + str(outputFile))
-            self.killBar()
+        except Exception:
+            traceback.print_exc()
+            logging.error("Cannot write to " + str(currentOutputFile))
             return
 
         headersToWrite = []
@@ -1940,18 +2024,32 @@ class mainClass:
         if aExperiment.hasAnimalNames:
             headersToWrite.append("Animal")
 
-        headersToWrite.extend(["Trial Code", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage", "score", "initial heading error", "entropy"])
+        headersToWrite.extend(["Trial Code", "Strategy", "IPE", "Velocity", "Distance covered", "Average distance to goal", "Average heading error", "Percent of maze traversed", "Latency", "Sccore", "Initial heading error", "Entropy", "Distance to swim path centroid", "Average distance to centre of maze", "Percent in angular corridor", "Percent in annulus zone", "Percent in smaller thigmotaxis zone", "Percent in full thigmotaxis zone", "Strategy (manual)"])
         writer.writerow(headersToWrite) # write to the csv
 
         dayNum = 0
         trialNum = {}
-        curDate = None 
+        curDate = None
         for aTrial in aExperiment:
-            animal = ""
+            animal = aTrial.animal
             if aExperiment.hasAnimalNames:
                 animal = aTrial.animal.replace("*", "")
-
-            if aExperiment.hasDateInfo and aTrial.date.date() != curDate:
+                # animal = animal.replace("Jan","1")
+                # animal = animal.replace("Feb","2")
+                # animal = animal.replace("Mar","3")
+                # animal = animal.replace("Apr","4")
+                # animal = animal.replace("May","5")
+                # animal = animal.replace("Jun","6")
+                # animal = animal.replace("Jul","7")
+                # animal = animal.replace("Aug","8")
+                # animal = animal.replace("Sep","9")
+                # animal = animal.replace("Oct","10")
+                # animal = animal.replace("Nov","11")
+                # animal = animal.replace("Dec","12")
+            if aExperiment.hasTrialNames:
+                dayNum = aTrial.day
+                trialNum[animal] = aTrial.trial
+            elif aExperiment.hasDateInfo and aTrial.date.date() != curDate:
                 dayNum += 1
                 curDate = aTrial.date.date()
                 trialNum = {}
@@ -1966,28 +2064,28 @@ class mainClass:
             xAv = 0.0
             yAv = 0.0
 
-            currentDistanceFromPlatform = 0.0
+            currentDistanceFromGoal = 0.0
             distanceAverage = 0.0
             aX = 0.0
             aY = 0.0
 
-            distanceToCenterOfPool = 0.0
-            totalDistanceToCenterOfPool = 0.0
+            distanceToCenterOfMaze = 0.0
+            totalDistanceToCenterOfMaze = 0.0
             averageDistanceToCentre = 0.0
 
-            innerWallCounter = 0.0
-            outerWallCounter = 0.0
+            fullThigmoCounter = 0.0
+            smallThigmoCounter = 0.0
             annulusCounter = 0.0
 
             distanceToSwimPathCentroid = 0.0
             totalDistanceToSwimPathCentroid = 0.0
             averageDistanceToSwimPathCentroid = 0.0
 
-            distanceToOldPlatform = 0.0
-            totalDistanceToOldPlatform = 0.0
-            averageDistanceToOldPlatform = 0.0
+            distanceToOldGoal = 0.0
+            totalDistanceToOldGoal = 0.0
+            averageDistanceToOldGoal = 0.0
 
-            cse = 0.0
+            ipe = 0.0
 
             startX = 0.0
             startY = 0.0
@@ -2003,34 +2101,38 @@ class mainClass:
             # </editor-fold>
             score = 0
             # Analyze the data ----------------------------------------------------------------------------------------------
-            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToOldPlatform, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, cse, initialHeadingError, entropyResult = self.calculateValues(
-                aTrial, platformX, platformY, poolCentreX,
-                poolCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
-                biggerWallZone, scalingFactor, poolRadius)
+
+
+            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, fullThigmoCounter, smallThigmoCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
+                aTrial, goalX, goalY, mazeCentreX,
+                mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, fullThigmoZone,
+                smallThigmoZone, scalingFactor, mazeRadius, dayNum, goalDiamVar)
 
             strategyType = ""
+            strategyManual = ""
+            print(fullThigmoMinVal, smallThigmoMinVal, fullThigmoCounter/i, smallThigmoCounter/i)
             # DIRECT SWIM
-            if cse <= cseMaxVal and averageHeadingError <= headingMaxVal and isRuediger == False and useDirectSwimV:  # direct swim
-                directSwimCount += 1.0
+            if ipe <= ipeMaxVal and averageHeadingError <= headingMaxVal and useDirectPathV:  # direct path
+                directPathCount += 1.0
                 score = 3
-                strategyType = "Direct Swim"
+                strategyType = "Direct Path"
             # FOCAL SEARCH
             elif averageDistanceToSwimPathCentroid < (
-                    poolRadius * distanceToSwimMaxVal) and distanceAverage < (
-                    distanceToPlatMaxVal * poolRadius) and totalDistance < focalMaxDistance and totalDistance > focalMinDistance and useFocalSearchV:  # Focal Search
+                    mazeRadius * distanceToSwimMaxVal) and distanceAverage < (
+                    distanceToPlatMaxVal * mazeRadius) and totalDistance < focalMaxDistance and totalDistance > focalMinDistance and useFocalSearchV:  # Focal Search
                 focalSearchCount += 1.0
                 score = 2
                 strategyType = "Focal Search"
             # DIRECTED SEARCH
-            elif corridorAverage >= corridorAverageMinVal and cse <= corridorCseMaxVal and totalDistance < directedSearchMaxDistance and useDirectedSearchV:  # directed search
+            elif corridorAverage >= corridorAverageMinVal and ipe <= corridoripeMaxVal and totalDistance < directedSearchMaxDistance and useDirectedSearchV:  # directed search
                 directSearchCount += 1.0
                 score = 2
                 strategyType = "Directed Search"
-            # spatial INDIRECT
-            elif cse < cseIndirectMaxVal and useIndirectV:  # Near miss
-                strategyType = "Spatial Indirect"
+            # Indirect Search
+            elif ipe < ipeIndirectMaxVal and averageHeadingError < headingIndirectMaxVal and useIndirectV:  # Near miss
+                strategyType = "Indirect Search"
                 score = 2
-                spatialIndirectCount += 1.0
+                indirectSearchCount += 1.0
             # CHAINING
             elif float(
                     annulusCounter / i) > annulusCounterMaxVal and quadrantTotal >= quadrantTotalMaxVal and percentTraversed < chainingMaxCoverage and useChainingV:  # or 4 chaining
@@ -2038,13 +2140,13 @@ class mainClass:
                 score = 1
                 strategyType = "Chaining"
             # SCANNING
-            elif percentTraversedMinVal <= percentTraversed >= percentTraversedMaxVal and averageDistanceToCentre <= (
-                    distanceToCentreMaxVal * poolRadius) and useScanningV:  # scanning
+            elif percentTraversedMinVal <= percentTraversed and percentTraversedMaxVal > percentTraversed and averageDistanceToCentre <= (
+                    distanceToCentreMaxVal * mazeRadius) and useScanningV:  # scanning
                 scanningCount += 1.0
                 score = 1
                 strategyType = "Scanning"
             # THIGMOTAXIS
-            elif innerWallCounter >= innerWallMaxVal * i and outerWallCounter >= i * outerWallMaxVal and totalDistance > thigmoMinDistance and useThigmoV:  # thigmotaxis
+            elif fullThigmoCounter/i >= fullThigmoMinVal and smallThigmoCounter/i >= smallThigmoMinVal and totalDistance > thigmoMinDistance and useThigmoV:  # thigmotaxis
                 thigmotaxisCount += 1.0
                 score = 0
                 strategyType = "Thigmotaxis"
@@ -2058,15 +2160,15 @@ class mainClass:
                 strategyType = "Not Recognized"
                 notRecognizedCount += 1.0
                 if manualFlag and not useManualForAllFlag:
-                    print("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage")
-                    print(dayNum, trialNum, aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
-                    #print("CSE: ", cse, " Distance to centroid: ", averageDistanceToSwimPathCentroid, " Distance to plat: ", distanceAverage)
+                    print("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "ipe", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage")
+                    print(dayNum, trialNum, aTrial.name, aTrial.date, aTrial.trial, strategyType, round(ipe,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
+                    #print("ipe: ", ipe, " Distance to centroid: ", averageDistanceToSwimPathCentroid, " Distance to plat: ", distanceAverage)
                     plotName = "Strategy " + str(strategyType) + " Animal " + str(animal) + "  Day " + str(dayNum) + " Trial " + str(trialNum[animal])
-                    self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
-                                float(platformX), float(platformY), float(scalingFactor), plotName,
-                                    ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(trialNum[animal])), float(platEstDiam))  # ask user for answer
+                    self.plotPoints(arrayX, arrayY, float(mazeDiamVar), float(mazeCentreX), float(mazeCentreY),
+                                float(goalX), float(goalY), float(scalingFactor), plotName,
+                                ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(trialNum[animal])), float(goalDiamVar))  # ask user for answer
                     root.wait_window(self.top2)  # we wait until the user responds
-                    strategyType = searchStrategyV  # update the strategyType to that of the user
+                    strategyManual = searchStrategyV  # update the strategyType to that of the user
                     try:  # try and kill the popup window
                         self.top2.destroy()
                     except:
@@ -2075,17 +2177,18 @@ class mainClass:
             totalTrialCount += 1.0
 
             n += 1
-            print("CSE: ", cse, "    Heading: ",averageHeadingError, " Entropy: ", entropyResult)
+            print(animal)
+            print("strategy: ", strategyType, "    ipe: ", round(ipe,2), "    Heading: ",round(averageHeadingError,2), "    Entropy: ", entropyResult)
 
             if useManualForAllFlag:
-                print("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "CSE", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage")
-                print(dayNum, trialNum[animal], aTrial.name, aTrial.date, aTrial.trial, strategyType, round(cse,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
+                print("Day #", "Trial #", "Name", "Date", "Trial", "Strategy Type", "ipe", "velocity", "totalDistance", "distanceAverage", "averageHeadingError", "percentTraversed", "latency", "corridorAverage")
+                print(dayNum, trialNum[animal], aTrial.name, aTrial.date, aTrial.trial, strategyType, round(ipe,2), round(velocity,2), round(totalDistance,2), round(distanceAverage,2), round(averageHeadingError,2), round(percentTraversed,2), round(latency,2), round(corridorAverage,2))
                 plotName = "Strategy " + str(strategyType) + " Animal " + str(animal) + "  Day " + str(dayNum) + " Trial " + str(trialNum[animal])
-                self.plotPoints(arrayX, arrayY, float(poolDiamVar), float(poolCentreX), float(poolCentreY),
-                                float(platformX), float(platformY), float(scalingFactor), plotName,
-                                ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(trialNum[animal])), float(platEstDiam))  # ask user for answer
+                self.plotPoints(arrayX, arrayY, float(mazeDiamVar), float(mazeCentreX), float(mazeCentreY),
+                                float(goalX), float(goalY), float(scalingFactor), plotName,
+                                ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(trialNum[animal])), float(goalDiamVar))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
-                strategyType = searchStrategyV  # update the strategyType to that of the user
+                strategyManual = searchStrategyV  # update the strategyType to that of the user
 
             dataToWrite = []
             if aExperiment.hasDateInfo:
@@ -2102,34 +2205,27 @@ class mainClass:
                 dataToWrite.append(aTrial.animal)
 
             dataToWrite.extend(
-                [(str(aTrial.animal) + " " + str(dayNum) + " " + str(trialNum[animal])), strategyType, round(cse, 2), round(velocity, 2), round(totalDistance, 2), round(distanceAverage, 2),
-                 round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2),
-                 round(corridorAverage, 2), score, initialHeadingError, round(entropyResult, 2)])
+                [(str(animal) + " " + str(dayNum) + " " + str(trialNum[animal])), strategyType, round(ipe, 2), round(velocity, 2), round(totalDistance, 2), round(distanceAverage, 2),
+                 round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2), score, initialHeadingError, round(entropyResult, 2), round(averageDistanceToSwimPathCentroid,2), round(averageDistanceToCentre,2), round(corridorAverage,2), round(annulusCounter/i, 2), round(smallThigmoCounter/i,2), round(fullThigmoCounter/i,2), str(strategyManual)])
             writer.writerow(dataToWrite)  # writing to csv file
 
             f.flush()
 
-        print("Direct Swim: ", directSwimCount, "| Directed Search: ", directSearchCount, "| Focal Search: ", focalSearchCount, "| Spatial Indirect: ", spatialIndirectCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ", randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
-        theStatus.set('Updating CSV...')
+        print("Direct Path: ", directPathCount, "| Directed Search: ", directSearchCount, "| Focal Search: ", focalSearchCount, "| Indirect Search: ", indirectSearchCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ", randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
         if sys.platform.startswith('darwin'):
-            subprocess.call(('open', outputFile))
+            subprocess.call(('open', currentOutputFile))
         elif os.name == 'nt': # For Windows
-            os.startfile(outputFile)
+            os.startfile(currentOutputFile)
         elif os.name == 'posix': # For Linux, Mac, etc.
-            subprocess.call(('xdg-open', outputFile))
+            subprocess.call(('xdg-open', currentOutputFile))
         self.updateTasks()
         theStatus.set('')
         self.updateTasks()
-        self.killBar()
-        csvfilename = "results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
-                                            localtime())) + ".csv"  # update the csv file name for the next run
+        csvfilename = "output/results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
+                                            localtime()))  # update the csv file name for the next run
         outputFileStringVar.set(csvfilename)
 
-        try:
-            t1.join()
-            t2.join()
-        except:
-            return
+        return
 
 def main():
     b = mainClass(root)  # start the main class (main program)

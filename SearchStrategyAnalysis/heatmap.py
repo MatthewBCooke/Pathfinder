@@ -1,7 +1,7 @@
 import math
 import os
 import sys
-from appTrial import Trial, Experiment, Parameters
+from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters
 from time import localtime, strftime
 
 if sys.version_info<(3,0,0):  # tkinter names for python 2
@@ -69,8 +69,6 @@ def heatmap(self, experiment):
                 xMax = row.x
             if row.y > yMax:
                 yMax = row.y
-
-
 
     aFileName = "heatmap " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
     aTitle = fileDirectory
