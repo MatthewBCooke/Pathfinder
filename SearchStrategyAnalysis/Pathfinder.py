@@ -95,8 +95,8 @@ probeCutVar = math.inf #stop probe trials at X seconds, inf = no cutoff
 defaultParams = Parameters(name="Default", ipeMaxVal=125, headingMaxVal=40, distanceToSwimMaxVal=0.3,
                            distanceToPlatMaxVal=0.3, corridorAverageMinVal=0.7, directedSearchMaxDistance=400, focalMinDistance=100, focalMaxDistance=400, corridoripeMaxVal=1500,
                            annulusCounterMaxVal=0.90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=20,
-                           percentTraversedMinVal=5, distanceToCentreMaxVal=0.6, thigmoMinDistance=400, innerWallMaxVal=0.65,
-                           outerWallMaxVal=0.35, ipeIndirectMaxVal=300, percentTraversedRandomMaxVal=10, headingIndirectMaxVal=70)
+                           percentTraversedMinVal=5, distanceToCentreMaxVal=0.6, thigmoMinDistance=400, fullThigmoMinVal=0.65,
+                           smallThigmoMinVal=0.35, ipeIndirectMaxVal=300, percentTraversedRandomMaxVal=10, headingIndirectMaxVal=70)
 global params
 params = defaultParams
 ipeMaxVal = params.ipeMaxVal
@@ -110,8 +110,8 @@ quadrantTotalMaxVal = params.quadrantTotalMaxVal
 percentTraversedMaxVal = params.percentTraversedMaxVal
 percentTraversedMinVal = params.percentTraversedMinVal
 distanceToCentreMaxVal = params.distanceToCentreMaxVal
-innerWallMaxVal = params.innerWallMaxVal
-outerWallMaxVal = params.outerWallMaxVal
+smallThigmoMinVal = params.smallThigmoMinVal
+fullThigmoMinVal = params.fullThigmoMinVal
 ipeIndirectMaxVal = params.ipeIndirectMaxVal
 percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
 directedSearchMaxDistance = params.directedSearchMaxDistance
@@ -750,8 +750,8 @@ class mainClass:
         self.percentTraversedCustom = StringVar()
         self.percentTraversedMinCustom = StringVar()
         self.distanceToCentreCustom = StringVar()
-        self.innerWallCustom = StringVar()
-        self.outerWallCustom = StringVar()
+        self.smallThigmoCustom = StringVar()
+        self.fullThigmoCustom = StringVar()
         self.jslsIndirectCustom = StringVar()
         self.percentTraversedRandomCustom = StringVar()
         self.directedSearchMaxDistanceCustom = StringVar()
@@ -819,8 +819,8 @@ class mainClass:
         self.percentTraversedCustom.set(percentTraversedMaxVal)
         self.percentTraversedMinCustom.set(percentTraversedMinVal)
         self.distanceToCentreCustom.set(distanceToCentreMaxVal * 100)
-        self.innerWallCustom.set(innerWallMaxVal * 100)
-        self.outerWallCustom.set(outerWallMaxVal * 100)
+        self.smallThigmoCustom.set(innerWallMaxVal * 100)
+        self.fullThigmoCustom.set(outerWallMaxVal * 100)
         self.jslsIndirectCustom.set(ipeIndirectMaxVal)
         self.percentTraversedRandomCustom.set(percentTraversedRandomMaxVal)
         self.directedSearchMaxDistanceCustom.set(directedSearchMaxDistance)
@@ -1005,17 +1005,17 @@ class mainClass:
 
         rowCount+=1
 
-        innerWallCustomL = Label(self.top, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg="white")
-        innerWallCustomL.grid(row=rowCount, column=0, sticky=E)
-        innerWallCustomE = Entry(self.top, textvariable=self.innerWallCustom)
-        innerWallCustomE.grid(row=rowCount, column=1)
+        fullThigmoCustomL = Label(self.top, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        fullThigmoCustomL.grid(row=rowCount, column=0, sticky=E)
+        fullThigmoCustomE = Entry(self.top, textvariable=self.fullThigmoCustom, bg="white")
+        fullThigmoCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
-        outerWallCustomL = Label(self.top, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg="white")
-        outerWallCustomL.grid(row=rowCount, column=0, sticky=E)
-        outerWallCustomE = Entry(self.top, textvariable=self.outerWallCustom, bg="white")
-        outerWallCustomE.grid(row=rowCount, column=1)
+        smallThigmoCustomL = Label(self.top, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        smallThigmoCustomL.grid(row=rowCount, column=0, sticky=E)
+        smallThigmoCustomE = Entry(self.top, textvariable=self.smallThigmoCustom)
+        smallThigmoCustomE.grid(row=rowCount, column=1)
 
         rowCount+=1
 
@@ -1078,8 +1078,8 @@ class mainClass:
         percentTraversedMaxVal = float(self.percentTraversedCustom.get())
         percentTraversedMinVal = float(self.percentTraversedMinCustom.get())
         distanceToCentreMaxVal = float(self.distanceToCentreCustom.get())/100
-        innerWallMaxVal = float(self.innerWallCustom.get())/100
-        outerWallMaxVal = float(self.outerWallCustom.get())/100
+        smallThigmoMinVal = float(self.smallThigmoCustom.get()) / 100
+        fullThigmoMinVal = float(self.fullThigmoCustom.get()) / 100
         ipeIndirectMaxVal = float(self.jslsIndirectCustom.get())
         percentTraversedRandomMaxVal = float(self.percentTraversedRandomCustom.get())
         directedSearchMaxDistance = float(self.directedSearchMaxDistanceCustom.get())
@@ -1092,8 +1092,7 @@ class mainClass:
         params = Parameters(name="Custom", ipeMaxVal=float(self.jslsMaxCustom.get()), headingMaxVal=float(self.headingErrorCustom.get()), distanceToSwimMaxVal=float(self.distanceToSwimCustom.get())/100,
                             distanceToPlatMaxVal=float(self.distanceToPlatCustom.get())/100, corridorAverageMinVal=float(self.corridorAverageCustom.get()) / 100, directedSearchMaxDistance=float(self.directedSearchMaxDistanceCustom.get()), focalMinDistance=float(self.focalMinDistanceCustom.get()), focalMaxDistance=float(self.focalMaxDistanceCustom.get()), corridoripeMaxVal=float(self.corridorJslsCustom.get()),
                             annulusCounterMaxVal=float(self.annulusCustom.get())/100, quadrantTotalMaxVal=float(self.quadrantTotalCustom.get()), chainingMaxCoverage=float(self.chainingMaxCoverageCustom.get()), percentTraversedMaxVal=float(self.percentTraversedCustom.get()),
-                            percentTraversedMinVal=float(self.percentTraversedMinCustom.get()), distanceToCentreMaxVal=float(self.distanceToCentreCustom.get())/100, thigmoMinDistance = float(self.thigmoMinDistanceCustom.get()), innerWallMaxVal=float(self.innerWallCustom.get())/100,
-                            outerWallMaxVal=float(self.outerWallCustom.get())/100, ipeIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get()), headingIndirectMaxVal=float(self.headingIndirectCustom.get()))
+                            percentTraversedMinVal=float(self.percentTraversedMinCustom.get()), distanceToCentreMaxVal=float(self.distanceToCentreCustom.get())/100, thigmoMinDistance = float(self.thigmoMinDistanceCustom.get()), fullThigmoMinVal=float(self.fullThigmoCustom.get()) / 100, smallThigmoMinVal=float(self.smallThigmoCustom.get()) / 100, ipeIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get()), headingIndirectMaxVal=float(self.headingIndirectCustom.get()))
 
         useDirectPathV = self.useDirectPath.get()
         useFocalSearchV = self.useFocalSearch.get()
@@ -1105,7 +1104,7 @@ class mainClass:
         useThigmoV = self.useThigmo.get()
         try:
             with open('customobjs.pickle', 'wb') as f:
-                pickle.dump([ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
+                pickle.dump([ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, smallThigmoMinVal, fullThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
         except:
             pass
         try:
@@ -1129,7 +1128,7 @@ class mainClass:
             useThigmoV = True
             try:
                 with open('customobjs.pickle', 'wb') as f:
-                    pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.innerWallMaxVal, params.outerWallMaxVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, params.headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
+                    pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.smallThigmoMinVal, params.fullThigmoMinVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, params.headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
             except:
                 pass
             try:
@@ -1672,7 +1671,7 @@ class mainClass:
         return (mazeCentreX,mazeCentreY,goalX,goalY,mazeDiamVar,mazeRadius,platEstDiam)
 
 
-    def calculateValues(self, theTrial, goalX, goalY, mazeCentreX, mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, outerWallZone, innerWallZone, scalingFactor, mazeradius, dayNum, goalDiam):
+    def calculateValues(self, theTrial, goalX, goalY, mazeCentreX, mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, fullThigmoZone, smallThigmoZone, scalingFactor, mazeradius, dayNum, goalDiam):
         global mazeCentreVar
         global useEntropyFlag
         global truncateFlag
@@ -1698,8 +1697,8 @@ class mainClass:
         totalDistanceToCenterOfMaze = 0.0
         averageDistanceToCentre = 0.0
 
-        innerWallCounter = 0.0
-        outerWallCounter = 0.0
+        smallThigmoCounter = 0.0
+        fullThigmoCounter = 0.0
         annulusCounter = 0.0
         currentHeadingError = 0.0
         distanceToSwimPathCentroid = 0.0
@@ -1771,10 +1770,10 @@ class mainClass:
             oldX = aX
             oldY = aY
 
-            if distanceToCenterOfMaze > innerWallZone:  # calculate if we are in zones
-                innerWallCounter += 1.0
-            if distanceToCenterOfMaze > outerWallZone:
-                outerWallCounter += 1.0
+            if distanceToCenterOfMaze > smallThigmoZone:  # calculate if we are in zones
+                smallThigmoCounter += 1.0
+            if distanceToCenterOfMaze > fullThigmoZone:
+                fullThigmoCounter += 1.0
             if (distanceToCenterOfMaze >= annulusZoneInner) and (distanceToCenterOfMaze <= annulusZoneOuter):
                 annulusCounter += 1.0
 
@@ -1908,7 +1907,7 @@ class mainClass:
             entropyResult = self.calculateEntropy(theTrial,goalX,goalY)
         else:
             entropyResult = False
-        return corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, innerWallCounter, outerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, averageInitialHeadingError, entropyResult
+        return corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, fullThigmoCounter, smallThigmoCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, averageInitialHeadingError, entropyResult
 
     def mainCalculate(self, goalPosVar=goalPosVar, goalDiamVar=goalDiamVar):
         global softwareStringVar
@@ -1939,8 +1938,8 @@ class mainClass:
         percentTraversedMaxVal = params.percentTraversedMaxVal
         percentTraversedMinVal = params.percentTraversedMinVal
         distanceToCentreMaxVal = params.distanceToCentreMaxVal
-        outerWallMaxVal = params.outerWallMaxVal
-        innerWallMaxVal = params.innerWallMaxVal
+        fullThigmoMinVal = params.fullThigmoMinVal
+        smallThigmoMinVal = params.smallThigmoMinVal
         ipeIndirectMaxVal = params.ipeIndirectMaxVal
         percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
         focalMinDistance = params.focalMinDistance
@@ -1960,8 +1959,8 @@ class mainClass:
         chainingRadius = 0.0
         mazeCentre = (0.0, 0.0)
         mazeRadius = 0.0
-        smallerWallZone = 0.0
-        biggerWallZone = 0.0
+        fullThigmoZone = 0.0
+        smallThigmoZone = 0.0
         distanceCenterToGoal = 0.0
         totalTrialCount = 0.0
         thigmotaxisCount = 0.0
@@ -2000,8 +1999,8 @@ class mainClass:
         chainingRadius = float(chainingRadiusVar) * scalingFactor # update the chaining radius
         corridorWidth = (int(corridorWidthVar) / 2) * scalingFactor # update the corridor width
 
-        smallerWallZone = mazeRadius - math.ceil(thigmotaxisZoneSize / 2)  # update the smaller wall zone
-        biggerWallZone = mazeRadius - thigmotaxisZoneSize  # and bigger wall zone
+        fullThigmoZone = mazeRadius - math.ceil(thigmotaxisZoneSize / 2)  # update the smaller wall zone
+        smallThigmoZone = mazeRadius - thigmotaxisZoneSize  # and bigger wall zone
 
         theStatus.set('Calculating Search Strategies...')  # update status bar
         self.updateTasks()
@@ -2074,8 +2073,8 @@ class mainClass:
             totalDistanceToCenterOfMaze = 0.0
             averageDistanceToCentre = 0.0
 
-            outerWallCounter = 0.0
-            innerWallCounter = 0.0
+            fullThigmoCounter = 0.0
+            smallThigmoCounter = 0.0
             annulusCounter = 0.0
 
             distanceToSwimPathCentroid = 0.0
@@ -2104,14 +2103,14 @@ class mainClass:
             # Analyze the data ----------------------------------------------------------------------------------------------
 
 
-            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, outerWallCounter, innerWallCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
+            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, fullThigmoCounter, smallThigmoCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
                 aTrial, goalX, goalY, mazeCentreX,
-                mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, smallerWallZone,
-                biggerWallZone, scalingFactor, mazeRadius, dayNum, goalDiamVar)
+                mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, fullThigmoZone,
+                smallThigmoZone, scalingFactor, mazeRadius, dayNum, goalDiamVar)
 
             strategyType = ""
             strategyManual = ""
-            print(outerWallMaxVal, innerWallMaxVal, outerWallCounter/i, innerWallCounter/i)
+            print(fullThigmoMinVal, smallThigmoMinVal, fullThigmoCounter/i, smallThigmoCounter/i)
             # DIRECT SWIM
             if ipe <= ipeMaxVal and averageHeadingError <= headingMaxVal and useDirectPathV:  # direct path
                 directPathCount += 1.0
@@ -2147,7 +2146,7 @@ class mainClass:
                 score = 1
                 strategyType = "Scanning"
             # THIGMOTAXIS
-            elif outerWallCounter/i >= outerWallMaxVal and innerWallCounter/i >= innerWallMaxVal and totalDistance > thigmoMinDistance and useThigmoV:  # thigmotaxis
+            elif fullThigmoCounter/i >= fullThigmoMinVal and smallThigmoCounter/i >= smallThigmoMinVal and totalDistance > thigmoMinDistance and useThigmoV:  # thigmotaxis
                 thigmotaxisCount += 1.0
                 score = 0
                 strategyType = "Thigmotaxis"
@@ -2207,7 +2206,7 @@ class mainClass:
 
             dataToWrite.extend(
                 [(str(animal) + " " + str(dayNum) + " " + str(trialNum[animal])), strategyType, round(ipe, 2), round(velocity, 2), round(totalDistance, 2), round(distanceAverage, 2),
-                 round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2), score, initialHeadingError, round(entropyResult, 2), round(averageDistanceToSwimPathCentroid,2), round(averageDistanceToCentre,2), round(corridorAverage,2), round(annulusCounter/i, 2), round(innerWallCounter/i,2), round(outerWallCounter/i,2), str(strategyManual)])
+                 round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2), score, initialHeadingError, round(entropyResult, 2), round(averageDistanceToSwimPathCentroid,2), round(averageDistanceToCentre,2), round(corridorAverage,2), round(annulusCounter/i, 2), round(smallThigmoCounter/i,2), round(fullThigmoCounter/i,2), str(strategyManual)])
             writer.writerow(dataToWrite)  # writing to csv file
 
             f.flush()

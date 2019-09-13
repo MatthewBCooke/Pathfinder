@@ -103,7 +103,7 @@ class Experiment(object):
 
 
 class Parameters:
-    def __init__(self, name, ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal):
+    def __init__(self, name, ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, fullThigmoMinVal, smallThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal):
 
         self.name = name
         self.ipeMaxVal = ipeMaxVal
@@ -122,8 +122,8 @@ class Parameters:
         self.percentTraversedMinVal = percentTraversedMinVal
         self.distanceToCentreMaxVal = distanceToCentreMaxVal
         self.thigmoMinDistance = thigmoMinDistance
-        self.innerWallMaxVal = innerWallMaxVal
-        self.outerWallMaxVal = outerWallMaxVal
+        self.fullThigmoMinVal = fullThigmoMinVal
+        self.smallThigmoMinVal = smallThigmoMinVal
         self.ipeIndirectMaxVal = ipeIndirectMaxVal
         self.percentTraversedRandomMaxVal = percentTraversedRandomMaxVal
         self.headingIndirectMaxVal = headingIndirectMaxVal
@@ -155,7 +155,7 @@ def defineOwnSoftware():
         return
     else:
         print("TODO")
-        return
+        pass
         filename, file_extension = os.path.splitext(filename)
 
 
