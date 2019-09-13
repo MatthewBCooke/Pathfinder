@@ -103,17 +103,21 @@ class Experiment(object):
 
 
 class Parameters:
-    def __init__(self, name, ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, fullThigmoMinVal, smallThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal):
+    def __init__(self, name, ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, distanceToSwimMaxVal2, distanceToPlatMaxVal2, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, focalMinDistance2, focalMaxDistance2, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, fullThigmoMinVal, smallThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirect, useFocal, useDirected, useIndirect, useFocal2, useChaining, useScanning, useRandom, useThigmogaxis):
 
         self.name = name
         self.ipeMaxVal = ipeMaxVal
         self.headingMaxVal = headingMaxVal
         self.distanceToSwimMaxVal = distanceToSwimMaxVal
         self.distanceToPlatMaxVal = distanceToPlatMaxVal
+        self.distanceToSwimMaxVal2 = distanceToSwimMaxVal2
+        self.distanceToPlatMaxVal2 = distanceToPlatMaxVal2
         self.corridorAverageMinVal = corridorAverageMinVal
         self.directedSearchMaxDistance = directedSearchMaxDistance
         self.focalMinDistance = focalMinDistance
         self.focalMaxDistance = focalMaxDistance
+        self.focalMinDistance2 = focalMinDistance2
+        self.focalMaxDistance2 = focalMaxDistance2
         self.corridoripeMaxVal = corridoripeMaxVal
         self.annulusCounterMaxVal = annulusCounterMaxVal
         self.quadrantTotalMaxVal = quadrantTotalMaxVal
@@ -127,6 +131,15 @@ class Parameters:
         self.ipeIndirectMaxVal = ipeIndirectMaxVal
         self.percentTraversedRandomMaxVal = percentTraversedRandomMaxVal
         self.headingIndirectMaxVal = headingIndirectMaxVal
+        self.useDirect = useDirect
+        self.useFocal = useFocal
+        self.useDirected = useDirected
+        self.useIndirect = useIndirect
+        self.useFocal2 = useFocal2
+        self.useChaining = useChaining
+        self.useScanning = useScanning
+        self.useRandom = useRandom
+        self.useThigmotaxis = useThigmogaxis
 
     def __str__(self):
         return self.name

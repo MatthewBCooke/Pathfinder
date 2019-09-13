@@ -92,11 +92,15 @@ outputFile = csvfilename
 fileFlag = 0
 probeCutVar = math.inf #stop probe trials at X seconds, inf = no cutoff
 
-defaultParams = Parameters(name="Default", ipeMaxVal=125, headingMaxVal=40, distanceToSwimMaxVal=0.3,
-                           distanceToPlatMaxVal=0.3, corridorAverageMinVal=0.7, directedSearchMaxDistance=400, focalMinDistance=100, focalMaxDistance=400, corridoripeMaxVal=1500,
-                           annulusCounterMaxVal=0.90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=20,
-                           percentTraversedMinVal=5, distanceToCentreMaxVal=0.6, thigmoMinDistance=400, fullThigmoMinVal=0.65,
-                           smallThigmoMinVal=0.35, ipeIndirectMaxVal=300, percentTraversedRandomMaxVal=10, headingIndirectMaxVal=70)
+defaultParams = Parameters(name="Default", ipeMaxVal=125, headingMaxVal=40, distanceToSwimMaxVal=30,
+                           distanceToPlatMaxVal=30, distanceToSwimMaxVal2=50, distanceToPlatMaxVal2=50, corridorAverageMinVal=70, directedSearchMaxDistance=400,
+                           focalMinDistance=100, focalMaxDistance=400, focalMinDistance2=0, focalMaxDistance2=500, corridoripeMaxVal=1500,
+                           annulusCounterMaxVal=90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=20,
+                           percentTraversedMinVal=5, distanceToCentreMaxVal=60, thigmoMinDistance=400, fullThigmoMinVal=65,
+                           smallThigmoMinVal=35, ipeIndirectMaxVal=300, percentTraversedRandomMaxVal=10, headingIndirectMaxVal=70,
+                           useDirect=True, useFocal=True, useDirected=True, useIndirect=True,
+                           useFocal2=False, useChaining=True, useScanning=True, useRandom=True, useThigmogaxis=True)
+
 global params
 params = defaultParams
 ipeMaxVal = params.ipeMaxVal
@@ -590,18 +594,21 @@ class mainClass:
         self.spatialRadio.select()
 
     def select5(self, event):
-        self.chainingRadio.select()
+        self.focalRadio2.select()
 
     def select6(self, event):
-        self.scanningRadio.select()
+        self.chainingRadio.select()
 
     def select7(self, event):
-        self.randomRadio.select()
+        self.scanningRadio.select()
 
     def select8(self, event):
-        self.thigmoRadio.select()
+        self.randomRadio.select()
 
     def select9(self, event):
+        self.thigmoRadio.select()
+
+    def select0(self, event):
         self.notRecognizedRadio.select()
 
     def enterSave(self, event):
@@ -721,17 +728,9 @@ class mainClass:
     def settings(self):
         logging.debug("Getting custom values")
 
-        global useDirectPathV
-        global useFocalSearchV
-        global useDirectedSearchV
-        global useScanningV
-        global useChainingV
-        global useRandomV
-        global useIndirectV
-        global useThigmoV
-
         self.useDirectPath = BooleanVar()
         self.useFocalSearch = BooleanVar()
+        self.useFocalSearch2 = BooleanVar()
         self.useDirectedSearch = BooleanVar()
         self.useScanning = BooleanVar()
         self.useChaining = BooleanVar()
@@ -743,6 +742,8 @@ class mainClass:
         self.headingErrorCustom = StringVar()
         self.distanceToSwimCustom = StringVar()
         self.distanceToPlatCustom = StringVar()
+        self.distanceToSwimCustom2 = StringVar()
+        self.distanceToPlatCustom2 = StringVar()
         self.corridorAverageCustom = StringVar()
         self.corridorJslsCustom = StringVar()
         self.annulusCustom = StringVar()
@@ -757,78 +758,58 @@ class mainClass:
         self.directedSearchMaxDistanceCustom = StringVar()
         self.focalMinDistanceCustom = StringVar()
         self.focalMaxDistanceCustom = StringVar()
+        self.focalMinDistanceCustom2 = StringVar()
+        self.focalMaxDistanceCustom2 = StringVar()
         self.chainingMaxCoverageCustom = StringVar()
         self.thigmoMinDistanceCustom = StringVar()
         self.headingIndirectCustom = StringVar()
 
         try:
             with open('customobjs.pickle', 'rb') as f:
-                ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, innerWallMaxVal, outerWallMaxVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV = pickle.load(f)
-                self.useDirectPath.set(useDirectPathV)
-                self.useFocalSearch.set(useFocalSearchV)
-                self.useDirectedSearch.set(useDirectedSearchV)
-                self.useScanning.set(useScanningV)
-                self.useChaining.set(useChainingV)
-                self.useRandom.set(useRandomV)
-                self.useIndirect.set(useIndirectV)
-                self.useThigmo.set(useThigmoV)
-
+                ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, distanceToSwimMaxVal2, distanceToPlatMaxVal2, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, focalMinDistance2, focalMaxDistance2, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, smallThigmoMinVal, fullThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useIndirectV, useFocalSearchV2, useScanningV, useChainingV, useRandomV, useThigmoV = pickle.load(f)
+            params = Parameters(name="Custom", ipeMaxVal=float(ipeMaxVal), headingMaxVal=float(headingMaxVal), distanceToSwimMaxVal=float(distanceToSwimMaxVal),
+                            distanceToPlatMaxVal=float(distanceToPlatMaxVal), distanceToSwimMaxVal2=float(distanceToSwimMaxVal2),
+                            distanceToPlatMaxVal2=float(distanceToPlatMaxVal2), corridorAverageMinVal=float(corridorAverageMinVal), directedSearchMaxDistance=float(directedSearchMaxDistance), focalMinDistance=float(focalMinDistance), focalMaxDistance=float(focalMaxDistance), focalMinDistance2=float(focalMinDistance2), focalMaxDistance2=float(focalMaxDistance2), corridoripeMaxVal=float(corridoripeMaxVal),
+                            annulusCounterMaxVal=float(annulusCounterMaxVal), quadrantTotalMaxVal=int(quadrantTotalMaxVal), chainingMaxCoverage=float(chainingMaxCoverage), percentTraversedMaxVal=float(percentTraversedMaxVal),
+                            percentTraversedMinVal=float(percentTraversedMinVal), distanceToCentreMaxVal=float(distanceToCentreMaxVal), thigmoMinDistance = float(thigmoMinDistance), fullThigmoMinVal=float(fullThigmoMinVal), smallThigmoMinVal=float(smallThigmoMinVal), ipeIndirectMaxVal=float(ipeIndirectMaxVal), percentTraversedRandomMaxVal=float(percentTraversedRandomMaxVal), headingIndirectMaxVal=float(headingIndirectMaxVal),
+                            useDirect=useDirectPathV, useFocal=useFocalSearchV, useDirected=useDirectedSearchV, useIndirect=useIndirectV, useFocal2=useFocalSearchV2, useChaining=useChainingV, useScanning=useScanningV, useRandom=useRandomV, useThigmogaxis=useThigmoV)
         except:
             params = defaultParams
-            ipeMaxVal = params.ipeMaxVal
-            headingMaxVal = params.headingMaxVal
-            distanceToSwimMaxVal = params.distanceToSwimMaxVal
-            distanceToPlatMaxVal = params.distanceToPlatMaxVal
-            corridorAverageMinVal = params.corridorAverageMinVal
-            corridoripeMaxVal = params.corridoripeMaxVal
-            annulusCounterMaxVal = params.annulusCounterMaxVal
-            quadrantTotalMaxVal = params.quadrantTotalMaxVal
-            percentTraversedMaxVal = params.percentTraversedMaxVal
-            percentTraversedMinVal = params.percentTraversedMinVal
-            distanceToCentreMaxVal = params.distanceToCentreMaxVal
-            innerWallMaxVal = params.innerWallMaxVal
-            outerWallMaxVal = params.outerWallMaxVal
-            ipeIndirectMaxVal = params.ipeIndirectMaxVal
-            percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
-            directedSearchMaxDistance = params.directedSearchMaxDistance
-            focalMinDistance = params.focalMinDistance
-            focalMaxDistance = params.focalMaxDistance
-            chainingMaxCoverage = params.chainingMaxCoverage
-            thigmoMinDistance = params.thigmoMinDistance
-            headingIndirectMaxVal = params.headingIndirectMaxVal
 
-            self.useDirectPath.set(True)
-            self.useFocalSearch.set(True)
-            self.useDirectedSearch.set(True)
-            self.useScanning.set(True)
-            self.useChaining.set(True)
-            self.useRandom.set(True)
-            self.useIndirect.set(True)
-            self.useThigmo.set(True)
-
-
-
-        self.jslsMaxCustom.set(ipeMaxVal)
-        self.headingErrorCustom.set(headingMaxVal)
-        self.distanceToSwimCustom.set(distanceToSwimMaxVal * 100)
-        self.distanceToPlatCustom.set(distanceToPlatMaxVal * 100)
-        self.corridorAverageCustom.set(corridorAverageMinVal * 100)
-        self.corridorJslsCustom.set(corridoripeMaxVal)
-        self.annulusCustom.set(annulusCounterMaxVal * 100)
-        self.quadrantTotalCustom.set(quadrantTotalMaxVal)
-        self.percentTraversedCustom.set(percentTraversedMaxVal)
-        self.percentTraversedMinCustom.set(percentTraversedMinVal)
-        self.distanceToCentreCustom.set(distanceToCentreMaxVal * 100)
-        self.smallThigmoCustom.set(innerWallMaxVal * 100)
-        self.fullThigmoCustom.set(outerWallMaxVal * 100)
-        self.jslsIndirectCustom.set(ipeIndirectMaxVal)
-        self.percentTraversedRandomCustom.set(percentTraversedRandomMaxVal)
-        self.directedSearchMaxDistanceCustom.set(directedSearchMaxDistance)
-        self.focalMinDistanceCustom.set(focalMinDistance)
-        self.focalMaxDistanceCustom.set(focalMaxDistance)
-        self.chainingMaxCoverageCustom.set(chainingMaxCoverage)
-        self.thigmoMinDistanceCustom.set(thigmoMinDistance)
-        self.headingIndirectCustom.set(headingIndirectMaxVal)
+        self.jslsMaxCustom.set(params.ipeMaxVal)
+        self.headingErrorCustom.set(params.headingMaxVal)
+        self.distanceToSwimCustom.set(params.distanceToSwimMaxVal)
+        self.distanceToPlatCustom.set(params.distanceToPlatMaxVal)
+        self.distanceToSwimCustom2.set(params.distanceToSwimMaxVal2)
+        self.distanceToPlatCustom2.set(params.distanceToPlatMaxVal2)
+        self.corridorAverageCustom.set(params.corridorAverageMinVal)
+        self.corridorJslsCustom.set(params.corridoripeMaxVal)
+        self.annulusCustom.set(params.annulusCounterMaxVal)
+        self.quadrantTotalCustom.set(params.quadrantTotalMaxVal)
+        self.percentTraversedCustom.set(params.percentTraversedMaxVal)
+        self.percentTraversedMinCustom.set(params.percentTraversedMinVal)
+        self.distanceToCentreCustom.set(params.distanceToCentreMaxVal)
+        self.smallThigmoCustom.set(params.smallThigmoMinVal)
+        self.fullThigmoCustom.set(params.fullThigmoMinVal)
+        self.jslsIndirectCustom.set(params.ipeIndirectMaxVal)
+        self.percentTraversedRandomCustom.set(params.percentTraversedRandomMaxVal)
+        self.directedSearchMaxDistanceCustom.set(params.directedSearchMaxDistance)
+        self.focalMinDistanceCustom.set(params.focalMinDistance)
+        self.focalMaxDistanceCustom.set(params.focalMaxDistance)
+        self.focalMinDistanceCustom2.set(params.focalMinDistance2)
+        self.focalMaxDistanceCustom2.set(params.focalMaxDistance2)
+        self.chainingMaxCoverageCustom.set(params.chainingMaxCoverage)
+        self.thigmoMinDistanceCustom.set(params.thigmoMinDistance)
+        self.headingIndirectCustom.set(params.headingIndirectMaxVal)
+        self.useDirectPath.set(params.useDirect)
+        self.useFocalSearch.set(params.useFocal)
+        self.useDirectedSearch.set(params.useDirected)
+        self.useIndirect.set(params.useIndirect)
+        self.useFocalSearch2.set(params.useFocal2)
+        self.useChaining.set(params.useChaining)
+        self.useScanning.set(params.useScanning)
+        self.useRandom.set(params.useRandom)
+        self.useThigmo.set(params.useThigmotaxis)
         # all of the above is the same as in snyder, plus the creation of variables to hold values from the custom menu
 
         self.top = Toplevel(root)  # we set this to be the top
@@ -942,6 +923,41 @@ class mainClass:
 
         rowCount+=1
 
+        useFocalSearchL2 = Label(self.top, text="Semi-focal Search: ", bg="white")
+        useFocalSearchL2.grid(row=rowCount, column=0, sticky=E)
+        useFocalSearchC2 = Checkbutton(self.top, variable=self.useFocalSearch2, bg="white")
+        useFocalSearchC2.grid(row=rowCount, column=1)
+
+        rowCount+=1
+
+        distanceToSwimCustomL2 = Label(self.top, text="Distance to swim path centroid [maximum, % of radius]: ", bg="white")
+        distanceToSwimCustomL2.grid(row=rowCount, column=0, sticky=E)
+        distanceToSwimCustomE2 = Entry(self.top, textvariable=self.distanceToSwimCustom2)
+        distanceToSwimCustomE2.grid(row=rowCount, column=1)
+
+        rowCount+=1
+
+        distanceToPlatCustomL2 = Label(self.top, text="Distance to goal [maximum, % of radius]: ", bg="white")
+        distanceToPlatCustomL2.grid(row=rowCount, column=0, sticky=E)
+        distanceToPlatCustomE2 = Entry(self.top, textvariable=self.distanceToPlatCustom2)
+        distanceToPlatCustomE2.grid(row=rowCount, column=1)
+
+        rowCount+=1
+
+        focalMinDistanceCustomL2 = Label(self.top, text="Distance covered (minimum, cm): ", bg="white")
+        focalMinDistanceCustomL2.grid(row=rowCount, column=0, sticky=E)
+        focalMinDistanceCustomE2 = Entry(self.top, textvariable=self.focalMinDistanceCustom2)
+        focalMinDistanceCustomE2.grid(row=rowCount, column=1)
+
+        rowCount+=1
+
+        focalMaxDistanceCustomL2 = Label(self.top, text="Distance covered (maximum, cm): ", bg="white")
+        focalMaxDistanceCustomL2.grid(row=rowCount, column=0, sticky=E)
+        focalMaxDistanceCustomE2 = Entry(self.top, textvariable=self.focalMaxDistanceCustom2)
+        focalMaxDistanceCustomE2.grid(row=rowCount, column=1)
+
+        rowCount+=1
+
         useChainingL = Label(self.top, text="Chaining: ", bg="white")
         useChainingL.grid(row=rowCount, column=0, sticky=E)
         useChainingC = Checkbutton(self.top, variable=self.useChaining, bg="white")
@@ -1048,63 +1064,17 @@ class mainClass:
 
     def saveCuston(self):  # save the custom values
         logging.debug("Saving custom parameters")
-        global useDirectPath
-        global useFocalSearch
-        global useDirectedSearch
-        global useScanning
-        global useChaining
-        global useRandom
-        global useIndirect
-        global useThigmo
         global params
+        params = Parameters(name="Custom", ipeMaxVal=float(self.jslsMaxCustom.get()), headingMaxVal=float(self.headingErrorCustom.get()), distanceToSwimMaxVal=float(self.distanceToSwimCustom.get()),
+                            distanceToPlatMaxVal=float(self.distanceToPlatCustom.get()), distanceToSwimMaxVal2=float(self.distanceToSwimCustom2.get()),
+                            distanceToPlatMaxVal2=float(self.distanceToPlatCustom2.get()), corridorAverageMinVal=float(self.corridorAverageCustom.get()), directedSearchMaxDistance=float(self.directedSearchMaxDistanceCustom.get()), focalMinDistance=float(self.focalMinDistanceCustom.get()), focalMaxDistance=float(self.focalMaxDistanceCustom.get()), focalMinDistance2=float(self.focalMinDistanceCustom2.get()), focalMaxDistance2=float(self.focalMaxDistanceCustom2.get()), corridoripeMaxVal=float(self.corridorJslsCustom.get()),
+                            annulusCounterMaxVal=float(self.annulusCustom.get()), quadrantTotalMaxVal=int(self.quadrantTotalCustom.get()), chainingMaxCoverage=float(self.chainingMaxCoverageCustom.get()), percentTraversedMaxVal=float(self.percentTraversedCustom.get()),
+                            percentTraversedMinVal=float(self.percentTraversedMinCustom.get()), distanceToCentreMaxVal=float(self.distanceToCentreCustom.get()), thigmoMinDistance = float(self.thigmoMinDistanceCustom.get()), fullThigmoMinVal=float(self.fullThigmoCustom.get()), smallThigmoMinVal=float(self.smallThigmoCustom.get()), ipeIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get()), headingIndirectMaxVal=float(self.headingIndirectCustom.get()),
+                            useDirect=self.useDirectPath.get(), useFocal=self.useFocalSearch.get(), useDirected=self.useDirectedSearch.get(), useIndirect=self.useIndirect.get(), useFocal2=self.useFocalSearch2.get(), useChaining=self.useChaining.get(), useScanning=self.useScanning.get(), useRandom=self.useRandom.get(), useThigmogaxis=self.useThigmo.get())
 
-        global useDirectPathV
-        global useFocalSearchV
-        global useDirectedSearchV
-        global useScanningV
-        global useChainingV
-        global useRandomV
-        global useIndirectV
-        global useThigmoV
-
-        ipeMaxVal = float(self.jslsMaxCustom.get())
-        headingMaxVal = float(self.headingErrorCustom.get())
-        distanceToSwimMaxVal = float(self.distanceToSwimCustom.get())/100
-        distanceToPlatMaxVal = float(self.distanceToPlatCustom.get())/100
-        corridorAverageMinVal = float(self.corridorAverageCustom.get()) / 100
-        corridoripeMaxVal = float(self.corridorJslsCustom.get())
-        annulusCounterMaxVal = float(self.annulusCustom.get())/100
-        quadrantTotalMaxVal = float(self.quadrantTotalCustom.get())
-        percentTraversedMaxVal = float(self.percentTraversedCustom.get())
-        percentTraversedMinVal = float(self.percentTraversedMinCustom.get())
-        distanceToCentreMaxVal = float(self.distanceToCentreCustom.get())/100
-        smallThigmoMinVal = float(self.smallThigmoCustom.get()) / 100
-        fullThigmoMinVal = float(self.fullThigmoCustom.get()) / 100
-        ipeIndirectMaxVal = float(self.jslsIndirectCustom.get())
-        percentTraversedRandomMaxVal = float(self.percentTraversedRandomCustom.get())
-        directedSearchMaxDistance = float(self.directedSearchMaxDistanceCustom.get())
-        focalMinDistance = float(self.focalMinDistanceCustom.get())
-        focalMaxDistance = float(self.focalMaxDistanceCustom.get())
-        chainingMaxCoverage = float(self.chainingMaxCoverageCustom.get())
-        thigmoMinDistance = float(self.thigmoMinDistanceCustom.get())
-        headingIndirectMaxVal = float(self.headingIndirectCustom.get())
-
-        params = Parameters(name="Custom", ipeMaxVal=float(self.jslsMaxCustom.get()), headingMaxVal=float(self.headingErrorCustom.get()), distanceToSwimMaxVal=float(self.distanceToSwimCustom.get())/100,
-                            distanceToPlatMaxVal=float(self.distanceToPlatCustom.get())/100, corridorAverageMinVal=float(self.corridorAverageCustom.get()) / 100, directedSearchMaxDistance=float(self.directedSearchMaxDistanceCustom.get()), focalMinDistance=float(self.focalMinDistanceCustom.get()), focalMaxDistance=float(self.focalMaxDistanceCustom.get()), corridoripeMaxVal=float(self.corridorJslsCustom.get()),
-                            annulusCounterMaxVal=float(self.annulusCustom.get())/100, quadrantTotalMaxVal=float(self.quadrantTotalCustom.get()), chainingMaxCoverage=float(self.chainingMaxCoverageCustom.get()), percentTraversedMaxVal=float(self.percentTraversedCustom.get()),
-                            percentTraversedMinVal=float(self.percentTraversedMinCustom.get()), distanceToCentreMaxVal=float(self.distanceToCentreCustom.get())/100, thigmoMinDistance = float(self.thigmoMinDistanceCustom.get()), fullThigmoMinVal=float(self.fullThigmoCustom.get()) / 100, smallThigmoMinVal=float(self.smallThigmoCustom.get()) / 100, ipeIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get()), headingIndirectMaxVal=float(self.headingIndirectCustom.get()))
-
-        useDirectPathV = self.useDirectPath.get()
-        useFocalSearchV = self.useFocalSearch.get()
-        useDirectedSearchV = self.useDirectedSearch.get()
-        useScanningV = self.useScanning.get()
-        useChainingV = self.useChaining.get()
-        useRandomV = self.useRandom.get()
-        useIndirectV = self.useIndirect.get()
-        useThigmoV = self.useThigmo.get()
         try:
             with open('customobjs.pickle', 'wb') as f:
-                pickle.dump([ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, smallThigmoMinVal, fullThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
+                pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.distanceToSwimMaxVal2, params.distanceToPlatMaxVal2, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.focalMinDistance2, params.focalMaxDistance2, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.smallThigmoMinVal, params.fullThigmoMinVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, params.headingIndirectMaxVal, params.useDirect, params.useFocal, params.useDirected, params.useIndirect, params.useFocal2, params.useChaining, params.useScanning, params.useRandom, params.useThigmotaxis], f)
         except:
             pass
         try:
@@ -1118,17 +1088,9 @@ class mainClass:
         if result == 'yes':
             logging.debug("Resetting custom parameters")
             params = defaultParams
-            useDirectPathV = True
-            useFocalSearchV = True
-            useDirectedSearchV = True
-            useScanningV = True
-            useChainingV = True
-            useRandomV = True
-            useIndirectV = True
-            useThigmoV = True
             try:
                 with open('customobjs.pickle', 'wb') as f:
-                    pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.smallThigmoMinVal, params.fullThigmoMinVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, params.headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useScanningV, useChainingV, useRandomV, useIndirectV, useThigmoV], f)
+                    pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.distanceToSwimMaxVal2, params.distanceToPlatMaxVal2, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.focalMinDistance2, params.focalMaxDistance2, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.smallThigmoMinVal, params.fullThigmoMinVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, params.headingIndirectMaxVal, params.useDirect, params.useFocal, params.useDirected, params.useIndirect, params.useFocal2, params.useChaining, params.useScanning, params.useRandom, params.useThigmotaxis], f)
             except:
                 pass
             try:
@@ -1213,23 +1175,26 @@ class mainClass:
         self.spatialRadio = Radiobutton(self.top2, text="(4) Indirect Search", variable=searchStrategyStringVar,
                                         value="Indirect Search", indicatoron=0, width=15, bg="white")
         self.spatialRadio.grid(row=6, column=0, columnspan = 7, pady=3)
-        self.chainingRadio = Radiobutton(self.top2, text="(5) Chaining", variable=searchStrategyStringVar, value="Chaining",
+        self.focalRadio2 = Radiobutton(self.top2, text="(5) Semi-focal Search", variable=searchStrategyStringVar, value="Semi-focal Search",
+                                      indicatoron=0, width=15, bg="white")
+        self.focalRadio2.grid(row=7, column=0, columnspan = 7, pady=3)
+        self.chainingRadio = Radiobutton(self.top2, text="(6) Chaining", variable=searchStrategyStringVar, value="Chaining",
                                          indicatoron=0, width=15, bg="white")
-        self.chainingRadio.grid(row=7, column=0, columnspan = 7, pady=3)
-        self.scanningRadio = Radiobutton(self.top2, text="(6) Scanning", variable=searchStrategyStringVar, value="Scanning",
+        self.chainingRadio.grid(row=8, column=0, columnspan = 7, pady=3)
+        self.scanningRadio = Radiobutton(self.top2, text="(7) Scanning", variable=searchStrategyStringVar, value="Scanning",
                                          indicatoron=0, width=15, bg="white")
-        self.scanningRadio.grid(row=8, column=0, columnspan = 7, pady=3)
-        self.randomRadio = Radiobutton(self.top2, text="(7) Random Search", variable=searchStrategyStringVar, value="Random Search",
+        self.scanningRadio.grid(row=9, column=0, columnspan = 7, pady=3)
+        self.randomRadio = Radiobutton(self.top2, text="(8) Random Search", variable=searchStrategyStringVar, value="Random Search",
                                        indicatoron=0, width=15, bg="white")
-        self.randomRadio.grid(row=9, column=0, columnspan = 7, pady=3)
-        self.thigmoRadio = Radiobutton(self.top2, text="(8) Thigmotaxis", variable=searchStrategyStringVar, value="Thigmotaxis",
+        self.randomRadio.grid(row=10, column=0, columnspan = 7, pady=3)
+        self.thigmoRadio = Radiobutton(self.top2, text="(9) Thigmotaxis", variable=searchStrategyStringVar, value="Thigmotaxis",
                                        indicatoron=0, width=15, bg="white")
-        self.thigmoRadio.grid(row=10, column=0, columnspan=7, pady=3)
-        self.notRecognizedRadio = Radiobutton(self.top2, text="(9) Not Recognized", variable=searchStrategyStringVar, value="Not Recognized",
+        self.thigmoRadio.grid(row=11, column=0, columnspan=7, pady=3)
+        self.notRecognizedRadio = Radiobutton(self.top2, text="(0) Not Recognized", variable=searchStrategyStringVar, value="Not Recognized",
                                               indicatoron=0, width=15, bg="white")
-        self.notRecognizedRadio.grid(row=11, column=0, columnspan = 7, pady=3)
+        self.notRecognizedRadio.grid(row=12, column=0, columnspan = 7, pady=3)
 
-        Button(self.top2, text="(Return) Save", command=self.saveStrat, fg="black", bg="white", width=15).grid(row=12,
+        Button(self.top2, text="(Return) Save", command=self.saveStrat, fg="black", bg="white", width=15).grid(row=13,
                                                                                                                column=0,
                                                                                                                columnspan=7,
                                                                                                                pady=5)  # save button not mac
@@ -1243,8 +1208,7 @@ class mainClass:
         self.top2.bind('7', self.select7)
         self.top2.bind('8', self.select8)
         self.top2.bind('9', self.select9)
-
-
+        self.top2.bind('0', self.select0)
 
         self.top2.bind('<Return>', self.enterSave)
 
@@ -1931,6 +1895,8 @@ class mainClass:
         headingMaxVal = params.headingMaxVal
         distanceToSwimMaxVal = params.distanceToSwimMaxVal
         distanceToPlatMaxVal = params.distanceToPlatMaxVal
+        distanceToSwimMaxVal2 = params.distanceToSwimMaxVal2
+        distanceToPlatMaxVal2 = params.distanceToPlatMaxVal2
         corridorAverageMinVal = params.corridorAverageMinVal
         corridoripeMaxVal = params.corridoripeMaxVal
         annulusCounterMaxVal = params.annulusCounterMaxVal
@@ -1944,6 +1910,8 @@ class mainClass:
         percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
         focalMinDistance = params.focalMinDistance
         focalMaxDistance = params.focalMaxDistance
+        focalMinDistance2 = params.focalMinDistance2
+        focalMaxDistance2 = params.focalMaxDistance2
         chainingMaxCoverage = params.chainingMaxCoverage
         thigmoMinDistance = params.thigmoMinDistance
         directedSearchMaxDistance = params.directedSearchMaxDistance
@@ -2110,48 +2078,52 @@ class mainClass:
 
             strategyType = ""
             strategyManual = ""
-            print(fullThigmoMinVal, smallThigmoMinVal, fullThigmoCounter/i, smallThigmoCounter/i)
+            # print(fullThigmoMinVal, smallThigmoMinVal, fullThigmoCounter/i, smallThigmoCounter/i)
             # DIRECT SWIM
-            if ipe <= ipeMaxVal and averageHeadingError <= headingMaxVal and useDirectPathV:  # direct path
+            if ipe <= params.ipeMaxVal and averageHeadingError <= params.headingMaxVal and useDirectPathV:  # direct path
                 directPathCount += 1.0
                 score = 3
                 strategyType = "Direct Path"
             # FOCAL SEARCH
             elif averageDistanceToSwimPathCentroid < (
-                    mazeRadius * distanceToSwimMaxVal) and distanceAverage < (
-                    distanceToPlatMaxVal * mazeRadius) and totalDistance < focalMaxDistance and totalDistance > focalMinDistance and useFocalSearchV:  # Focal Search
+                    mazeRadius * params.distanceToSwimMaxVal/100) and distanceAverage < (
+                    params.distanceToPlatMaxVal/100 * mazeRadius) and totalDistance < params.focalMaxDistance and totalDistance > params.focalMinDistance and useFocalSearchV:  # Focal Search
                 focalSearchCount += 1.0
                 score = 2
                 strategyType = "Focal Search"
             # DIRECTED SEARCH
-            elif corridorAverage >= corridorAverageMinVal and ipe <= corridoripeMaxVal and totalDistance < directedSearchMaxDistance and useDirectedSearchV:  # directed search
+            elif corridorAverage >= params.corridorAverageMinVal/100 and ipe <= params.corridoripeMaxVal and totalDistance < params.directedSearchMaxDistance and useDirectedSearchV:  # directed search
                 directSearchCount += 1.0
                 score = 2
                 strategyType = "Directed Search"
             # Indirect Search
-            elif ipe < ipeIndirectMaxVal and averageHeadingError < headingIndirectMaxVal and useIndirectV:  # Near miss
+            elif ipe < params.ipeIndirectMaxVal and averageHeadingError < params.headingIndirectMaxVal and useIndirectV:  # Near miss
                 strategyType = "Indirect Search"
                 score = 2
                 indirectSearchCount += 1.0
+            elif averageDistanceToSwimPathCentroid < (mazeRadius * params.distanceToSwimMaxVal2/100) and distanceAverage < (params.distanceToPlatMaxVal2/100 * mazeRadius) and totalDistance < params.focalMaxDistance2 and totalDistance > params.focalMinDistance2 and useFocalSearchV2:  # Focal Search
+                focalSearch2Count += 1.0
+                score = 2
+                strategyType = "Semi-focal Search"
             # CHAINING
             elif float(
-                    annulusCounter / i) > annulusCounterMaxVal and quadrantTotal >= quadrantTotalMaxVal and percentTraversed < chainingMaxCoverage and useChainingV:  # or 4 chaining
+                    annulusCounter / i) > params.annulusCounterMaxVal/100 and quadrantTotal >= params.quadrantTotalMaxVal and percentTraversed < params.chainingMaxCoverage and useChainingV:  # or 4 chaining
                 chainingCount += 1.0
                 score = 1
                 strategyType = "Chaining"
             # SCANNING
-            elif percentTraversedMinVal <= percentTraversed and percentTraversedMaxVal > percentTraversed and averageDistanceToCentre <= (
-                    distanceToCentreMaxVal * mazeRadius) and useScanningV:  # scanning
+            elif params.percentTraversedMinVal <= percentTraversed and params.percentTraversedMaxVal > percentTraversed and averageDistanceToCentre <= (
+                    params.distanceToCentreMaxVal/100 * mazeRadius) and useScanningV:  # scanning
                 scanningCount += 1.0
                 score = 1
                 strategyType = "Scanning"
             # THIGMOTAXIS
-            elif fullThigmoCounter/i >= fullThigmoMinVal and smallThigmoCounter/i >= smallThigmoMinVal and totalDistance > thigmoMinDistance and useThigmoV:  # thigmotaxis
+            elif fullThigmoCounter/i >= params.fullThigmoMinVal/100 and smallThigmoCounter/i >= params.smallThigmoMinVal/100 and totalDistance > params.thigmoMinDistance and useThigmoV:  # thigmotaxis
                 thigmotaxisCount += 1.0
                 score = 0
                 strategyType = "Thigmotaxis"
             # RANDOM SEARCH
-            elif percentTraversed >= percentTraversedRandomMaxVal and useRandomV:  # random search
+            elif percentTraversed >= params.percentTraversedRandomMaxVal and useRandomV:  # random search
                 randomCount += 1.0
                 score = 0
                 strategyType = "Random Search"
@@ -2211,7 +2183,7 @@ class mainClass:
 
             f.flush()
 
-        print("Direct Path: ", directPathCount, "| Directed Search: ", directSearchCount, "| Focal Search: ", focalSearchCount, "| Indirect Search: ", indirectSearchCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ", randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
+        print("Direct Path: ", directPathCount, "| Directed Search: ", directSearchCount, "| Focal Search: ", focalSearchCount, "| Indirect Search: ", indirectSearchCount, "| Semi-focal Search: ", focalSearch2Count, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ", randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
         if sys.platform.startswith('darwin'):
             subprocess.call(('open', currentOutputFile))
         elif os.name == 'nt': # For Windows
