@@ -94,46 +94,17 @@ probeCutVar = math.inf #stop probe trials at X seconds, inf = no cutoff
 
 defaultParams = Parameters(name="Default", ipeMaxVal=125, headingMaxVal=40, distanceToSwimMaxVal=30,
                            distanceToPlatMaxVal=30, distanceToSwimMaxVal2=50, distanceToPlatMaxVal2=50, corridorAverageMinVal=70, directedSearchMaxDistance=400,
-                           focalMinDistance=100, focalMaxDistance=400, focalMinDistance2=0, focalMaxDistance2=500, corridoripeMaxVal=1500,
+                           focalMinDistance=100, focalMaxDistance=400, semiFocalMinDistance=0, semiFocalMaxDistance=500, corridoripeMaxVal=1500,
                            annulusCounterMaxVal=90, quadrantTotalMaxVal=4, chainingMaxCoverage=40, percentTraversedMaxVal=20,
                            percentTraversedMinVal=5, distanceToCentreMaxVal=60, thigmoMinDistance=400, fullThigmoMinVal=65,
                            smallThigmoMinVal=35, ipeIndirectMaxVal=300, percentTraversedRandomMaxVal=10, headingIndirectMaxVal=70,
                            useDirect=True, useFocal=True, useDirected=True, useIndirect=True,
-                           useFocal2=False, useChaining=True, useScanning=True, useRandom=True, useThigmogaxis=True)
+                           useSemiFocal=False, useChaining=True, useScanning=True, useRandom=True, useThigmogaxis=True)
 
 global params
 params = defaultParams
-ipeMaxVal = params.ipeMaxVal
-headingMaxVal = params.headingMaxVal
-distanceToSwimMaxVal = params.distanceToSwimMaxVal
-distanceToPlatMaxVal = params.distanceToPlatMaxVal
-corridorAverageMinVal = params.corridorAverageMinVal
-corridoripeMaxVal = params.corridoripeMaxVal
-annulusCounterMaxVal = params.annulusCounterMaxVal
-quadrantTotalMaxVal = params.quadrantTotalMaxVal
-percentTraversedMaxVal = params.percentTraversedMaxVal
-percentTraversedMinVal = params.percentTraversedMinVal
-distanceToCentreMaxVal = params.distanceToCentreMaxVal
-smallThigmoMinVal = params.smallThigmoMinVal
-fullThigmoMinVal = params.fullThigmoMinVal
-ipeIndirectMaxVal = params.ipeIndirectMaxVal
-percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
-directedSearchMaxDistance = params.directedSearchMaxDistance
-focalMinDistance = params.focalMinDistance
-focalMaxDistance = params.focalMaxDistance
-chainingMaxCoverage = params.chainingMaxCoverage
-thigmoMinDistanceCustom = params.thigmoMinDistance
-headingIndirectMaxVal = params.headingIndirectMaxVal
 
 customFlag = False
-useDirectPathV = True
-useFocalSearchV = True
-useDirectedSearchV = True
-useScanningV = True
-useChainingV = True
-useRandomV = True
-useIndirectV = True
-useThigmoV = True
 
 root = Tk()  # set up the root
 theStatus = StringVar()  # create the status bar text
@@ -244,7 +215,6 @@ class mainClass:
 
         softwareStringVar = StringVar()
         softwareStringVar.set("ethovision")
-
 
         if _platform == "darwin":
             accelF = "CMD+F"
@@ -429,7 +399,6 @@ class mainClass:
         self.saveDirectory.bind("<Enter>", partial(self.on_enter, "The csv file to store the results"))
         self.saveDirectory.bind("<Leave>", self.on_leave)
 
-
         global outputFile  # allow outputFile to be accessed from anywhere (not secure)
         outputFile = outputFileStringVar.get()  # get the value entered for the ouput file
 
@@ -444,7 +413,6 @@ class mainClass:
         self.scalingTickC.grid(row=rowCount, column=1)
         self.scalingTickL.bind("<Enter>", partial(self.on_enter, "Check if you want to scale the values to fit your maze"))
         self.scalingTickL.bind("<Leave>", self.on_leave)
-
 
         scale = useScaling.get()
         rowCount = rowCount+1
@@ -644,7 +612,6 @@ class mainClass:
             print("Running for ROI: " + roi[0])
             self.mainCalculate(roi[0],roi[1])
 
-
     def otherROI(self):
         logging.debug("Opening ROI menu")
         self.entries = []
@@ -768,11 +735,11 @@ class mainClass:
             with open('customobjs.pickle', 'rb') as f:
                 ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, distanceToSwimMaxVal2, distanceToPlatMaxVal2, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, focalMinDistance2, focalMaxDistance2, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, smallThigmoMinVal, fullThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useIndirectV, useFocalSearchV2, useScanningV, useChainingV, useRandomV, useThigmoV = pickle.load(f)
             params = Parameters(name="Custom", ipeMaxVal=float(ipeMaxVal), headingMaxVal=float(headingMaxVal), distanceToSwimMaxVal=float(distanceToSwimMaxVal),
-                            distanceToPlatMaxVal=float(distanceToPlatMaxVal), distanceToSwimMaxVal2=float(distanceToSwimMaxVal2),
-                            distanceToPlatMaxVal2=float(distanceToPlatMaxVal2), corridorAverageMinVal=float(corridorAverageMinVal), directedSearchMaxDistance=float(directedSearchMaxDistance), focalMinDistance=float(focalMinDistance), focalMaxDistance=float(focalMaxDistance), focalMinDistance2=float(focalMinDistance2), focalMaxDistance2=float(focalMaxDistance2), corridoripeMaxVal=float(corridoripeMaxVal),
-                            annulusCounterMaxVal=float(annulusCounterMaxVal), quadrantTotalMaxVal=int(quadrantTotalMaxVal), chainingMaxCoverage=float(chainingMaxCoverage), percentTraversedMaxVal=float(percentTraversedMaxVal),
-                            percentTraversedMinVal=float(percentTraversedMinVal), distanceToCentreMaxVal=float(distanceToCentreMaxVal), thigmoMinDistance = float(thigmoMinDistance), fullThigmoMinVal=float(fullThigmoMinVal), smallThigmoMinVal=float(smallThigmoMinVal), ipeIndirectMaxVal=float(ipeIndirectMaxVal), percentTraversedRandomMaxVal=float(percentTraversedRandomMaxVal), headingIndirectMaxVal=float(headingIndirectMaxVal),
-                            useDirect=useDirectPathV, useFocal=useFocalSearchV, useDirected=useDirectedSearchV, useIndirect=useIndirectV, useFocal2=useFocalSearchV2, useChaining=useChainingV, useScanning=useScanningV, useRandom=useRandomV, useThigmogaxis=useThigmoV)
+                                distanceToPlatMaxVal=float(distanceToPlatMaxVal), distanceToSwimMaxVal2=float(distanceToSwimMaxVal2),
+                                distanceToPlatMaxVal2=float(distanceToPlatMaxVal2), corridorAverageMinVal=float(corridorAverageMinVal), directedSearchMaxDistance=float(directedSearchMaxDistance), focalMinDistance=float(focalMinDistance), focalMaxDistance=float(focalMaxDistance), semiFocalMinDistance=float(focalMinDistance2), semiFocalMaxDistance=float(focalMaxDistance2), corridoripeMaxVal=float(corridoripeMaxVal),
+                                annulusCounterMaxVal=float(annulusCounterMaxVal), quadrantTotalMaxVal=int(quadrantTotalMaxVal), chainingMaxCoverage=float(chainingMaxCoverage), percentTraversedMaxVal=float(percentTraversedMaxVal),
+                                percentTraversedMinVal=float(percentTraversedMinVal), distanceToCentreMaxVal=float(distanceToCentreMaxVal), thigmoMinDistance = float(thigmoMinDistance), fullThigmoMinVal=float(fullThigmoMinVal), smallThigmoMinVal=float(smallThigmoMinVal), ipeIndirectMaxVal=float(ipeIndirectMaxVal), percentTraversedRandomMaxVal=float(percentTraversedRandomMaxVal), headingIndirectMaxVal=float(headingIndirectMaxVal),
+                                useDirect=useDirectPathV, useFocal=useFocalSearchV, useDirected=useDirectedSearchV, useIndirect=useIndirectV, useSemiFocal=useFocalSearchV2, useChaining=useChainingV, useScanning=useScanningV, useRandom=useRandomV, useThigmogaxis=useThigmoV)
         except:
             params = defaultParams
 
@@ -796,8 +763,8 @@ class mainClass:
         self.directedSearchMaxDistanceCustom.set(params.directedSearchMaxDistance)
         self.focalMinDistanceCustom.set(params.focalMinDistance)
         self.focalMaxDistanceCustom.set(params.focalMaxDistance)
-        self.focalMinDistanceCustom2.set(params.focalMinDistance2)
-        self.focalMaxDistanceCustom2.set(params.focalMaxDistance2)
+        self.focalMinDistanceCustom2.set(params.semiFocalMinDistance)
+        self.focalMaxDistanceCustom2.set(params.semiFocalMaxDistance)
         self.chainingMaxCoverageCustom.set(params.chainingMaxCoverage)
         self.thigmoMinDistanceCustom.set(params.thigmoMinDistance)
         self.headingIndirectCustom.set(params.headingIndirectMaxVal)
@@ -805,7 +772,7 @@ class mainClass:
         self.useFocalSearch.set(params.useFocal)
         self.useDirectedSearch.set(params.useDirected)
         self.useIndirect.set(params.useIndirect)
-        self.useFocalSearch2.set(params.useFocal2)
+        self.useFocalSearch2.set(params.useSemiFocal)
         self.useChaining.set(params.useChaining)
         self.useScanning.set(params.useScanning)
         self.useRandom.set(params.useRandom)
@@ -1067,14 +1034,14 @@ class mainClass:
         global params
         params = Parameters(name="Custom", ipeMaxVal=float(self.jslsMaxCustom.get()), headingMaxVal=float(self.headingErrorCustom.get()), distanceToSwimMaxVal=float(self.distanceToSwimCustom.get()),
                             distanceToPlatMaxVal=float(self.distanceToPlatCustom.get()), distanceToSwimMaxVal2=float(self.distanceToSwimCustom2.get()),
-                            distanceToPlatMaxVal2=float(self.distanceToPlatCustom2.get()), corridorAverageMinVal=float(self.corridorAverageCustom.get()), directedSearchMaxDistance=float(self.directedSearchMaxDistanceCustom.get()), focalMinDistance=float(self.focalMinDistanceCustom.get()), focalMaxDistance=float(self.focalMaxDistanceCustom.get()), focalMinDistance2=float(self.focalMinDistanceCustom2.get()), focalMaxDistance2=float(self.focalMaxDistanceCustom2.get()), corridoripeMaxVal=float(self.corridorJslsCustom.get()),
+                            distanceToPlatMaxVal2=float(self.distanceToPlatCustom2.get()), corridorAverageMinVal=float(self.corridorAverageCustom.get()), directedSearchMaxDistance=float(self.directedSearchMaxDistanceCustom.get()), focalMinDistance=float(self.focalMinDistanceCustom.get()), focalMaxDistance=float(self.focalMaxDistanceCustom.get()), semiFocalMinDistance=float(self.focalMinDistanceCustom2.get()), semiFocalMaxDistance=float(self.focalMaxDistanceCustom2.get()), corridoripeMaxVal=float(self.corridorJslsCustom.get()),
                             annulusCounterMaxVal=float(self.annulusCustom.get()), quadrantTotalMaxVal=int(self.quadrantTotalCustom.get()), chainingMaxCoverage=float(self.chainingMaxCoverageCustom.get()), percentTraversedMaxVal=float(self.percentTraversedCustom.get()),
                             percentTraversedMinVal=float(self.percentTraversedMinCustom.get()), distanceToCentreMaxVal=float(self.distanceToCentreCustom.get()), thigmoMinDistance = float(self.thigmoMinDistanceCustom.get()), fullThigmoMinVal=float(self.fullThigmoCustom.get()), smallThigmoMinVal=float(self.smallThigmoCustom.get()), ipeIndirectMaxVal=float(self.jslsIndirectCustom.get()), percentTraversedRandomMaxVal=float(self.percentTraversedRandomCustom.get()), headingIndirectMaxVal=float(self.headingIndirectCustom.get()),
-                            useDirect=self.useDirectPath.get(), useFocal=self.useFocalSearch.get(), useDirected=self.useDirectedSearch.get(), useIndirect=self.useIndirect.get(), useFocal2=self.useFocalSearch2.get(), useChaining=self.useChaining.get(), useScanning=self.useScanning.get(), useRandom=self.useRandom.get(), useThigmogaxis=self.useThigmo.get())
+                            useDirect=self.useDirectPath.get(), useFocal=self.useFocalSearch.get(), useDirected=self.useDirectedSearch.get(), useIndirect=self.useIndirect.get(), useSemiFocal=self.useFocalSearch2.get(), useChaining=self.useChaining.get(), useScanning=self.useScanning.get(), useRandom=self.useRandom.get(), useThigmogaxis=self.useThigmo.get())
 
         try:
             with open('customobjs.pickle', 'wb') as f:
-                pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.distanceToSwimMaxVal2, params.distanceToPlatMaxVal2, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.focalMinDistance2, params.focalMaxDistance2, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.smallThigmoMinVal, params.fullThigmoMinVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, params.headingIndirectMaxVal, params.useDirect, params.useFocal, params.useDirected, params.useIndirect, params.useFocal2, params.useChaining, params.useScanning, params.useRandom, params.useThigmotaxis], f)
+                pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.distanceToSwimMaxVal2, params.distanceToPlatMaxVal2, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.semiFocalMinDistance, params.semiFocalMaxDistance, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.smallThigmoMinVal, params.fullThigmoMinVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, params.headingIndirectMaxVal, params.useDirect, params.useFocal, params.useDirected, params.useIndirect, params.useSemiFocal, params.useChaining, params.useScanning, params.useRandom, params.useThigmotaxis], f)
         except:
             pass
         try:
@@ -1090,7 +1057,7 @@ class mainClass:
             params = defaultParams
             try:
                 with open('customobjs.pickle', 'wb') as f:
-                    pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.distanceToSwimMaxVal2, params.distanceToPlatMaxVal2, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.focalMinDistance2, params.focalMaxDistance2, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.smallThigmoMinVal, params.fullThigmoMinVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, params.headingIndirectMaxVal, params.useDirect, params.useFocal, params.useDirected, params.useIndirect, params.useFocal2, params.useChaining, params.useScanning, params.useRandom, params.useThigmotaxis], f)
+                    pickle.dump([params.ipeMaxVal, params.headingMaxVal, params.distanceToSwimMaxVal, params.distanceToPlatMaxVal, params.distanceToSwimMaxVal2, params.distanceToPlatMaxVal2, params.corridorAverageMinVal, params.directedSearchMaxDistance, params.focalMinDistance, params.focalMaxDistance, params.semiFocalMinDistance, params.semiFocalMaxDistance, params.corridoripeMaxVal, params.annulusCounterMaxVal, params.quadrantTotalMaxVal, params.chainingMaxCoverage, params.percentTraversedMaxVal, params.percentTraversedMinVal, params.distanceToCentreMaxVal, params.thigmoMinDistance, params.smallThigmoMinVal, params.fullThigmoMinVal, params.ipeIndirectMaxVal, params.percentTraversedRandomMaxVal, params.headingIndirectMaxVal, params.useDirect, params.useFocal, params.useDirected, params.useIndirect, params.useSemiFocal, params.useChaining, params.useScanning, params.useRandom, params.useThigmotaxis], f)
             except:
                 pass
             try:
@@ -1194,10 +1161,7 @@ class mainClass:
                                               indicatoron=0, width=15, bg="white")
         self.notRecognizedRadio.grid(row=12, column=0, columnspan = 7, pady=3)
 
-        Button(self.top2, text="(Return) Save", command=self.saveStrat, fg="black", bg="white", width=15).grid(row=13,
-                                                                                                               column=0,
-                                                                                                               columnspan=7,
-                                                                                                               pady=5)  # save button not mac
+        Button(self.top2, text="(Return) Save", command=self.saveStrat, fg="black", bg="white", width=15).grid(row=13,                                                                                                pady=5)  # save button not mac
 
         self.top2.bind('1', self.select1)
         self.top2.bind('2', self.select2)
@@ -1213,8 +1177,6 @@ class mainClass:
         self.top2.bind('<Return>', self.enterSave)
 
         self.top2.focus_force()  # once built, show the window in front
-
-
 
         searchStrategyV = searchStrategyStringVar.get()  # get the solution
 
@@ -1258,7 +1220,6 @@ class mainClass:
         self.trialValE.pack(side=TOP)
 
         Button(self.top3, text="Generate", command=lambda: self.heatmap(aExperiment), fg="black", bg="white").pack()
-
 
     def heatmap(self, aExperiment): #Generates heatmaps for inputted trial data
         logging.debug("Heatmap Called")
@@ -1343,8 +1304,6 @@ class mainClass:
                         xMax = aDatapoint.getx()
                     if aDatapoint.gety() > yMax:
                         yMax = aDatapoint.gety()
-
-
 
         aFileName = "output/heatmaps/ " + "Day "+ dayValStringVar.get() + " Trial " + trialValStringVar.get() + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the log file for the run
         aTitle = fileDirectory
@@ -1463,7 +1422,6 @@ class mainClass:
         diamFlag = False
         autoParams = []
 
-
         if goalPosVar != "Auto" and goalPosVar != "auto" and goalPosVar != "automatic" and goalPosVar != "Automatic" and goalPosVar != "":  # if we want manual goal
             goalX, goalY = goalPosVar.split(",")
             goalX = float(goalX)
@@ -1492,7 +1450,6 @@ class mainClass:
         else:
             platDiamFlag = True
             autoParams.append("goal diameter")
-
 
         if mazeCentreVar != "Auto" and mazeCentreVar != "auto" and mazeCentreVar != "automatic" and mazeCentreVar != "Automatic" and mazeCentreVar != "":  # manual maze center
             mazeCentreX, mazeCentreY = mazeCentreVar.split(",")
@@ -1571,8 +1528,6 @@ class mainClass:
                         platEstX += lastX
                         platEstY += lastY
 
-
-
             if centreCount < 1:  # we couldnt get the position
                 if centreFlag:
                     logging.error("Unable to determine a centre position. Compatible trials: 0" )
@@ -1634,7 +1589,6 @@ class mainClass:
             mazeRadius = float(mazeDiamVar) / 2
         return (mazeCentreX,mazeCentreY,goalX,goalY,mazeDiamVar,mazeRadius,platEstDiam)
 
-
     def calculateValues(self, theTrial, goalX, goalY, mazeCentreX, mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, fullThigmoZone, smallThigmoZone, scalingFactor, mazeradius, dayNum, goalDiam):
         global mazeCentreVar
         global useEntropyFlag
@@ -1695,7 +1649,6 @@ class mainClass:
         Matrix = [[0 for x in range(0, math.ceil(gridCellSize)+1)] for y in range(0, math.ceil(gridCellSize)+1)]
 
         for aDatapoint in theTrial:  # for each row in our sheet
-
             # if dayNum == 9 or dayNum == 14:
             #     if aDatapoint.gettime() > probeCutVar:
             #         continue
@@ -1703,7 +1656,6 @@ class mainClass:
                 startX = aDatapoint.getx()
                 startY = aDatapoint.gety()
                 startTime = aDatapoint.gettime()
-
 
             # Swim Path centroid
             i += 1.0
@@ -1717,8 +1669,6 @@ class mainClass:
 
             # Average Distance
             currentDistanceFromGoal = math.sqrt((goalX - aX) ** 2 + (goalY - aY) ** 2)*scalingFactor
-
-
 
             # in zones
             distanceCenterToGoal = math.sqrt((mazeCentreX - goalX) ** 2 + (mazeCentreY - goalY) ** 2)*scalingFactor
@@ -1743,12 +1693,10 @@ class mainClass:
 
             a, b = 0, 0
 
-
             Matrix[int(aDatapoint.getx()/gridCellSize)][int(aDatapoint.gety()/gridCellSize)] = 1  # set matrix cells to 1 if we have visited them
 
             if (mazeCentreX - aX) != 0:
                 centerArcTangent = math.degrees(math.atan((mazeCentreY - aY) / (mazeCentreX - aX)))
-
 
             if aDatapoint.getx() >= mazeCentreX and aDatapoint.gety() >= mazeCentreY:
                 quadrantOne = 1
@@ -1774,12 +1722,10 @@ class mainClass:
         except:
             swimPathCentroid = (0, 0)
 
-
         startPoint = np.array([startX,startY])
         goalPoint = np.array([goalX,goalY])
 
         startToPlatVector = goalPoint-startPoint
-
 
         aArcTangent = math.degrees(math.atan((goalY - startY) / (goalX - startX)))
         upperCorridor = aArcTangent + corridorWidth
@@ -1788,6 +1734,7 @@ class mainClass:
         totalHeadingError = 0.0
         initialHeadingError = 0.0
         initialHeadingErrorCount = 0
+
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
             # if dayNum == 9 or dayNum == 14:
             #     if aDatapoint.gettime() > probeCutVar:
@@ -1890,34 +1837,6 @@ class mainClass:
         softwareScalingFactorVar = softwareScalingFactorStringVar.get()
         # basic setup
 
-
-        ipeMaxVal = params.ipeMaxVal
-        headingMaxVal = params.headingMaxVal
-        distanceToSwimMaxVal = params.distanceToSwimMaxVal
-        distanceToPlatMaxVal = params.distanceToPlatMaxVal
-        distanceToSwimMaxVal2 = params.distanceToSwimMaxVal2
-        distanceToPlatMaxVal2 = params.distanceToPlatMaxVal2
-        corridorAverageMinVal = params.corridorAverageMinVal
-        corridoripeMaxVal = params.corridoripeMaxVal
-        annulusCounterMaxVal = params.annulusCounterMaxVal
-        quadrantTotalMaxVal = params.quadrantTotalMaxVal
-        percentTraversedMaxVal = params.percentTraversedMaxVal
-        percentTraversedMinVal = params.percentTraversedMinVal
-        distanceToCentreMaxVal = params.distanceToCentreMaxVal
-        fullThigmoMinVal = params.fullThigmoMinVal
-        smallThigmoMinVal = params.smallThigmoMinVal
-        ipeIndirectMaxVal = params.ipeIndirectMaxVal
-        percentTraversedRandomMaxVal = params.percentTraversedRandomMaxVal
-        focalMinDistance = params.focalMinDistance
-        focalMaxDistance = params.focalMaxDistance
-        focalMinDistance2 = params.focalMinDistance2
-        focalMaxDistance2 = params.focalMaxDistance2
-        chainingMaxCoverage = params.chainingMaxCoverage
-        thigmoMinDistance = params.thigmoMinDistance
-        directedSearchMaxDistance = params.directedSearchMaxDistance
-        headingIndirectMaxVal = params.headingIndirectMaxVal
-
-
         mazeRadius = 0.0
         thigmotaxisZoneSize = 0.0
         corridorWidth = 0.0
@@ -1940,6 +1859,7 @@ class mainClass:
         directPathCount = 0.0
         indirectSearchCount = 0.0
         notRecognizedCount = 0.0
+        semifocalSearchCount = 0.0
         n = 0
         numOfRows = 0
         mazeCentreX, mazeCentreY = mazeCentre
@@ -2002,18 +1922,6 @@ class mainClass:
             animal = aTrial.animal
             if aExperiment.hasAnimalNames:
                 animal = aTrial.animal.replace("*", "")
-                # animal = animal.replace("Jan","1")
-                # animal = animal.replace("Feb","2")
-                # animal = animal.replace("Mar","3")
-                # animal = animal.replace("Apr","4")
-                # animal = animal.replace("May","5")
-                # animal = animal.replace("Jun","6")
-                # animal = animal.replace("Jul","7")
-                # animal = animal.replace("Aug","8")
-                # animal = animal.replace("Sep","9")
-                # animal = animal.replace("Oct","10")
-                # animal = animal.replace("Nov","11")
-                # animal = animal.replace("Dec","12")
             if aExperiment.hasTrialNames:
                 dayNum = aTrial.day
                 trialNum[animal] = aTrial.trial
@@ -2070,7 +1978,6 @@ class mainClass:
             score = 0
             # Analyze the data ----------------------------------------------------------------------------------------------
 
-
             corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, fullThigmoCounter, smallThigmoCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
                 aTrial, goalX, goalY, mazeCentreX,
                 mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, fullThigmoZone,
@@ -2080,50 +1987,50 @@ class mainClass:
             strategyManual = ""
             # print(fullThigmoMinVal, smallThigmoMinVal, fullThigmoCounter/i, smallThigmoCounter/i)
             # DIRECT SWIM
-            if ipe <= params.ipeMaxVal and averageHeadingError <= params.headingMaxVal and useDirectPathV:  # direct path
+            if ipe <= params.ipeMaxVal and averageHeadingError <= params.headingMaxVal and params.useDirect:  # direct path
                 directPathCount += 1.0
                 score = 3
                 strategyType = "Direct Path"
             # FOCAL SEARCH
             elif averageDistanceToSwimPathCentroid < (
                     mazeRadius * params.distanceToSwimMaxVal/100) and distanceAverage < (
-                    params.distanceToPlatMaxVal/100 * mazeRadius) and totalDistance < params.focalMaxDistance and totalDistance > params.focalMinDistance and useFocalSearchV:  # Focal Search
+                    params.distanceToPlatMaxVal/100 * mazeRadius) and totalDistance < params.focalMaxDistance and totalDistance > params.focalMinDistance and params.useFocal:  # Focal Search
                 focalSearchCount += 1.0
                 score = 2
                 strategyType = "Focal Search"
             # DIRECTED SEARCH
-            elif corridorAverage >= params.corridorAverageMinVal/100 and ipe <= params.corridoripeMaxVal and totalDistance < params.directedSearchMaxDistance and useDirectedSearchV:  # directed search
+            elif corridorAverage >= params.corridorAverageMinVal/100 and ipe <= params.corridoripeMaxVal and totalDistance < params.directedSearchMaxDistance and params.useDirected:  # directed search
                 directSearchCount += 1.0
                 score = 2
                 strategyType = "Directed Search"
             # Indirect Search
-            elif ipe < params.ipeIndirectMaxVal and averageHeadingError < params.headingIndirectMaxVal and useIndirectV:  # Near miss
+            elif ipe < params.ipeIndirectMaxVal and averageHeadingError < params.headingIndirectMaxVal and params.useIndirect:  # Near miss
                 strategyType = "Indirect Search"
                 score = 2
                 indirectSearchCount += 1.0
-            elif averageDistanceToSwimPathCentroid < (mazeRadius * params.distanceToSwimMaxVal2/100) and distanceAverage < (params.distanceToPlatMaxVal2/100 * mazeRadius) and totalDistance < params.focalMaxDistance2 and totalDistance > params.focalMinDistance2 and useFocalSearchV2:  # Focal Search
-                focalSearch2Count += 1.0
+            elif averageDistanceToSwimPathCentroid < (mazeRadius * params.distanceToSwimMaxVal2/100) and distanceAverage < (params.distanceToPlatMaxVal2/100 * mazeRadius) and totalDistance < params.focalMaxDistance2 and totalDistance > params.focalMinDistance2 and params.useSemiFocal:  # Semi-Focal Search
+                semifocalSearchCount += 1.0
                 score = 2
                 strategyType = "Semi-focal Search"
             # CHAINING
             elif float(
-                    annulusCounter / i) > params.annulusCounterMaxVal/100 and quadrantTotal >= params.quadrantTotalMaxVal and percentTraversed < params.chainingMaxCoverage and useChainingV:  # or 4 chaining
+                    annulusCounter / i) > params.annulusCounterMaxVal/100 and quadrantTotal >= params.quadrantTotalMaxVal and percentTraversed < params.chainingMaxCoverage and params.useChaining:  # or 4 chaining
                 chainingCount += 1.0
                 score = 1
                 strategyType = "Chaining"
             # SCANNING
             elif params.percentTraversedMinVal <= percentTraversed and params.percentTraversedMaxVal > percentTraversed and averageDistanceToCentre <= (
-                    params.distanceToCentreMaxVal/100 * mazeRadius) and useScanningV:  # scanning
+                    params.distanceToCentreMaxVal/100 * mazeRadius) and params.useScanning:  # scanning
                 scanningCount += 1.0
                 score = 1
                 strategyType = "Scanning"
             # THIGMOTAXIS
-            elif fullThigmoCounter/i >= params.fullThigmoMinVal/100 and smallThigmoCounter/i >= params.smallThigmoMinVal/100 and totalDistance > params.thigmoMinDistance and useThigmoV:  # thigmotaxis
+            elif fullThigmoCounter/i >= params.fullThigmoMinVal/100 and smallThigmoCounter/i >= params.smallThigmoMinVal/100 and totalDistance > params.thigmoMinDistance and params.useThigmotaxis:  # thigmotaxis
                 thigmotaxisCount += 1.0
                 score = 0
                 strategyType = "Thigmotaxis"
             # RANDOM SEARCH
-            elif percentTraversed >= params.percentTraversedRandomMaxVal and useRandomV:  # random search
+            elif percentTraversed >= params.percentTraversedRandomMaxVal and params.useRandom:  # random search
                 randomCount += 1.0
                 score = 0
                 strategyType = "Random Search"
@@ -2183,7 +2090,7 @@ class mainClass:
 
             f.flush()
 
-        print("Direct Path: ", directPathCount, "| Directed Search: ", directSearchCount, "| Focal Search: ", focalSearchCount, "| Indirect Search: ", indirectSearchCount, "| Semi-focal Search: ", focalSearch2Count, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ", randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
+        print("Direct Path: ", directPathCount, "| Directed Search: ", directSearchCount, "| Focal Search: ", focalSearchCount, "| Indirect Search: ", indirectSearchCount, "| Semi-focal Search: ", semifocalSearchCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ", randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
         if sys.platform.startswith('darwin'):
             subprocess.call(('open', currentOutputFile))
         elif os.name == 'nt': # For Windows
