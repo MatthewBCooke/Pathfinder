@@ -2003,12 +2003,13 @@ class mainClass:
                 directSearchCount += 1.0
                 score = 2
                 strategyType = "Directed Search"
-            # Indirect Search
+            # INDIRECT SEARCH
             elif ipe < params.ipeIndirectMaxVal and averageHeadingError < params.headingIndirectMaxVal and params.useIndirect:  # Near miss
                 strategyType = "Indirect Search"
                 score = 2
                 indirectSearchCount += 1.0
-            elif averageDistanceToSwimPathCentroid < (mazeRadius * params.distanceToSwimMaxVal2/100) and distanceAverage < (params.distanceToPlatMaxVal2/100 * mazeRadius) and totalDistance < params.focalMaxDistance2 and totalDistance > params.focalMinDistance2 and params.useSemiFocal:  # Semi-Focal Search
+            # SEMI FOCAL SEARCH
+            elif averageDistanceToSwimPathCentroid < (mazeRadius * params.distanceToSwimMaxVal2/100) and distanceAverage < (params.distanceToPlatMaxVal2/100 * mazeRadius) and totalDistance < params.semiFocalMaxDistance and totalDistance > params.semiFocalMinDistance and params.useSemiFocal:  # Semi-Focal Search
                 semifocalSearchCount += 1.0
                 score = 2
                 strategyType = "Semi-focal Search"

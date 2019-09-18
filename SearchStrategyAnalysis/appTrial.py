@@ -313,7 +313,10 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     elif sheet.cell(row, 0).value.upper() == 'DAY':
                         aTrial.setday(sheet.cell(row, 1).value)
                     elif sheet.cell(row, 0).value.upper() == 'TRIAL':
-                        aTrial.settrial(int(sheet.cell(row, 1).value))
+                        try:
+                            aTrial.settrial(int(sheet.cell(row, 1).value))
+                        except:
+                            pass
 
                 for row in range(headerLines, number_of_rows):  # for each row
                     time = sheet.cell(row, 1).value
