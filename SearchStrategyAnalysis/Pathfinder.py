@@ -605,7 +605,7 @@ class mainClass:
                 pickle.dump([goalPosVar, goalDiamVar, mazeDiamVar, mazeCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar], f)
         except:
             pass
-
+        theStatus.set("Generating Heatmap...")
         self.mainCalculate(goalPosVar,goalDiamVar)
 
         for roi in rois:
@@ -1887,8 +1887,8 @@ class mainClass:
         chainingRadius = float(chainingRadiusVar) * scalingFactor # update the chaining radius
         corridorWidth = (int(corridorWidthVar) / 2) * scalingFactor # update the corridor width
 
-        fullThigmoZone = mazeRadius - math.ceil(thigmotaxisZoneSize / 2)  # update the smaller wall zone
-        smallThigmoZone = mazeRadius - thigmotaxisZoneSize  # and bigger wall zone
+        smallThigmoZone = mazeRadius - math.ceil(thigmotaxisZoneSize / 2)  # update the smaller wall zone
+        fullThigmoZone = mazeRadius - thigmotaxisZoneSize  # and bigger wall zone
 
         theStatus.set('Calculating Search Strategies...')  # update status bar
         self.updateTasks()
