@@ -605,7 +605,7 @@ class mainClass:
                 pickle.dump([goalPosVar, goalDiamVar, mazeDiamVar, mazeCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar], f)
         except:
             pass
-        theStatus.set("Generating Heatmap...")
+        theStatus.set("Loading Files...")
         self.mainCalculate(goalPosVar,goalDiamVar)
 
         for roi in rois:
@@ -1827,6 +1827,18 @@ class mainClass:
         self.updateTasks()
         theStatus.set("Initializing")
 
+        try:
+            with open('customobjs.pickle', 'rb') as f:
+                ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, distanceToSwimMaxVal2, distanceToPlatMaxVal2, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, focalMinDistance2, focalMaxDistance2, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, smallThigmoMinVal, fullThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useIndirectV, useFocalSearchV2, useScanningV, useChainingV, useRandomV, useThigmoV = pickle.load(f)
+            params = Parameters(name="Custom", ipeMaxVal=float(ipeMaxVal), headingMaxVal=float(headingMaxVal), distanceToSwimMaxVal=float(distanceToSwimMaxVal),
+                                distanceToPlatMaxVal=float(distanceToPlatMaxVal), distanceToSwimMaxVal2=float(distanceToSwimMaxVal2),
+                                distanceToPlatMaxVal2=float(distanceToPlatMaxVal2), corridorAverageMinVal=float(corridorAverageMinVal), directedSearchMaxDistance=float(directedSearchMaxDistance), focalMinDistance=float(focalMinDistance), focalMaxDistance=float(focalMaxDistance), semiFocalMinDistance=float(focalMinDistance2), semiFocalMaxDistance=float(focalMaxDistance2), corridoripeMaxVal=float(corridoripeMaxVal),
+                                annulusCounterMaxVal=float(annulusCounterMaxVal), quadrantTotalMaxVal=int(quadrantTotalMaxVal), chainingMaxCoverage=float(chainingMaxCoverage), percentTraversedMaxVal=float(percentTraversedMaxVal),
+                                percentTraversedMinVal=float(percentTraversedMinVal), distanceToCentreMaxVal=float(distanceToCentreMaxVal), thigmoMinDistance = float(thigmoMinDistance), fullThigmoMinVal=float(fullThigmoMinVal), smallThigmoMinVal=float(smallThigmoMinVal), ipeIndirectMaxVal=float(ipeIndirectMaxVal), percentTraversedRandomMaxVal=float(percentTraversedRandomMaxVal), headingIndirectMaxVal=float(headingIndirectMaxVal),
+                                useDirect=useDirectPathV, useFocal=useFocalSearchV, useDirected=useDirectedSearchV, useIndirect=useIndirectV, useSemiFocal=useFocalSearchV2, useChaining=useChainingV, useScanning=useScanningV, useRandom=useRandomV, useThigmogaxis=useThigmoV)
+        except:
+            params = defaultParams
+
         print("Running: " + str(goalPosVar) + " with diamater " + str(goalDiamVar))
 
         mazeDiamVar = mazeDiamStringVar.get()
@@ -1912,7 +1924,7 @@ class mainClass:
         if aExperiment.hasAnimalNames:
             headersToWrite.append("Animal")
 
-        headersToWrite.extend(["Trial Code", "Strategy", "IPE", "Velocity", "Distance covered", "Average distance to goal", "Average heading error", "Percent of maze traversed", "Latency", "Sccore", "Initial heading error", "Entropy", "Distance to swim path centroid", "Average distance to centre of maze", "Percent in angular corridor", "Percent in annulus zone", "Percent in smaller thigmotaxis zone", "Percent in full thigmotaxis zone", "Strategy (manual)"])
+        headersToWrite.extend(["Trial Code", "Strategy", "IPE", "Velocity", "Distance covered", "Average distance to goal", "Average heading error", "Percent of maze traversed", "Latency", "Sccore", "Initial heading error", "Entropy", "Distance to swim path centroid", "Average distance to centre of maze", "Percent in angular corridor", "Percent in annulus zone", "Percent in smaller thigmotaxis zone", "Percent in full thigmotaxis zone", "Strategy (manual)", "File"])
         writer.writerow(headersToWrite) # write to the csv
 
         dayNum = 0
@@ -2086,7 +2098,7 @@ class mainClass:
 
             dataToWrite.extend(
                 [(str(animal) + " " + str(dayNum) + " " + str(trialNum[animal])), strategyType, round(ipe, 2), round(velocity, 2), round(totalDistance, 2), round(distanceAverage, 2),
-                 round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2), score, initialHeadingError, round(entropyResult, 2), round(averageDistanceToSwimPathCentroid,2), round(averageDistanceToCentre,2), round(corridorAverage,2), round(annulusCounter/i, 2), round(smallThigmoCounter/i,2), round(fullThigmoCounter/i,2), str(strategyManual)])
+                 round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2), score, initialHeadingError, round(entropyResult, 2), round(averageDistanceToSwimPathCentroid,2), round(averageDistanceToCentre,2), round(corridorAverage,2), round(annulusCounter/i, 2), round(smallThigmoCounter/i,2), round(fullThigmoCounter/i,2), str(strategyManual), str(aTrial.getfile())])
             writer.writerow(dataToWrite)  # writing to csv file
 
             f.flush()

@@ -39,6 +39,7 @@ class Trial(object):  # an object for our row values
         self.date = None
         self.day = None
         self.trial = None
+        self.file = None
         self.corruptedData = False
 
     def setname(self, name):
@@ -55,6 +56,12 @@ class Trial(object):  # an object for our row values
 
     def setday(self, day):
         self.day = day
+
+    def setfile(self, file):
+        self.file = file
+
+    def getfile(self):
+        return str(self.file)
 
     def markDataAsCorrupted(self):
         self.corruptedData = True
@@ -300,7 +307,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 number_of_rows = sheet.nrows
                 headerLines = int(sheet.cell(0, 1).value)  # gets number of header lines in the spreadsheet
                 aTrial = Trial()
-
+                aTrial.setfile(filename)
                 for row in range(1, headerLines):
                     if sheet.cell(row, 0).value.upper() == 'TRIAL NAME':
                         aTrial.setname(sheet.cell(row, 1).value)
@@ -357,6 +364,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     columns[i].append(v)
 
             aTrial = Trial()
+            aTrial.setfile(filename)
             aTrial.setname(filename.split("/")[-1])
 
             for time, x, y in zip(columns[0][1:], columns[1][1:], columns[2][1:]):
@@ -400,6 +408,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 col3 = columns[2 + i * 3]
 
                 aTrial = Trial()
+                aTrial.setfile(filename)
                 aTrial.setanimal(col1[0])
                 try:
                     aTrial.setdate(datetime.datetime.strptime(col2[0] + " " + col3[0], "%m/%d/%Y %H:%M %p"))
@@ -439,6 +448,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
             reader = csv.reader(f, delimiter=",")
             listReader = list(reader)
             aTrial = Trial()
+            aTrial.setfile(filename)
             aTrial.setname(filename.split("/")[-1])
             columns = defaultdict(list)  # each value in each column is appended to a list
             aIndex = 0
