@@ -1,15 +1,30 @@
 # Module: appTrial.py
 # Holds data structures
 
+import sys
+from sys import platform as _platform
 import csv
 import math
 import logging
 import os
 import fnmatch
 import datetime
+import tkinter
 from collections import defaultdict
 from xlrd import open_workbook
-from tkinter import filedialog
+if sys.version_info<(3,0,0):  # tkinter names for python 2
+    print("Update to Python3 for best results... You may encounter errors")
+    from Tkinter import *
+    import tkMessageBox as messagebox
+    import ttk
+    import tkFileDialog as filedialog
+else:  # tkinter for python 3
+    from tkinter import *
+    from tkinter import messagebox
+    from tkinter import ttk
+    from tkinter import filedialog
+import traceback
+import pandas as pd
 
 class Datapoint(object):
     def __init__(self, time: float, x: float, y: float):
@@ -158,18 +173,101 @@ def openFile():  # opens a dialog to get a single file
     return theFile
 
 
-def defineOwnSoftware():
-    filename = ""
-    file_extension = ""
+global xyt
+xyt = []
+
+
+def defineOwnSoftware(root):
     filename = openFile()
+    file_extension = os.path.splitext(filename)[1]
     if filename == "":
         logging.error("Please select a file")
         print("Please select a file")
         return
     else:
-        print("TODO")
-        pass
-        filename, file_extension = os.path.splitext(filename)
+        # main loop
+        top = Toplevel(root)
+        canvas = Canvas(top, borderwidth=0, width=800, height=600, bg="white")  # we create the canvas
+        frame = Frame(canvas)  # we place a frame in the canvas
+        frame.configure(bg="white")
+        xscrollbar = Scrollbar(top, orient=HORIZONTAL, command=canvas.xview)  # we add a horizontal scroll bar
+        yscrollbar = Scrollbar(top, orient="vertical", command=canvas.yview)  # vertical scroll bar
+        xscrollbar.pack(side=BOTTOM, fill=X)  # we put the horizontal scroll bar on the bottom
+        yscrollbar.pack(side="right", fill="y")  # put on right
+
+        canvas.pack(side="left", fill="both", expand=True)  # we pack in the canvas
+        canvas.create_window((4, 4), window=frame, anchor="nw")  # we create the window for the results
+        canvas.configure(xscrollcommand=xscrollbar.set)
+        canvas.configure(yscrollcommand=yscrollbar.set)  # we set the commands for the scroll bars
+        frame.bind("<Configure>", lambda event, canvas=canvas: canvas.configure(scrollregion=canvas.bbox("all")))
+        top.attributes('-topmost', True)
+
+        # display selected XYT columns using a status bar
+        theStatus = StringVar()
+        theStatus.set("[X-col, Y-col, time col]: ")
+        status = Label(frame, textvariable=theStatus, width=25, height=2, relief=SUNKEN, anchor=W, bg="white")
+        status.grid(row=0, column=0, columnspan=2)
+
+        global xyt
+
+        def okButton():
+            if (len(xyt) == 3):
+                top.attributes('-topmost', False)
+                messagebox.showinfo(None, "X-position column: " + str(xyt[0])
+                                    + "\nY-position column: " + str(xyt[1])
+                                    + "\nTime column: " + str(xyt[2]))
+                top.destroy()
+            else:
+                top.attributes('-topmost', False)
+                messagebox.showinfo(None, "Please select three columns!")
+                top.attributes('-topmost', True)
+
+        def resetButton():
+            global xyt
+            xyt = []
+            theStatus.set("[X-col, Y-col, time col]: ")
+
+        def displayTable(data):
+            r = 0
+            for col in data:
+                c = 0
+                for row in col:
+                    coord = (r, c)
+                    if (r < 100):
+                        cell = Label(frame, width=12, height=1, text=row, borderwidth=2, relief="groove")
+                        cell.grid(row=r + 1, column=c)
+                        cell.bind("<Button-1>", lambda event: getXYT(event))
+                    c += 1
+                r += 1
+
+        # gets column number from clicked column
+        def getXYT(event):
+            info = event.widget.grid_info()
+            coord = (info["row"], info["column"])
+            xyt.append(coord[1])
+            theStatus.set("[X-col, Y-col, time col]: " + str(xyt))
+            print(coord)
+            print(xyt)
+
+        if (file_extension == '.csv'):
+            # display csv as table
+            with open(filename, newline="") as file:
+                data = csv.reader(file)
+                displayTable(data)
+        elif (file_extension == '.xlsx'):
+            #TODO first row (headers) are not displayed
+            data = pd.read_excel(filename)
+            displayTable(data.values)
+
+        okbutton = Button(frame, text="Save", width=12, height=2, command=okButton)
+        okbutton.grid(row=0, column=2)
+        resetbutton = Button(frame, text="Reset", width=12, height=2, command=resetButton)
+        resetbutton.grid(row=0, column=3)
+
+        top.attributes('-topmost', False)
+        messagebox.showinfo(None, "Please select in order: X-position column, Y-position column, time column.")
+        top.attributes('-topmost', True)
+        top.mainloop()
 
 
 

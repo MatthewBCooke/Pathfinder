@@ -1108,7 +1108,7 @@ class mainClass:
 
     def callDefineOwnSoftware(self):
         messagebox.showinfo(None,"Please select a sample input file")
-        defineOwnSoftware()
+        defineOwnSoftware(root)
 
     def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, scalingFactor, name, title, platEstDiam):  # function to graph the data for the not recognized trials
         wallsX = []
