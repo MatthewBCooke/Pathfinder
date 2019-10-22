@@ -485,7 +485,7 @@ class mainClass:
         trunacteFlag = truncate.get()
         rowCount = rowCount+1
         self.calculateButton = Button(self.paramFrame, text="Calculate", fg="black",
-                                      command=self.mainHelper)  # add a button that says calculate
+                                      command=self.mainHelper, state=DISABLED)  # add a button that says calculate
         self.calculateButton.grid(row=rowCount, column=1, columnspan=1)
         self.settingsButton = Button(self.paramFrame, text="Settings", command=self.settings, fg="black")
         self.settingsButton.grid(row=rowCount, column=0, columnspan=1)  # add custom button
@@ -512,6 +512,7 @@ class mainClass:
         fileFlag = 1
         fileDirectory = ""
         theFile = filedialog.askopenfilename()  # look for xlsx and xls files
+        self.calculateButton['state'] = 'normal'
 
     def openDir(self):  # open dialog to get multiple files
         logging.debug("Open Dir...")
