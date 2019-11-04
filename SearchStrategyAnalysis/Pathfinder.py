@@ -272,7 +272,7 @@ class mainClass:
             accelC = "Ctrl+C"
             accelV = "Ctrl+V"
 
-        root.geometry('{}x{}'.format(800, 500))
+        root.geometry('{}x{}'.format(1000, 500))
 
         self.menu = Menu(root)  # create a menu
         root.config(menu=self.menu, bg="white")  # set up the config
@@ -338,7 +338,7 @@ class mainClass:
 
         self.defineSoftware = Button(self.softwareBar, text="Define..", command=self.callDefineOwnSoftware, width=15,
                                      bg="white")
-        self.defineSoftware.grid(row=rowCount, column=4, padx=5, sticky='NW')
+        self.defineSoftware.grid(row=rowCount, column=5, padx=5, sticky='NW')
         self.softwareBar.pack(side=TOP, fill=X, pady=5)
 
         self.autoRadio.bind("<Enter>", partial(self.on_enter, "Click for automatic detection of data-type"))
@@ -549,18 +549,22 @@ class mainClass:
             with open(theFile, newline="") as file:
                 data = csv.reader(file)
                 twoRows = [row for idx, row in enumerate(data) if idx in (0, 1)]
-                if (twoRows[0] == anymaze):
+                if (set(anymaze).issubset(twoRows[0])):
                     softwareStringVar.set("anymaze")
+                    self.calculateButton['state'] = 'normal'
                 if (set(['x', 'y', 't']).issubset(twoRows[1])):
                     softwareStringVar.set("watermaze")
-                if (twoRows[0] == ethovision):
+                    self.calculateButton['state'] = 'normal'
+                if (set(eztrack).issubset(twoRows[0])):
                     softwareStringVar.set("eztrack")
+                    self.calculateButton['state'] = 'normal'
         elif (file_extension == '.xlsx'):
             workbook = open_workbook(theFile)
             sheet = workbook.sheet_by_index(0)
             rowNames = sheet.col_values(0)
             if (set(ethovision).issubset(rowNames)):
                 softwareStringVar.set("ethovision")
+                self.calculateButton['state'] = 'normal'
         else:
             self.callDefineOwnSoftware()
 
@@ -574,7 +578,6 @@ class mainClass:
         fileDirectory = ""
         theFile = filedialog.askopenfilename()  # look for xlsx and xls files
         self.detectSoftwareType()
-        self.calculateButton['state'] = 'normal'
 
     def openDir(self):  # open dialog to get multiple files
         logging.debug("Open Dir...")
@@ -1242,6 +1245,7 @@ class mainClass:
     def callDefineOwnSoftware(self):
         messagebox.showinfo(None, "Please select a sample input file")
         defineOwnSoftware(root)
+        self.calculateButton['state'] = 'normal'
 
     def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, scalingFactor, name, title,
                    platEstDiam):  # function to graph the data for the not recognized trials
