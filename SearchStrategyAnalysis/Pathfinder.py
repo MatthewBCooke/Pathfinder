@@ -257,7 +257,7 @@ class mainClass:
         global softwareScalingFactorStringVar
 
         softwareStringVar = StringVar()
-        softwareStringVar.set("ethovision")
+        softwareStringVar.set("auto")
 
         if _platform == "darwin":
             accelF = "CMD+F"
@@ -316,28 +316,34 @@ class mainClass:
         # ******* Software Type *******
         self.softwareBar = Frame(root)  # add a toolbar to the frame
         self.softwareBar.config(bg="white")
+        self.autoRadio = Radiobutton(self.softwareBar, text="Auto", variable=softwareStringVar,
+                                           value="auto", indicatoron=1, width=15, bg="white")
+        self.autoRadio.grid(row=rowCount, column=0, padx=5, sticky='NW')  # add the radiobuttons for selection
+
         self.ethovisionRadio = Radiobutton(self.softwareBar, text="Ethovision", variable=softwareStringVar,
-                                           value="ethovision",
-                                           indicatoron=1, width=15, bg="white")
-        self.ethovisionRadio.grid(row=rowCount, column=0, padx=5, sticky='NW')  # add the radiobuttons for selection
+                                           value="ethovision", indicatoron=1, width=15, bg="white")
+        self.ethovisionRadio.grid(row=rowCount, column=1, padx=5, sticky='NW')
 
         self.anymazeRadio = Radiobutton(self.softwareBar, text="Anymaze", variable=softwareStringVar,
-                                        value="anymaze",
-                                        indicatoron=1, width=15, bg="white")
-        self.anymazeRadio.grid(row=rowCount, column=1, padx=5, sticky='NW')
+                                        value="anymaze", indicatoron=1, width=15, bg="white")
+        self.anymazeRadio.grid(row=rowCount, column=2, padx=5, sticky='NW')
+
         self.watermazeRadio = Radiobutton(self.softwareBar, text="Watermaze", variable=softwareStringVar,
                                           value="watermaze", indicatoron=1, width=15, bg="white")
-        self.watermazeRadio.grid(row=rowCount, column=2, padx=5, sticky='NW')
+        self.watermazeRadio.grid(row=rowCount, column=3, padx=5, sticky='NW')
+
         self.eztrackRadio = Radiobutton(self.softwareBar, text="ezTrack", variable=softwareStringVar,
                                         value="eztrack", indicatoron=1, width=15, bg="white")
-        self.eztrackRadio.grid(row=rowCount, column=3, padx=5, sticky='NW')
+        self.eztrackRadio.grid(row=rowCount, column=4, padx=5, sticky='NW')
+
         self.defineSoftware = Button(self.softwareBar, text="Define..", command=self.callDefineOwnSoftware, width=15,
                                      bg="white")
         self.defineSoftware.grid(row=rowCount, column=4, padx=5, sticky='NW')
         self.softwareBar.pack(side=TOP, fill=X, pady=5)
 
-        self.ethovisionRadio.bind("<Enter>",
-                                  partial(self.on_enter, "Click if you used Ethovision to generate your data"))
+        self.autoRadio.bind("<Enter>", partial(self.on_enter, "Click for automatic detection of data-type"))
+        self.autoRadio.bind("<Leave>", self.on_leave)
+        self.ethovisionRadio.bind("<Enter>", partial(self.on_enter, "Click if you used Ethovision to generate your data"))
         self.ethovisionRadio.bind("<Leave>", self.on_leave)
         self.anymazeRadio.bind("<Enter>", partial(self.on_enter, "Click if you used Anymaze to generate your data"))
         self.anymazeRadio.bind("<Leave>", self.on_leave)
@@ -534,19 +540,10 @@ class mainClass:
         canvas.configure(scrollregion=canvas.bbox("all"))
 
     def detectSoftwareType(self):
-        anymaze = ['Time', 'Centre posn X', 'Centre posn Y', 'In Quadrant 1', 'In Quadrant 2', 'In Quadrant 3', 'In Quadrant 4',
-                   'In Platform location M1', 'In Platform location M2', 'In Platform Location M3', 'In Platform Location M4',
-                   'In Platform Location I1', 'In Platform Location I2', 'In Platform Location I3', 'In Platform Location I4',
-                   'In Platform Location O1', 'In Platform Location O2', 'In Platform Location O3', 'In Platform Location O4']
+        anymaze = ['Time', 'Centre posn X', 'Centre posn Y', 'In Quadrant 1', 'In Quadrant 2', 'In Quadrant 3', 'In Quadrant 4']
         eztrack = ['', 'File', 'FPS', 'Location_Thresh', 'Use_Window', 'Window_Weight', 'Window_Size', 'Start_Frame',
                       'Frame', 'X', 'Y', 'Distance', 'dark', 'light']
-        ethovision = ['Number of header lines:', 'Experiment', 'System Independent Variable', 'Trial name', 'Trial ID',
-                      'Arena name', 'Arena ID', 'Subject name', 'Subject ID', 'Arena settings', 'Detection settings',
-                      'Trial Control settings', 'Start time', 'Trial duration', 'Recording after', 'Recording duration',
-                      'Track', 'Tracking source', 'Video file', 'Video start time', 'Trial status', 'Acquisition status',
-                      'Track status', 'Video file status', 'Sync status', 'Reference duration', 'Reference time', 'Sof file',
-                      'Missed samples', 'Subject not found', 'User-defined Independent Variable', 'Animal ID', 'Genotype',
-                      'Temperature', 'Trial', 'Day']
+        ethovision = ['Number of header lines:']
         file_extension = os.path.splitext(theFile)[1]
         if (file_extension == '.csv'):
             with open(theFile, newline="") as file:
@@ -2086,6 +2083,9 @@ class mainClass:
         dayFlag = False
         autoFlag = False
         skipFlag = False
+        software = softwareStringVar.get()
+        if (software == "auto"):
+            detectSoftwareType(self)
         software = softwareStringVar.get()
 
         try:
