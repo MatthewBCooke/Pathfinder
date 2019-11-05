@@ -272,7 +272,7 @@ class mainClass:
             accelC = "Ctrl+C"
             accelV = "Ctrl+V"
 
-        root.geometry('{}x{}'.format(1000, 500))
+        root.geometry('{}x{}'.format(900, 500))
 
         self.menu = Menu(root)  # create a menu
         root.config(menu=self.menu, bg="white")  # set up the config
@@ -535,6 +535,23 @@ class mainClass:
             root.bind('<Control-f>', self.ctrlFile)
 
         root.bind('<Shift-Return>', self.enterManual)
+
+        # ****** DIAGRAM SIDE ******
+        self.graphFrame = Frame(root, bd=1, bg="white")  # create a frame for the diagram
+        self.graphFrame.pack(side=RIGHT, fill=BOTH, padx=5, pady=5)  # place this on the left
+
+        canvas = Canvas(self.graphFrame, width=400, height=400)
+        canvas.pack()
+        self.circle = canvas.create_oval(50, 50, 350, 350, fill="#f1f1f1", width=3)
+        self.bigChain = canvas.create_oval(100, 100, 300, 300, fill="#c7c7c7", width=1)
+        self.smallChain = canvas.create_oval(130, 130, 400-130, 400-130, fill="#f1f1f1", width=1)
+        self.bigThigmo = canvas.create_oval(60, 60, 400-60, 400-60, dash=(2, 1))
+        self.smallThigmo = canvas.create_oval(70, 70, 400-70, 400-70, dash=(2, 1))
+        self.goal = canvas.create_oval(132, 132, 148, 148, fill="#a1a1a1", width=2)
+        # center = x2 - ((x2 - x1)/2)
+        self.centerLine = canvas.create_line(200,350, 148 - ((148 - 132)/2), 148 - ((148 - 132)/2), fill="red")
+
+
 
     def onFrameConfigure(self, canvas):  # configure the frame
         canvas.configure(scrollregion=canvas.bbox("all"))
