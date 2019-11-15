@@ -365,8 +365,7 @@ class mainClass:
 
         try:
             with open('mainobjs.pickle', 'rb') as f:
-                goalPosVar, goalDiamVar, mazeDiamVar, mazeCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar = pickle.load(
-                    f)
+                goalPosVar, goalDiamVar, mazeDiamVar, mazeCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar = pickle.load(f)
                 goalPosStringVar.set(goalPosVar)
                 goalDiamStringVar.set(goalDiamVar)
                 mazeDiamStringVar.set(mazeDiamVar)
@@ -538,19 +537,64 @@ class mainClass:
 
         # ****** DIAGRAM SIDE ******
         self.graphFrame = Frame(root, bd=1, bg="white")  # create a frame for the diagram
-        self.graphFrame.pack(side=RIGHT, fill=BOTH, padx=5, pady=5)  # place this on the left
-
+        self.graphFrame.pack(side=RIGHT, fill=BOTH, padx=5, pady=5)  # place this on the right
         canvas = Canvas(self.graphFrame, width=400, height=400)
         canvas.pack()
-        self.circle = canvas.create_oval(50, 50, 350, 350, fill="#f1f1f1", width=3)
-        self.bigChain = canvas.create_oval(100, 100, 300, 300, fill="#c7c7c7", width=1)
-        self.smallChain = canvas.create_oval(130, 130, 400-130, 400-130, fill="#f1f1f1", width=1)
-        self.bigThigmo = canvas.create_oval(60, 60, 400-60, 400-60, dash=(2, 1))
-        self.smallThigmo = canvas.create_oval(70, 70, 400-70, 400-70, dash=(2, 1))
-        self.goal = canvas.create_oval(132, 132, 148, 148, fill="#a1a1a1", width=2)
-        # center = x2 - ((x2 - x1)/2)
-        self.centerLine = canvas.create_line(200,350, 148 - ((148 - 132)/2), 148 - ((148 - 132)/2), fill="red")
 
+        self.circle = canvas.create_oval(50, 50, 350, 350, fill="#f1f1f1", width=3)
+
+        bigThigmoRadius = 50+int(thigmotaxisZoneSizeVar)
+        smallThigmoRadius = 50 + (int(thigmotaxisZoneSizeVar) / 2)
+
+        mazeCentreX, mazeCentreY = mazeCentreVar.split(",")
+        mazeCentre = [float(mazeCentreX), float(mazeCentreY)]
+
+        goalX, goalY = goalPosStringVar.get().split(",")
+        goalCentre = [float(goalX), float(goalY)]
+        # goalCentre = [300, 150]
+        # goalCentre = [float(goalPosStringVar.get().split(",")[0]), float(goalPosStringVar.get().split(",")[1])]
+        goalLBorder = goalCentre[0] - (float(goalDiamVar) / 2)
+        goalRBorder = goalCentre[0] + (float(goalDiamVar) / 2)
+        goalTopBorder = goalCentre[1]-(float(goalDiamVar)/2)
+        goalBottomBorder = goalCentre[1]+(float(goalDiamVar)/2)
+        newGoalCentreXY = goalRBorder - ((goalRBorder - goalLBorder)/2)
+
+        smallChainRadius = math.sqrt( ((goalCentre[0]-200)**2)+((goalCentre[1]-200)**2) ) - float(corridorWidthVar)/2
+        bigChainRadius = math.sqrt( ((goalCentre[0]-200)**2)+((goalCentre[1]-200)**2) ) + float(corridorWidthVar)/2
+
+
+        smallChainLBorder = 200 - smallChainRadius
+        smallChainRBorder = 200 + smallChainRadius
+        bigChainLBorder = 200 - bigChainRadius
+        bigChainRBorder = 200 + bigChainRadius
+
+        self.bigThigmo = canvas.create_oval(bigThigmoRadius, bigThigmoRadius,
+                                            400-bigThigmoRadius, 400-bigThigmoRadius, dash=(2, 1))
+        self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
+                                              400-smallThigmoRadius, 400-smallThigmoRadius, dash=(2, 1))
+
+        self.bigChain = canvas.create_oval(bigChainLBorder, bigChainLBorder, bigChainRBorder, bigChainRBorder,
+                                           fill="#c7c7c7", width=1) # chainingLoc depends on goalPos
+        self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder, smallChainRBorder, smallChainRBorder,
+                                             fill="#f1f1f1", width=1)
+
+        self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="#a1a1a1", width=2) # goalPos depends on mazeCentre
+        self.centerLine = canvas.create_line(200,350, goalCentre[0], goalCentre[1], fill="red") # center = x2 - ((x2 - x1)/2)
+
+        # global goalPosVar (cm, cm)
+        # global goalDiamVar (cm)
+        # global mazeDiamVar (cm)
+        # global mazeCentreVar
+        # global corridorWidthVar (degrees)
+        # global chainingRadiusVar (cm)
+        # global thigmotaxisZoneSizeVar (cm)
+        # softwareScalingFactorVar (pixels/cm)
+
+        # self.updateButton = Button(self.paramFrame, text="Update", command=canvas.update_idletasks(), fg="black")
+        # self.updateButton.grid(row=rowCount+1, column=0, columnspan=2)
+        # self.updateButton.config(width=10)
+
+        # root.after(1000, canvas.update())
 
 
     def onFrameConfigure(self, canvas):  # configure the frame
