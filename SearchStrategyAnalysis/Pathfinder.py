@@ -579,33 +579,39 @@ class mainClass:
         # if (goalCentre[0] > 200):
 
         def redrawThigmo(*args):
-            canvas.delete(self.bigThigmo, self.smallThigmo)
-            bigThigmoRadius = 50 + int(thigmotaxisZoneSizeStringVar.get())
-            smallThigmoRadius = 50 + (int(thigmotaxisZoneSizeStringVar.get()) / 2)
-            self.bigThigmo = canvas.create_oval(bigThigmoRadius, bigThigmoRadius, 400 - bigThigmoRadius, 400 - bigThigmoRadius, dash=(2, 1))
-            self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius, 400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
+            try:
+                canvas.delete(self.bigThigmo, self.smallThigmo)
+                bigThigmoRadius = 50 + int(thigmotaxisZoneSizeStringVar.get())
+                smallThigmoRadius = 50 + (int(thigmotaxisZoneSizeStringVar.get()) / 2)
+                self.bigThigmo = canvas.create_oval(bigThigmoRadius, bigThigmoRadius, 400 - bigThigmoRadius, 400 - bigThigmoRadius, dash=(2, 1))
+                self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius, 400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
+            except:
+                print("INVALID VAR INPUT")
         thigmotaxisZoneSizeStringVar.trace_variable("w",redrawThigmo)
 
         def redrawGoalStuff(*args):
-            canvas.delete(self.bigChain, self.smallChain, self.goal, self.centerToGoalLine)
-            goalX, goalY = goalPosStringVar.get().split(",")
-            goalCentre = [float(goalX), float(goalY)]
-            goalLBorder = goalCentre[0] - (float(goalDiamStringVar.get()) / 2)
-            goalRBorder = goalCentre[0] + (float(goalDiamStringVar.get()) / 2)
-            goalTopBorder = goalCentre[1] - (float(goalDiamStringVar.get()) / 2)
-            goalBottomBorder = goalCentre[1] + (float(goalDiamStringVar.get()) / 2)
-            smallChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + float(chainingRadiusStringVar.get()) / 2
-            smallChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - float(chainingRadiusStringVar.get()) / 2
-            bigChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - float(chainingRadiusStringVar.get()) / 2
-            bigChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + float(chainingRadiusStringVar.get()) / 2
-            self.bigChain = canvas.create_oval(bigChainLBorder, bigChainLBorder, bigChainRBorder, bigChainRBorder, fill="#c7c7c7", width=1)
-            self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder, smallChainRBorder, smallChainRBorder, fill="white", width=1)
-            self.centerLine = canvas.create_line(200, 350, 200, 50, dash=(1, 1))
-            self.centerLine = canvas.create_line(50, 200, 350, 200, dash=(1, 1))
-            self.center = canvas.create_oval(195, 195, 205, 205, fill="blue")
-            self.start = canvas.create_oval(195, 345, 205, 355, fill="green", width=1)
-            self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
-            self.centerToGoalLine = canvas.create_line(200, 350, goalCentre[0], goalCentre[1], fill="red")
+            try:
+                canvas.delete(self.bigChain, self.smallChain, self.goal, self.centerToGoalLine)
+                goalX, goalY = goalPosStringVar.get().split(",")
+                goalCentre = [float(goalX), float(goalY)]
+                goalLBorder = goalCentre[0] - (float(goalDiamStringVar.get()) / 2)
+                goalRBorder = goalCentre[0] + (float(goalDiamStringVar.get()) / 2)
+                goalTopBorder = goalCentre[1] - (float(goalDiamStringVar.get()) / 2)
+                goalBottomBorder = goalCentre[1] + (float(goalDiamStringVar.get()) / 2)
+                smallChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + float(chainingRadiusStringVar.get()) / 2
+                smallChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - float(chainingRadiusStringVar.get()) / 2
+                bigChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - float(chainingRadiusStringVar.get()) / 2
+                bigChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + float(chainingRadiusStringVar.get()) / 2
+                self.bigChain = canvas.create_oval(bigChainLBorder, bigChainLBorder, bigChainRBorder, bigChainRBorder, fill="#c7c7c7", width=1)
+                self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder, smallChainRBorder, smallChainRBorder, fill="white", width=1)
+                self.centerLine = canvas.create_line(200, 350, 200, 50, dash=(1, 1))
+                self.centerLine = canvas.create_line(50, 200, 350, 200, dash=(1, 1))
+                self.center = canvas.create_oval(195, 195, 205, 205, fill="blue")
+                self.start = canvas.create_oval(195, 345, 205, 355, fill="green", width=1)
+                self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
+                self.centerToGoalLine = canvas.create_line(200, 350, goalCentre[0], goalCentre[1], fill="red")
+            except:
+                print("INVALID VAR INPUT")
         goalDiamStringVar.trace_variable("w", redrawGoalStuff)
         goalPosStringVar.trace_variable("w",redrawGoalStuff)
         chainingRadiusStringVar.trace_variable("w",redrawGoalStuff)
