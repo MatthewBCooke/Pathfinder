@@ -541,7 +541,7 @@ class mainClass:
         canvas.pack()
         # initialize main maze
         # TODO: make maze center editable
-        self.circle = canvas.create_oval(50, 50, 350, 350, fill="#f1f1f1", width=3)
+        self.circle = canvas.create_oval(50, 50, 350, 350, fill="white", width=3)
         mazeCentreX, mazeCentreY = mazeCentreVar.split(",")
         mazeCentre = [float(mazeCentreX), float(mazeCentreY)]
         # initialize goal
@@ -561,7 +561,7 @@ class mainClass:
         smallThigmoRadius = 50 + (int(thigmotaxisZoneSizeVar) / 2)
         # draw all items
         self.bigChain = canvas.create_oval(bigChainLBorder, bigChainLBorder, bigChainRBorder, bigChainRBorder, fill="#c7c7c7", width=1)
-        self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder, smallChainRBorder, smallChainRBorder, fill="#f1f1f1", width=1)
+        self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder, smallChainRBorder, smallChainRBorder, fill="white", width=1)
         self.bigThigmo = canvas.create_oval(bigThigmoRadius, bigThigmoRadius, 400 - bigThigmoRadius, 400 - bigThigmoRadius, dash=(2, 1))
         self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius, 400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
         self.centerLine = canvas.create_line(200, 350, 200, 50, dash=(1, 1))
@@ -599,7 +599,7 @@ class mainClass:
             bigChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - float(chainingRadiusStringVar.get()) / 2
             bigChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + float(chainingRadiusStringVar.get()) / 2
             self.bigChain = canvas.create_oval(bigChainLBorder, bigChainLBorder, bigChainRBorder, bigChainRBorder, fill="#c7c7c7", width=1)
-            self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder, smallChainRBorder, smallChainRBorder, fill="#f1f1f1", width=1)
+            self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder, smallChainRBorder, smallChainRBorder, fill="white", width=1)
             self.centerLine = canvas.create_line(200, 350, 200, 50, dash=(1, 1))
             self.centerLine = canvas.create_line(50, 200, 350, 200, dash=(1, 1))
             self.center = canvas.create_oval(195, 195, 205, 205, fill="blue")
