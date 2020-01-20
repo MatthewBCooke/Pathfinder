@@ -255,7 +255,6 @@ def defineOwnSoftware(root):
                 data = csv.reader(file)
                 displayTable(data)
         elif (file_extension == '.xlsx'):
-            #TODO first row (headers) are not displayed
             data = pd.read_excel(filename)
             displayTable(data.values)
 

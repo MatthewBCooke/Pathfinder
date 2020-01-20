@@ -228,7 +228,7 @@ class mainClass:
     def __init__(self, root):  # init is called on runtime
         logging.debug("Initiating Main program")
         try:
-            self.buildGUI(root)
+            self.buildGUI(root, redraw=False)
         except Exception:
             traceback.print_exc()
             logging.fatal("Couldn't build GUI")
@@ -236,7 +236,7 @@ class mainClass:
             return
         logging.debug("GUI is built")
 
-    def buildGUI(self, root):  # Called in the __init__ to build the GUI window
+    def buildGUI(self, root, redraw):  # Called in the __init__ to build the GUI window
         root.wm_title("Pathfinder")
 
         global goalPosVar
@@ -539,11 +539,13 @@ class mainClass:
         self.graphFrame.pack(side=RIGHT, fill=BOTH, padx=5, pady=5)  # place this on the right
         canvas = Canvas(self.graphFrame, width=400, height=400)
         canvas.pack()
+
         # initialize main maze
         # TODO: make maze center editable
         self.circle = canvas.create_oval(50, 50, 350, 350, fill="white", width=3)
         mazeCentreX, mazeCentreY = mazeCentreVar.split(",")
         mazeCentre = [float(mazeCentreX), float(mazeCentreY)]
+
         # initialize goal
         goalX, goalY = goalPosStringVar.get().split(",")
         goalCentre = [float(goalX), float(goalY)]
@@ -551,14 +553,17 @@ class mainClass:
         goalRBorder = goalCentre[0] + (float(goalDiamStringVar.get()) / 2)
         goalTopBorder = goalCentre[1] - (float(goalDiamStringVar.get()) / 2)
         goalBottomBorder = goalCentre[1] + (float(goalDiamStringVar.get()) / 2)
+
         # initialize chaining corridor
-        smallChainLBorder = 200 - math.sqrt( ((goalCentre[0]-200)**2)+((goalCentre[1]-200)**2) ) + float(corridorWidthVar)/2
-        smallChainRBorder = 200 + math.sqrt( ((goalCentre[0]-200)**2)+((goalCentre[1]-200)**2) ) - float(corridorWidthVar)/2
-        bigChainLBorder = 200 - math.sqrt( ((goalCentre[0]-200)**2)+((goalCentre[1]-200)**2) ) - float(corridorWidthVar)/2
-        bigChainRBorder = 200 + math.sqrt( ((goalCentre[0]-200)**2)+((goalCentre[1]-200)**2) ) + float(corridorWidthVar)/2
+        smallChainLBorder = 200 - math.sqrt( ((goalCentre[0]-200)**2)+((goalCentre[1]-200)**2) ) + float(chainingRadiusVar)/2
+        smallChainRBorder = 200 + math.sqrt( ((goalCentre[0]-200)**2)+((goalCentre[1]-200)**2) ) - float(chainingRadiusVar)/2
+        bigChainLBorder = 200 - math.sqrt( ((goalCentre[0]-200)**2)+((goalCentre[1]-200)**2) ) - float(chainingRadiusVar)/2
+        bigChainRBorder = 200 + math.sqrt( ((goalCentre[0]-200)**2)+((goalCentre[1]-200)**2) ) + float(chainingRadiusVar)/2
+
         # initialize thigmotaxis zone
         bigThigmoRadius = 50 + int(thigmotaxisZoneSizeVar)
         smallThigmoRadius = 50 + (int(thigmotaxisZoneSizeVar) / 2)
+
         # draw all items
         self.bigChain = canvas.create_oval(bigChainLBorder, bigChainLBorder, bigChainRBorder, bigChainRBorder, fill="#c7c7c7", width=1)
         self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder, smallChainRBorder, smallChainRBorder, fill="white", width=1)
@@ -571,12 +576,25 @@ class mainClass:
         self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
         self.centerToGoalLine = canvas.create_line(200, 350, goalCentre[0], goalCentre[1], fill="red")
 
-        # TODO: draw angular corridor
-        # if (goalCentre[0] < 200):
-        #     rightLineX = 100*math.sin(360 - float(corridorWidthVar)*2)
-        #     rightLineY = 100*math.cos(360 - float(corridorWidthVar)*2)
-        #     leftLineX = 100*math.sin(360 - float(corridorWidthVar)*2)
-        # if (goalCentre[0] > 200):
+        # # draw all rois
+        # for aTuple in rois:
+        #     roiX, roiY = aTuple[0].split(",")
+        #     roiCentre = [float(roiX), float(roiY)]
+        #     roiLBorder = roiCentre[0] - (float(aTuple[1]) / 2)
+        #     roiRBorder = roiCentre[0] + (float(aTuple[1]) / 2)
+        #     roiTopBorder = roiCentre[1] - (float(aTuple[1]) / 2)
+        #     roiBottomBorder = roiCentre[1] + (float(aTuple[1]) / 2)
+        #     self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
+
+        # TODO: fix angular corridor
+        goalAngle = math.degrees(math.atan2(goalCentre[1] - 200, goalCentre[0] - 200))
+        if goalAngle < 0: goalAngle = goalAngle + 360
+        x1 = 200 + 150 * math.cos(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
+        y1 = 200 + 150 * math.sin(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
+        x2 = 200 + 150 * math.cos(math.radians(goalAngle + float(corridorWidthStringVar.get()) / 2))
+        y2 = 200 + 150 * math.sin(math.radians(goalAngle + float(corridorWidthStringVar.get()) / 2))
+        self.angularCorridorL = canvas.create_line(x1, y1, 200, 350, fill="green", width=2.0)
+        self.angularCorridorR = canvas.create_line(x2, y2, 200, 350, fill="green", width=2.0)
 
         def redrawThigmo(*args):
             try:
@@ -587,11 +605,10 @@ class mainClass:
                 self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius, 400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
             except:
                 print("INVALID VAR INPUT")
-        thigmotaxisZoneSizeStringVar.trace_variable("w",redrawThigmo)
 
         def redrawGoalStuff(*args):
             try:
-                canvas.delete(self.bigChain, self.smallChain, self.goal, self.centerToGoalLine)
+                canvas.delete(self.bigChain, self.smallChain, self.goal, self.centerToGoalLine, self.angularCorridorL, self.angularCorridorR)
                 goalX, goalY = goalPosStringVar.get().split(",")
                 goalCentre = [float(goalX), float(goalY)]
                 goalLBorder = goalCentre[0] - (float(goalDiamStringVar.get()) / 2)
@@ -610,12 +627,33 @@ class mainClass:
                 self.start = canvas.create_oval(195, 345, 205, 355, fill="green", width=1)
                 self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
                 self.centerToGoalLine = canvas.create_line(200, 350, goalCentre[0], goalCentre[1], fill="red")
+
+                # # draw all rois
+                # for aTuple in rois:
+                #     roiX, roiY = aTuple[0].split(",")
+                #     roiCentre = [float(roiX), float(roiY)]
+                #     roiLBorder = roiCentre[0] - (float(aTuple[1]) / 2)
+                #     roiRBorder = roiCentre[0] + (float(aTuple[1]) / 2)
+                #     roiTopBorder = roiCentre[1] - (float(aTuple[1]) / 2)
+                #     roiBottomBorder = roiCentre[1] + (float(aTuple[1]) / 2)
+                #     self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
+
+                goalAngle = math.degrees(math.atan2(goalCentre[1] - 200, goalCentre[0] - 200))
+                if goalAngle < 0: goalAngle = goalAngle + 360
+                x1 = 200 + 150 * math.cos(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
+                y1 = 200 + 150 * math.sin(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
+                x2 = 200 + 150 * math.cos(math.radians(goalAngle + float(corridorWidthStringVar.get()) / 2))
+                y2 = 200 + 150 * math.sin(math.radians(goalAngle + float(corridorWidthStringVar.get()) / 2))
+                self.angularCorridorL = canvas.create_line(x1, y1, 200, 350, fill="green", width=2.0)
+                self.angularCorridorR = canvas.create_line(x2, y2, 200, 350, fill="green", width=2.0)
             except:
                 print("INVALID VAR INPUT")
-        goalDiamStringVar.trace_variable("w", redrawGoalStuff)
-        goalPosStringVar.trace_variable("w",redrawGoalStuff)
-        chainingRadiusStringVar.trace_variable("w",redrawGoalStuff)
 
+        goalDiamStringVar.trace_variable("w", redrawGoalStuff)
+        goalPosStringVar.trace_variable("w", redrawGoalStuff)
+        chainingRadiusStringVar.trace_variable("w", redrawGoalStuff)
+        corridorWidthStringVar.trace_variable("w", redrawGoalStuff)
+        thigmotaxisZoneSizeStringVar.trace_variable("w", redrawThigmo)
         # TODO: softwareScalingFactorVar (pixels/cm)
 
     def onFrameConfigure(self, canvas):  # configure the frame
@@ -872,6 +910,7 @@ class mainClass:
                 self.top4.destroy()
             except:
                 pass
+
 
     def settings(self):
         logging.debug("Getting custom values")
