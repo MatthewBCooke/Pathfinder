@@ -576,25 +576,26 @@ class mainClass:
         self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
         self.centerToGoalLine = canvas.create_line(200, 350, goalCentre[0], goalCentre[1], fill="red")
 
-        # # draw all rois
-        # for aTuple in rois:
-        #     roiX, roiY = aTuple[0].split(",")
-        #     roiCentre = [float(roiX), float(roiY)]
-        #     roiLBorder = roiCentre[0] - (float(aTuple[1]) / 2)
-        #     roiRBorder = roiCentre[0] + (float(aTuple[1]) / 2)
-        #     roiTopBorder = roiCentre[1] - (float(aTuple[1]) / 2)
-        #     roiBottomBorder = roiCentre[1] + (float(aTuple[1]) / 2)
-        #     self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
+        # draw all rois
+        for aTuple in rois:
+            roiX, roiY = aTuple[0].split(",")
+            roiCentre = [float(roiX), float(roiY)]
+            roiLBorder = roiCentre[0] - (float(aTuple[1]) / 2)
+            roiRBorder = roiCentre[0] + (float(aTuple[1]) / 2)
+            roiTopBorder = roiCentre[1] - (float(aTuple[1]) / 2)
+            roiBottomBorder = roiCentre[1] + (float(aTuple[1]) / 2)
+            self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
 
         # TODO: fix angular corridor
         goalAngle = math.degrees(math.atan2(goalCentre[1] - 200, goalCentre[0] - 200))
+        print(goalAngle)
         if goalAngle < 0: goalAngle = goalAngle + 360
         x1 = 200 + 150 * math.cos(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
         y1 = 200 + 150 * math.sin(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
         x2 = 200 + 150 * math.cos(math.radians(goalAngle + float(corridorWidthStringVar.get()) / 2))
         y2 = 200 + 150 * math.sin(math.radians(goalAngle + float(corridorWidthStringVar.get()) / 2))
-        self.angularCorridorL = canvas.create_line(x1, y1, 200, 350, fill="green", width=2.0)
-        self.angularCorridorR = canvas.create_line(x2, y2, 200, 350, fill="green", width=2.0)
+        self.angularCorridorL = canvas.create_line(x1, y1, 200, 200, fill="green", width=2.0)
+        self.angularCorridorR = canvas.create_line(x2, y2, 200, 200, fill="green", width=2.0)
 
         def redrawThigmo(*args):
             try:
@@ -628,24 +629,27 @@ class mainClass:
                 self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
                 self.centerToGoalLine = canvas.create_line(200, 350, goalCentre[0], goalCentre[1], fill="red")
 
-                # # draw all rois
-                # for aTuple in rois:
-                #     roiX, roiY = aTuple[0].split(",")
-                #     roiCentre = [float(roiX), float(roiY)]
-                #     roiLBorder = roiCentre[0] - (float(aTuple[1]) / 2)
-                #     roiRBorder = roiCentre[0] + (float(aTuple[1]) / 2)
-                #     roiTopBorder = roiCentre[1] - (float(aTuple[1]) / 2)
-                #     roiBottomBorder = roiCentre[1] + (float(aTuple[1]) / 2)
-                #     self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
+                # draw all rois
+                # TODO: roi goals are covered when new goals are added
+                # TODO: added rois are not immediately shown when saved
+                for aTuple in rois:
+                    roiX, roiY = aTuple[0].split(",")
+                    roiCentre = [float(roiX), float(roiY)]
+                    roiLBorder = roiCentre[0] - (float(aTuple[1]) / 2)
+                    roiRBorder = roiCentre[0] + (float(aTuple[1]) / 2)
+                    roiTopBorder = roiCentre[1] - (float(aTuple[1]) / 2)
+                    roiBottomBorder = roiCentre[1] + (float(aTuple[1]) / 2)
+                    self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
 
                 goalAngle = math.degrees(math.atan2(goalCentre[1] - 200, goalCentre[0] - 200))
+                print(goalAngle)
                 if goalAngle < 0: goalAngle = goalAngle + 360
                 x1 = 200 + 150 * math.cos(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
                 y1 = 200 + 150 * math.sin(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
                 x2 = 200 + 150 * math.cos(math.radians(goalAngle + float(corridorWidthStringVar.get()) / 2))
                 y2 = 200 + 150 * math.sin(math.radians(goalAngle + float(corridorWidthStringVar.get()) / 2))
-                self.angularCorridorL = canvas.create_line(x1, y1, 200, 350, fill="green", width=2.0)
-                self.angularCorridorR = canvas.create_line(x2, y2, 200, 350, fill="green", width=2.0)
+                self.angularCorridorL = canvas.create_line(x1, y1, 200, 200, fill="green", width=2.0)
+                self.angularCorridorR = canvas.create_line(x2, y2, 200, 200, fill="green", width=2.0)
             except:
                 print("INVALID VAR INPUT")
 
