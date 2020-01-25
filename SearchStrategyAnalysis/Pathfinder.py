@@ -83,14 +83,12 @@ csvfilename = "output/results/results " + str(
     strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the default results file
 theFile = ""
 fileDirectory = ""
-goalPosVar = "Auto"
-mazeDiamVar = "Auto"
-goalPosVar = "Auto"
-goalDiamVar = "Auto"
-mazeDiamVar = "Auto"
+goalPosVar = "0,0"
+mazeDiamVar = "300"
+goalDiamVar = "10"
 corridorWidthVar = "40"
-mazeCentreVar = "Auto"
-chainingRadiusVar = "35"
+mazeCentreVar = "0,0"
+chainingRadiusVar = "25"
 thigmotaxisZoneSizeVar = "15"
 outputFile = csvfilename
 fileFlag = 0
@@ -228,7 +226,7 @@ class mainClass:
     def __init__(self, root):  # init is called on runtime
         logging.debug("Initiating Main program")
         try:
-            self.buildGUI(root, redraw=False)
+            self.buildGUI(root)
         except Exception:
             traceback.print_exc()
             logging.fatal("Couldn't build GUI")
@@ -236,7 +234,7 @@ class mainClass:
             return
         logging.debug("GUI is built")
 
-    def buildGUI(self, root, redraw):  # Called in the __init__ to build the GUI window
+    def buildGUI(self, root):  # Called in the __init__ to build the GUI window
         root.wm_title("Pathfinder")
 
         global goalPosVar
@@ -363,7 +361,7 @@ class mainClass:
 
         try:
             with open('mainobjs.pickle', 'rb') as f:
-                goalPosVar, goalDiamVar, mazeDiamVar, mazeCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar = pickle.load(f)
+                # goalPosVar, goalDiamVar, mazeDiamVar, mazeCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar = pickle.load(f)
                 goalPosStringVar.set(goalPosVar)
                 goalDiamStringVar.set(goalDiamVar)
                 mazeDiamStringVar.set(mazeDiamVar)
@@ -372,6 +370,14 @@ class mainClass:
                 chainingRadiusStringVar.set(chainingRadiusVar)
                 thigmotaxisZoneSizeStringVar.set(thigmotaxisZoneSizeVar)
                 softwareScalingFactorStringVar.set(softwareScalingFactorVar)
+                # goalPosStringVar.set("0,0")
+                # goalDiamStringVar.set("10")
+                # mazeDiamStringVar.set("300")
+                # mazeCentreStringVar.set("0,0")
+                # corridorWidthStringVar.set("40")
+                # chainingRadiusStringVar.set("25")
+                # thigmotaxisZoneSizeStringVar.set("20")
+                # softwareScalingFactorStringVar.set("1.0")
         except:
             pass
 
@@ -544,27 +550,22 @@ class mainClass:
         # TODO: make maze center editable
         scale = 1 / float(softwareScalingFactorStringVar.get())
         radius = float(mazeDiamStringVar.get()) / 2
-        self.circle = canvas.create_oval(200 - scale * (radius), 200 - scale * (radius),
-                                         200 + scale * (radius), 200 + scale * (radius),
-                                         fill="white", width=3)
+        self.circle = canvas.create_oval(200 - scale*radius, 200 - scale*radius,
+                                         200 + scale*radius, 200 + scale*radius, fill="white", width=3)
 
         goalX, goalY = goalPosStringVar.get().split(",")
-        goalCentre = [(float(goalX)), (float(goalY))]
+        goalCentre = [200+(float(goalX)), 200-(float(goalY))]
         goalLBorder = goalCentre[0] - scale * (float(goalDiamStringVar.get()) / 2)
         goalRBorder = goalCentre[0] + scale * (float(goalDiamStringVar.get()) / 2)
         goalTopBorder = goalCentre[1] - scale * (float(goalDiamStringVar.get()) / 2)
         goalBottomBorder = goalCentre[1] + scale * (float(goalDiamStringVar.get()) / 2)
 
         smallChainLBorder = 200 - math.sqrt(
-            ((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + scale * float(
-            chainingRadiusStringVar.get()) / 2
+            ((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + scale * float(chainingRadiusStringVar.get()) / 2
         smallChainRBorder = 200 + math.sqrt(
-            ((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - scale * float(
-            chainingRadiusStringVar.get()) / 2
-        bigChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - scale * float(
-            chainingRadiusStringVar.get()) / 2
-        bigChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + scale * float(
-            chainingRadiusStringVar.get()) / 2
+            ((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - scale * float(chainingRadiusStringVar.get()) / 2
+        bigChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - scale * float(chainingRadiusStringVar.get()) / 2
+        bigChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + scale * float(chainingRadiusStringVar.get()) / 2
         self.bigChain = canvas.create_oval(bigChainLBorder, bigChainLBorder, bigChainRBorder, bigChainRBorder,
                                            fill="#c7c7c7", width=1)
         self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder,
@@ -572,36 +573,28 @@ class mainClass:
 
         bigThigmoRadius = 200 - scale * radius + scale * int(thigmotaxisZoneSizeStringVar.get())
         smallThigmoRadius = 200 - scale * radius + scale * (int(thigmotaxisZoneSizeStringVar.get()) / 2)
-        self.bigThigmo = canvas.create_oval(bigThigmoRadius, bigThigmoRadius, 400 - bigThigmoRadius,
-                                            400 - bigThigmoRadius, dash=(2, 1))
-        self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius, 400 - smallThigmoRadius,
-                                              400 - smallThigmoRadius, dash=(2, 1))
+        self.bigThigmo = canvas.create_oval(bigThigmoRadius, bigThigmoRadius,
+                                            400 - bigThigmoRadius, 400 - bigThigmoRadius, dash=(2, 1))
+        self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
+                                              400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
-        self.centerLine = canvas.create_line(200, 200 + scale * radius,
-                                             200, 200 - scale * radius, dash=(1, 1))
-        self.centerLine = canvas.create_line(200 - scale * radius, 200,
-                                             200 + scale * radius, 200, dash=(1, 1))
-        self.center = canvas.create_oval(195, 195, 205, 205, fill="blue")
-        self.start = canvas.create_oval(195, 195 + scale * radius,
-                                        205, 205 + scale * radius, fill="green", width=1)
+        self.centerLine = canvas.create_line(200, 200 + scale * radius, 200, 200 - scale * radius, dash=(1, 1))
+        self.centerLine = canvas.create_line(200 - scale * radius, 200, 200 + scale * radius, 200, dash=(1, 1))
+        self.start = canvas.create_oval(195, 195 + scale * radius, 205, 205 + scale * radius, fill="green", width=1)
         self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
-        self.centerToGoalLine = canvas.create_line(200, 200 + scale * radius,
-                                                   goalCentre[0], goalCentre[1], fill="red")
+        self.centerToGoalLine = canvas.create_line(200, 200 + scale * radius, goalCentre[0], goalCentre[1], fill="red")
 
         # draw all rois
-        # TODO: roi goals are covered when new goals are added
-        # TODO: added rois are not immediately shown when saved
         for aTuple in rois:
             roiX, roiY = aTuple[0].split(",")
-            roiCentre = [float(roiX), float(roiY)]
-            roiLBorder = roiCentre[0] - (float(aTuple[1]) / 2)
-            roiRBorder = roiCentre[0] + (float(aTuple[1]) / 2)
-            roiTopBorder = roiCentre[1] - (float(aTuple[1]) / 2)
-            roiBottomBorder = roiCentre[1] + (float(aTuple[1]) / 2)
+            roiCentre = [200+scale*float(roiX), 200-scale*float(roiY)]
+            roiLBorder = roiCentre[0] - scale*float(aTuple[1])/2
+            roiRBorder = roiCentre[0] + scale*float(aTuple[1])/2
+            roiTopBorder = roiCentre[1] - scale*float(aTuple[1])/2
+            roiBottomBorder = roiCentre[1] + scale*float(aTuple[1])/2
             self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
 
         goalAngle = math.degrees(math.atan2(goalCentre[1] - 200, goalCentre[0] - 200))
-        print(goalAngle)
         if goalAngle < 0: goalAngle = goalAngle + 360
         x1 = 200 + scale * radius * math.cos(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
         y1 = 200 + scale * radius * math.sin(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
@@ -621,16 +614,16 @@ class mainClass:
                                                  fill="white", width=3)
 
                 goalX, goalY = goalPosStringVar.get().split(",")
-                goalCentre = [(float(goalX)), (float(goalY))]
+                goalCentre = [200+scale*float(goalX), 200-scale*float(goalY)]
                 goalLBorder = goalCentre[0] - scale*(float(goalDiamStringVar.get()) / 2)
                 goalRBorder = goalCentre[0] + scale*(float(goalDiamStringVar.get()) / 2)
                 goalTopBorder = goalCentre[1] - scale*(float(goalDiamStringVar.get()) / 2)
                 goalBottomBorder = goalCentre[1] + scale*(float(goalDiamStringVar.get()) / 2)
 
-                smallChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + scale*float(chainingRadiusStringVar.get()) / 2
-                smallChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - scale*float(chainingRadiusStringVar.get()) / 2
-                bigChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - scale*float(chainingRadiusStringVar.get()) / 2
-                bigChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + scale*float(chainingRadiusStringVar.get()) / 2
+                smallChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + (goalCentre[1] - 200) ** 2) + scale*float(chainingRadiusStringVar.get()) / 2
+                smallChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + (goalCentre[1] - 200) ** 2) - scale*float(chainingRadiusStringVar.get()) / 2
+                bigChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + (goalCentre[1] - 200) ** 2) - scale*float(chainingRadiusStringVar.get()) / 2
+                bigChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + (goalCentre[1] - 200) ** 2) + scale*float(chainingRadiusStringVar.get()) / 2
                 self.bigChain = canvas.create_oval(bigChainLBorder, bigChainLBorder, bigChainRBorder, bigChainRBorder,
                                                    fill="#c7c7c7", width=1)
                 self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder,
@@ -638,34 +631,28 @@ class mainClass:
 
                 bigThigmoRadius = 200 - scale*radius + scale*int(thigmotaxisZoneSizeStringVar.get())
                 smallThigmoRadius = 200 - scale*radius + scale*(int(thigmotaxisZoneSizeStringVar.get()) / 2)
-                self.bigThigmo = canvas.create_oval(bigThigmoRadius, bigThigmoRadius, 400 - bigThigmoRadius,
-                                                    400 - bigThigmoRadius, dash=(2, 1))
-                self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius, 400 - smallThigmoRadius,
-                                                      400 - smallThigmoRadius, dash=(2, 1))
+                self.bigThigmo = canvas.create_oval(bigThigmoRadius, bigThigmoRadius,
+                                                    400 - bigThigmoRadius, 400 - bigThigmoRadius, dash=(2, 1))
+                self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
+                                                      400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
-                self.centerLine = canvas.create_line(200, 200 + scale*radius,
-                                                     200, 200 - scale*radius, dash=(1, 1))
-                self.centerLine = canvas.create_line(200 - scale*radius, 200,
-                                                     200 + scale*radius, 200, dash=(1, 1))
-                self.center = canvas.create_oval(195, 195, 205, 205, fill="blue")
-                self.start = canvas.create_oval(195, 195 + scale*radius,
-                                                205, 205 + scale*radius, fill="green", width=1)
+                self.centerLine = canvas.create_line(200, 200 + scale*radius, 200, 200 - scale*radius, dash=(1, 1))
+                self.centerLine = canvas.create_line(200 - scale*radius, 200, 200 + scale*radius, 200, dash=(1, 1))
+                self.start = canvas.create_oval(195, 195 + scale*radius, 205, 205 + scale*radius, fill="green", width=1)
                 self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
-                self.centerToGoalLine = canvas.create_line(200, 200 + scale*radius,
-                                                           goalCentre[0], goalCentre[1], fill="red")
+                self.centerToGoalLine = canvas.create_line(200, 200 + scale*radius, goalCentre[0], goalCentre[1], fill="red")
 
                 # draw all rois
                 for aTuple in rois:
                     roiX, roiY = aTuple[0].split(",")
-                    roiCentre = [float(roiX), float(roiY)]
-                    roiLBorder = roiCentre[0] - (float(aTuple[1]) / 2)
-                    roiRBorder = roiCentre[0] + (float(aTuple[1]) / 2)
-                    roiTopBorder = roiCentre[1] - (float(aTuple[1]) / 2)
-                    roiBottomBorder = roiCentre[1] + (float(aTuple[1]) / 2)
+                    roiCentre = [200 + scale * float(roiX), 200 - scale * float(roiY)]
+                    roiLBorder = roiCentre[0] - scale * float(aTuple[1]) / 2
+                    roiRBorder = roiCentre[0] + scale * float(aTuple[1]) / 2
+                    roiTopBorder = roiCentre[1] - scale * float(aTuple[1]) / 2
+                    roiBottomBorder = roiCentre[1] + scale * float(aTuple[1]) / 2
                     self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
 
                 goalAngle = math.degrees(math.atan2(goalCentre[1] - 200, goalCentre[0] - 200))
-                print(goalAngle)
                 if goalAngle < 0: goalAngle = goalAngle + 360
                 x1 = 200 + scale*radius * math.cos(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
                 y1 = 200 + scale*radius * math.sin(math.radians(goalAngle - float(corridorWidthStringVar.get()) / 2))
@@ -895,12 +882,12 @@ class mainClass:
         roiError = False
         roiList = []
         sizeList = []
-        try:
-            rois.clear()
-            sizeList.clear()
-            roiList.clear()
-        except:
-            pass
+        # try:
+        #     rois.clear()
+        #     sizeList.clear()
+        #     roiList.clear()
+        # except:
+        #     pass
 
         count = 0
         for entry in self.entries:
@@ -912,20 +899,18 @@ class mainClass:
 
         tempRois = zip(roiList, sizeList)
 
-        patternROI = re.compile("^[0-9]{1,9}([.][0-9]{1,9})?[,][0-9]{1,9}([.][0-9]{1,9})?$")
+        patternROI = re.compile("^-?[0-9]{1,9}([.][0-9]{1,9})?[,]-?[0-9]{1,9}([.][0-9]{1,9})?$")
         patternSize = re.compile("^[0-9]{1,9}([.][0-9]{1,9})?$")
 
         for aTuple in tempRois:
             if aTuple[0] == 'Location (x,y)' or aTuple[1] == 'Diameter (cm)':
                 continue
             if patternROI.match(aTuple[0]) == None:
-                messagebox.showwarning('Input Error',
-                                       'Please verify your ROI input')
+                messagebox.showwarning('Input Error', 'Please verify your ROI input')
                 rois.clear()
                 roiError = True
             elif patternSize.match(aTuple[1]) == None:
-                messagebox.showwarning('Input Error',
-                                       'Please verify your size input')
+                messagebox.showwarning('Input Error', 'Please verify your size input')
                 rois.clear()
                 roiError = True
             else:
@@ -938,6 +923,27 @@ class mainClass:
                 self.top4.destroy()
             except:
                 pass
+
+        global goalPosVar
+        global goalDiamVar
+        global mazeDiamVar
+        global mazeCentreVar
+        global corridorWidthVar
+        global chainingRadiusVar
+        global thigmotaxisZoneSizeVar
+        global softwareScalingFactorVar
+
+        goalPosVar = goalPosStringVar.get()
+        goalDiamVar = goalDiamStringVar.get()
+        mazeDiamVar = mazeDiamStringVar.get()
+        mazeCentreVar = mazeCentreStringVar.get()
+        corridorWidthVar = corridorWidthStringVar.get()
+        chainingRadiusVar = chainingRadiusStringVar.get()
+        thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()
+        softwareScalingFactorVar = softwareScalingFactorStringVar.get()
+
+        self.buildGUI(root)
+
 
 
     def settings(self):
