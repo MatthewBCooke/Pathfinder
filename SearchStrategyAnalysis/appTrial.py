@@ -118,7 +118,7 @@ class Experiment(object):
 
 
 class Parameters:
-    def __init__(self, name, ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, distanceToSwimMaxVal2, distanceToPlatMaxVal2, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, focalMinDistance2, focalMaxDistance2, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, fullThigmoMinVal, smallThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirect, useFocal, useDirected, useIndirect, useFocal2, useChaining, useScanning, useRandom, useThigmogaxis):
+    def __init__(self, name, ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, distanceToSwimMaxVal2, distanceToPlatMaxVal2, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, semiFocalMinDistance, semiFocalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, fullThigmoMinVal, smallThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirect, useFocal, useDirected, useIndirect, useSemiFocal, useChaining, useScanning, useRandom, useThigmogaxis):
 
         self.name = name
         self.ipeMaxVal = ipeMaxVal
@@ -131,8 +131,8 @@ class Parameters:
         self.directedSearchMaxDistance = directedSearchMaxDistance
         self.focalMinDistance = focalMinDistance
         self.focalMaxDistance = focalMaxDistance
-        self.focalMinDistance2 = focalMinDistance2
-        self.focalMaxDistance2 = focalMaxDistance2
+        self.semiFocalMinDistance = semiFocalMinDistance
+        self.semiFocalMaxDistance = semiFocalMinDistance
         self.corridoripeMaxVal = corridoripeMaxVal
         self.annulusCounterMaxVal = annulusCounterMaxVal
         self.quadrantTotalMaxVal = quadrantTotalMaxVal
@@ -150,7 +150,7 @@ class Parameters:
         self.useFocal = useFocal
         self.useDirected = useDirected
         self.useIndirect = useIndirect
-        self.useFocal2 = useFocal2
+        self.useSemiFocal = useSemiFocal
         self.useChaining = useChaining
         self.useScanning = useScanning
         self.useRandom = useRandom
