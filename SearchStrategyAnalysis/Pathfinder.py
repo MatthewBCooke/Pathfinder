@@ -268,7 +268,7 @@ class mainClass:
             accelC = "Ctrl+C"
             accelV = "Ctrl+V"
 
-        root.geometry('{}x{}'.format(900, 500))
+        #root.geometry('{}x{}'.format(1100, 500))
 
         self.menu = Menu(root)  # create a menu
         root.config(menu=self.menu, bg="white")  # set up the config
@@ -639,7 +639,8 @@ class mainClass:
                     roiBottomBorder = roiCentre[1] + scale * float(aTuple[1]) / 2
                     self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
             except:
-                print("INVALID VAR INPUT")
+                #print("INVALID VAR INPUT")
+                pass
 
         goalDiamStringVar.trace_variable("w", redraw)
         goalPosStringVar.trace_variable("w", redraw)
