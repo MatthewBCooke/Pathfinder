@@ -20,7 +20,7 @@ If you use Pathfinder, please cite: Cooke MB, O'Leary TP, Harris P et al. (2019)
 
 2. This will open up the main GUI window.
 
-    ![Window Preview](http://snyderlab.com/pathfinder/main.jpg)
+    ![Window Preview](http://snyderlab.com/pathfinder/pathfinder_main.png)
 
 3. You can select an inividual file or a directory containing export files from the **File** drop-down menu.
 
