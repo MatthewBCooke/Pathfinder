@@ -332,7 +332,7 @@ class mainClass:
                                         value="eztrack", indicatoron=1, width=15, bg="white")
         self.eztrackRadio.grid(row=rowCount, column=4, padx=5, sticky='NW')
 
-        self.defineRadio = Radiobutton(self.softwareBar, text="Custom", variable=softwareStringVar, value="custom",
+        self.defineRadio = Radiobutton(self.softwareBar, text="Define", variable=softwareStringVar, value="define",
                                        indicatoron=0, width=15, bg="white", command=self.callDefineOwnSoftware)
         self.defineRadio.grid(row=rowCount, column=5, padx=5, sticky='NW')
         self.softwareBar.pack(side=TOP, fill=X, pady=5)

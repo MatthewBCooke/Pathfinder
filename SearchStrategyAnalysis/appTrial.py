@@ -204,7 +204,7 @@ def defineOwnSoftware(root):
 
         # display selected XYT columns using a status bar
         theStatus = StringVar()
-        theStatus.set("[First X, Y, time coordinates]: ")
+        theStatus.set("[First X, Y, time values]: ")
         status = Label(frame, textvariable=theStatus, width=50, height=2, relief=SUNKEN, anchor=W, bg="white")
         status.grid(row=0, column=0, columnspan=4)
 
@@ -213,9 +213,9 @@ def defineOwnSoftware(root):
         def okButton():
             if (len(xyt) == 3):
                 top.attributes('-topmost', False)
-                messagebox.showinfo(None, "First X-position value: " + str(xyt[0])
-                                    + "\nFirst Y-position value: " + str(xyt[1])
-                                    + "\nFirst Time value: " + str(xyt[2]))
+                messagebox.showinfo(None, "First X value: " + str(xyt[0])
+                                    + "\nFirst Y value: " + str(xyt[1])
+                                    + "\nFirst time value: " + str(xyt[2]))
                 top.quit()
                 top.destroy()
             else:
@@ -226,7 +226,7 @@ def defineOwnSoftware(root):
         def resetButton():
             global xyt
             xyt = []
-            theStatus.set("[First X, Y, time coordinates]: ")
+            theStatus.set("[First X, Y, time values]: ")
 
         def displayTable(data):
             r = 0
@@ -246,7 +246,7 @@ def defineOwnSoftware(root):
             info = event.widget.grid_info()
             coord = (info["column"], info["row"]-1)
             xyt.append(coord)
-            theStatus.set("[First X, Y, time coordinates]: " + str(xyt))
+            theStatus.set("[First X, Y, time values]: " + str(xyt))
 
         if (file_extension == '.csv'):
             # display csv as table
@@ -263,7 +263,7 @@ def defineOwnSoftware(root):
         resetbutton.grid(row=0, column=5)
 
         top.attributes('-topmost', False)
-        messagebox.showinfo(None, "Please select in order: first X-position, first Y-position, first time value.")
+        messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
         top.attributes('-topmost', True)
         top.mainloop()
 
