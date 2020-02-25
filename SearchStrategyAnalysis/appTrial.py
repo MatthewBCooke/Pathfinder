@@ -216,6 +216,7 @@ def defineOwnSoftware(root):
                 messagebox.showinfo(None, "X-position column: " + str(xyt[0])
                                     + "\nY-position column: " + str(xyt[1])
                                     + "\nTime column: " + str(xyt[2]))
+                top.quit()
                 top.destroy()
             else:
                 top.attributes('-topmost', False)

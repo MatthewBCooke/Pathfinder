@@ -332,9 +332,9 @@ class mainClass:
                                         value="eztrack", indicatoron=1, width=15, bg="white")
         self.eztrackRadio.grid(row=rowCount, column=4, padx=5, sticky='NW')
 
-        self.defineSoftware = Button(self.softwareBar, text="Define..", command=self.callDefineOwnSoftware, width=15,
-                                     bg="white")
-        self.defineSoftware.grid(row=rowCount, column=5, padx=5, sticky='NW')
+        self.defineRadio = Radiobutton(self.softwareBar, text="Custom", variable=softwareStringVar, value="custom",
+                                       indicatoron=0, width=15, bg="white", command=self.callDefineOwnSoftware)
+        self.defineRadio.grid(row=rowCount, column=5, padx=5, sticky='NW')
         self.softwareBar.pack(side=TOP, fill=X, pady=5)
 
         self.autoRadio.bind("<Enter>", partial(self.on_enter, "Click for automatic detection of data-type"))
@@ -347,8 +347,8 @@ class mainClass:
         self.watermazeRadio.bind("<Leave>", self.on_leave)
         self.eztrackRadio.bind("<Enter>", partial(self.on_enter, "Click if you used ezTrack to generate your data"))
         self.eztrackRadio.bind("<Leave>", self.on_leave)
-        self.defineSoftware.bind("<Enter>", partial(self.on_enter, "Click if your software does not match a preset"))
-        self.defineSoftware.bind("<Leave>", self.on_leave)
+        self.defineRadio.bind("<Enter>", partial(self.on_enter, "Click if your software does not match a preset"))
+        self.defineRadio.bind("<Leave>", self.on_leave)
 
         # ******* STATUS BAR *******
         self.status = Label(root, textvariable=theStatus, bd=1, relief=SUNKEN, anchor=W,
@@ -1372,6 +1372,7 @@ class mainClass:
     def callDefineOwnSoftware(self):
         messagebox.showinfo(None, "Please select a sample input file")
         defineOwnSoftware(root)
+        self.defineRadio['state'] = 'active'
         self.calculateButton['state'] = 'normal'
 
     def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, scalingFactor, name, title,
