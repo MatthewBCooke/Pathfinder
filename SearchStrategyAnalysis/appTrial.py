@@ -204,18 +204,19 @@ def defineOwnSoftware(root):
 
         # display selected XYT columns using a status bar
         theStatus = StringVar()
-        theStatus.set("[X-col, Y-col, time col]: ")
-        status = Label(frame, textvariable=theStatus, width=25, height=2, relief=SUNKEN, anchor=W, bg="white")
-        status.grid(row=0, column=0, columnspan=2)
+        theStatus.set("[First X, Y, time values]: ")
+        status = Label(frame, textvariable=theStatus, width=50, height=2, relief=SUNKEN, anchor=W, bg="white")
+        status.grid(row=0, column=0, columnspan=4)
 
         global xyt
 
         def okButton():
             if (len(xyt) == 3):
                 top.attributes('-topmost', False)
-                messagebox.showinfo(None, "X-position column: " + str(xyt[0])
-                                    + "\nY-position column: " + str(xyt[1])
-                                    + "\nTime column: " + str(xyt[2]))
+                messagebox.showinfo(None, "First X value: " + str(xyt[0])
+                                    + "\nFirst Y value: " + str(xyt[1])
+                                    + "\nFirst time value: " + str(xyt[2]))
+                top.quit()
                 top.destroy()
             else:
                 top.attributes('-topmost', False)
@@ -225,7 +226,7 @@ def defineOwnSoftware(root):
         def resetButton():
             global xyt
             xyt = []
-            theStatus.set("[X-col, Y-col, time col]: ")
+            theStatus.set("[First X, Y, time values]: ")
 
         def displayTable(data):
             r = 0
@@ -243,11 +244,9 @@ def defineOwnSoftware(root):
         # gets column number from clicked column
         def getXYT(event):
             info = event.widget.grid_info()
-            coord = (info["row"], info["column"])
-            xyt.append(coord[1])
-            theStatus.set("[X-col, Y-col, time col]: " + str(xyt))
-            print(coord)
-            print(xyt)
+            coord = (info["column"], info["row"]-1)
+            xyt.append(coord)
+            theStatus.set("[First X, Y, time values]: " + str(xyt))
 
         if (file_extension == '.csv'):
             # display csv as table
@@ -259,12 +258,12 @@ def defineOwnSoftware(root):
             displayTable(data.values)
 
         okbutton = Button(frame, text="Save", width=12, height=2, command=okButton)
-        okbutton.grid(row=0, column=2)
+        okbutton.grid(row=0, column=4)
         resetbutton = Button(frame, text="Reset", width=12, height=2, command=resetButton)
-        resetbutton.grid(row=0, column=3)
+        resetbutton.grid(row=0, column=5)
 
         top.attributes('-topmost', False)
-        messagebox.showinfo(None, "Please select in order: X-position column, Y-position column, time column.")
+        messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
         top.attributes('-topmost', True)
         top.mainloop()
 
