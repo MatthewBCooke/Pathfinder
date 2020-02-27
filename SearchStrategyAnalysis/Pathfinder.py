@@ -547,6 +547,7 @@ class mainClass:
         mazeX, mazeY = mazeCentreStringVar.get().split(",")
         mazeCentre = [float(mazeX), float(mazeY)]
 
+        startX, startY =  200, 200+scale*radius
         goalX, goalY = goalPosStringVar.get().split(",")
         goalCentre = [200 + (float(goalX)) - mazeCentre[0], 200 - (float(goalY)) + mazeCentre[1]]
         goalLBorder = goalCentre[0] - scale * (float(goalDiamStringVar.get()) / 2)
@@ -572,11 +573,42 @@ class mainClass:
         self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                               400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
+        aArcTangent = math.degrees(math.atan((goalCentre[0] - startY) / (goalCentre[1]+0.000000001 - startX)))
+        if (aArcTangent < 0): aArcTangent += 360
+        upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
+        lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
+
+        p, q = goalCentre[0] , goalCentre[1]
+        r = radius*scale
+
+        m1 = math.tan(math.radians(upperCorridor))
+        c1 = startY - m1 * startX
+        A1 = m1 ** 2 + 1
+        B1 = 2 * (m1 * c1 - m1 * q - p)
+        C1 = q ** 2 - r ** 2 + p ** 2 - 2 * c1 * q + c1 ** 2
+        det = B1 ** 2 - 4 * A1 * C1
+
+        endX1 = (-B1 + math.sqrt(det)) / 2 * A1
+        endY1 = m1 * endX1 + c1
+
+        m2 = math.tan(math.radians(lowerCorridor))
+        c2 = startY - m2 * startX
+        A2 = m2 ** 2 + 1
+        B2 = 2 * (m2 * c2 - m2 * q - p)
+        C2 = q ** 2 - r ** 2 + p ** 2 - 2 * c2 * q + c2 ** 2
+        det = B2 ** 2 - 4 * A2 * C2
+
+        endX2 = (-B2 + math.sqrt(det)) / 2 * A2
+        endY2 = m2 * endX2 + c2
+
+        self.upperCorridorLine = canvas.create_line(startX, startY, endX1, endY1, fill="blue", width=2)
+        self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, endY2, fill="blue", width=2)
+
         self.centerLine = canvas.create_line(200, 200 + scale * radius, 200, 200 - scale * radius, dash=(1, 1))
         self.centerLine = canvas.create_line(200 - scale * radius, 200, 200 + scale * radius, 200, dash=(1, 1))
+        self.centerToGoalLine = canvas.create_line(200, 200 + scale * radius, goalCentre[0], goalCentre[1], fill="red")
         self.start = canvas.create_oval(195, 195 + scale * radius, 205, 205 + scale * radius, fill="green", width=1)
         self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
-        self.centerToGoalLine = canvas.create_line(200, 200 + scale * radius, goalCentre[0], goalCentre[1], fill="red")
 
         # draw all rois
         for aTuple in rois:
@@ -623,11 +655,42 @@ class mainClass:
                 self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                                       400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
+                aArcTangent = math.degrees(math.atan((goalCentre[0] - startY) / (goalCentre[1] + 0.000000001 - startX)))
+                if (aArcTangent < 0): aArcTangent += 360
+                upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
+                lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
+
+                p, q = goalCentre[0], goalCentre[1]
+                r = radius * scale
+
+                m1 = math.tan(math.radians(upperCorridor))
+                c1 = startY - m1 * startX
+                A1 = m1 ** 2 + 1
+                B1 = 2 * (m1 * c1 - m1 * q - p)
+                C1 = q ** 2 - r ** 2 + p ** 2 - 2 * c1 * q + c1 ** 2
+                det = B1 ** 2 - 4 * A1 * C1
+
+                endX1 = (-B1 + math.sqrt(det)) / 2 * A1
+                endY1 = m1 * endX1 + c1
+
+                m2 = math.tan(math.radians(lowerCorridor))
+                c2 = startY - m2 * startX
+                A2 = m2 ** 2 + 1
+                B2 = 2 * (m2 * c2 - m2 * q - p)
+                C2 = q ** 2 - r ** 2 + p ** 2 - 2 * c2 * q + c2 ** 2
+                det = B2 ** 2 - 4 * A2 * C2
+
+                endX2 = (-B2 + math.sqrt(det)) / 2 * A2
+                endY2 = m2 * endX2 + c2
+
+                self.upperCorridorLine = canvas.create_line(startX, startY, endX1, endY1, fill="blue", width=2)
+                self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, endY2, fill="blue", width=2)
+
                 self.centerLine = canvas.create_line(200, 200 + scale*radius, 200, 200 - scale*radius, dash=(1, 1))
                 self.centerLine = canvas.create_line(200 - scale*radius, 200, 200 + scale*radius, 200, dash=(1, 1))
+                self.centerToGoalLine = canvas.create_line(200, 200 + scale*radius, goalCentre[0], goalCentre[1], fill="red")
                 self.start = canvas.create_oval(195, 195 + scale*radius, 205, 205 + scale*radius, fill="green", width=1)
                 self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
-                self.centerToGoalLine = canvas.create_line(200, 200 + scale*radius, goalCentre[0], goalCentre[1], fill="red")
 
                 # draw all rois
                 for aTuple in rois:
