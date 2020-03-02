@@ -573,33 +573,25 @@ class mainClass:
         self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                               400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
-        aArcTangent = math.degrees(math.atan((goalCentre[0] - startY) / (goalCentre[1]+0.000000001 - startX)))
+        aArcTangent = math.degrees(math.atan((startY - goalCentre[0]) / (startX - goalCentre[1]+0.000000001)))
         if (aArcTangent < 0): aArcTangent += 360
         upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
+        if (upperCorridor < 0): upperCorridor += 360
         lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
+        if (lowerCorridor < 0): lowerCorridor += 360
 
         p, q = goalCentre[0] , goalCentre[1]
         r = radius*scale
 
         m1 = math.tan(math.radians(upperCorridor))
         c1 = startY - m1 * startX
-        A1 = m1 ** 2 + 1
-        B1 = 2 * (m1 * c1 - m1 * q - p)
-        C1 = q ** 2 - r ** 2 + p ** 2 - 2 * c1 * q + c1 ** 2
-        det = B1 ** 2 - 4 * A1 * C1
-
-        endX1 = (-B1 + math.sqrt(det)) / 2 * A1
-        endY1 = m1 * endX1 + c1
+        endX1 = -c1/m1
+        endY1 = 0
 
         m2 = math.tan(math.radians(lowerCorridor))
         c2 = startY - m2 * startX
-        A2 = m2 ** 2 + 1
-        B2 = 2 * (m2 * c2 - m2 * q - p)
-        C2 = q ** 2 - r ** 2 + p ** 2 - 2 * c2 * q + c2 ** 2
-        det = B2 ** 2 - 4 * A2 * C2
-
-        endX2 = (-B2 + math.sqrt(det)) / 2 * A2
-        endY2 = m2 * endX2 + c2
+        endX2 = -c2/m2
+        endY2 = 0
 
         self.upperCorridorLine = canvas.create_line(startX, startY, endX1, endY1, fill="blue", width=2)
         self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, endY2, fill="blue", width=2)
@@ -655,33 +647,25 @@ class mainClass:
                 self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                                       400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
-                aArcTangent = math.degrees(math.atan((goalCentre[0] - startY) / (goalCentre[1] + 0.000000001 - startX)))
+                aArcTangent = math.degrees(math.atan((startY - goalCentre[0]) / (startX - goalCentre[1] + 0.000000001)))
                 if (aArcTangent < 0): aArcTangent += 360
                 upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
+                if (upperCorridor < 0): upperCorridor += 360
                 lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
+                if (lowerCorridor < 0): lowerCorridor += 360
 
                 p, q = goalCentre[0], goalCentre[1]
                 r = radius * scale
 
                 m1 = math.tan(math.radians(upperCorridor))
                 c1 = startY - m1 * startX
-                A1 = m1 ** 2 + 1
-                B1 = 2 * (m1 * c1 - m1 * q - p)
-                C1 = q ** 2 - r ** 2 + p ** 2 - 2 * c1 * q + c1 ** 2
-                det = B1 ** 2 - 4 * A1 * C1
-
-                endX1 = (-B1 + math.sqrt(det)) / 2 * A1
-                endY1 = m1 * endX1 + c1
+                endX1 = -c1 / m1
+                endY1 = 0
 
                 m2 = math.tan(math.radians(lowerCorridor))
                 c2 = startY - m2 * startX
-                A2 = m2 ** 2 + 1
-                B2 = 2 * (m2 * c2 - m2 * q - p)
-                C2 = q ** 2 - r ** 2 + p ** 2 - 2 * c2 * q + c2 ** 2
-                det = B2 ** 2 - 4 * A2 * C2
-
-                endX2 = (-B2 + math.sqrt(det)) / 2 * A2
-                endY2 = m2 * endX2 + c2
+                endX2 = -c2 / m2
+                endY2 = 0
 
                 self.upperCorridorLine = canvas.create_line(startX, startY, endX1, endY1, fill="blue", width=2)
                 self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, endY2, fill="blue", width=2)
