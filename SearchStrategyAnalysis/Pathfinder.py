@@ -515,7 +515,7 @@ class mainClass:
         trunacteFlag = truncate.get()
         rowCount = rowCount + 1
         self.calculateButton = Button(self.paramFrame, text="Calculate", fg="black",
-                                      command=self.mainHelper, state=DISABLED)  # add a button that says calculate
+                                      command=self.mainHelper, state='disabled')  # add a button that says calculate
         self.calculateButton.grid(row=rowCount, column=1, columnspan=1)
         self.settingsButton = Button(self.paramFrame, text="Settings", command=self.settings, fg="black")
         self.settingsButton.grid(row=rowCount, column=0, columnspan=1)  # add custom button
@@ -666,20 +666,16 @@ class mainClass:
                 twoRows = [row for idx, row in enumerate(data) if idx in (0, 1)]
                 if (set(anymaze).issubset(twoRows[0])):
                     softwareStringVar.set("anymaze")
-                    self.calculateButton['state'] = 'normal'
                 if (set(['x', 'y', 't']).issubset(twoRows[1])):
                     softwareStringVar.set("watermaze")
-                    self.calculateButton['state'] = 'normal'
                 if (set(eztrack).issubset(twoRows[0])):
                     softwareStringVar.set("eztrack")
-                    self.calculateButton['state'] = 'normal'
         elif (file_extension == '.xlsx'):
             workbook = open_workbook(theFile)
             sheet = workbook.sheet_by_index(0)
             rowNames = sheet.col_values(0)
             if (set(ethovision).issubset(rowNames)):
                 softwareStringVar.set("ethovision")
-                self.calculateButton['state'] = 'normal'
         else:
             self.callDefineOwnSoftware()
 
@@ -692,7 +688,8 @@ class mainClass:
         fileFlag = 1
         fileDirectory = ""
         theFile = filedialog.askopenfilename()  # look for xlsx and xls files
-        self.detectSoftwareType()
+        self.calculateButton['state'] = 'normal'
+        #self.detectSoftwareType()
 
     def openDir(self):  # open dialog to get multiple files
         logging.debug("Open Dir...")
@@ -701,6 +698,7 @@ class mainClass:
         global fileFlag
         fileFlag = 0
         theFile = ""
+        self.calculateButton['state'] = 'normal'
         fileDirectory = filedialog.askdirectory(mustexist=TRUE)
 
     def generateHeatmap(self, root):
@@ -2040,7 +2038,11 @@ class mainClass:
 
         startToPlatVector = goalPoint - startPoint
 
-        aArcTangent = math.degrees(math.atan((goalY - startY) / (goalX - startX)))
+        if(goalX-startX != 0):
+            aArcTangent = math.degrees(math.atan((goalY - startY) / (goalX - startX)))
+        else:
+            aArcTangent = 0;
+
         upperCorridor = aArcTangent + corridorWidth
         lowerCorridor = aArcTangent - corridorWidth
         corridorWidth = 0.0
@@ -2118,7 +2120,6 @@ class mainClass:
         try:
             sampleRate = (theTrial.datapointList[-1].gettime() - startTime) / (len(theTrial.datapointList) - 1)
         except:
-            print("Error with sample rate calculation")
             logging.info("Error with sample rate calculation")
             sampleRate = 1
         while idealDistance > math.ceil(float(goalDiam) / 2):
@@ -2257,21 +2258,23 @@ class mainClass:
             return
 
         headersToWrite = []
-        if aExperiment.hasDateInfo:
-            headersToWrite.extend(["Date", "Time", "Day"])
+        try:
+            if aExperiment.hasDateInfo:
+                headersToWrite.extend(["Date", "Time", "Day"])
 
-        headersToWrite.append("Trial")
-        if aExperiment.hasTrialNames:
-            headersToWrite.append("Name")
-        if aExperiment.hasAnimalNames:
-            headersToWrite.append("Animal")
-
+            headersToWrite.append("Trial")
+            if aExperiment.hasTrialNames:
+                headersToWrite.append("Name")
+            if aExperiment.hasAnimalNames:
+                headersToWrite.append("Animal")
+        except:
+            pass
         headersToWrite.extend(
             ["Trial Code", "Strategy", "IPE", "Velocity", "Distance covered", "Average distance to goal",
-             "Average heading error", "Percent of maze traversed", "Latency", "Sccore", "Initial heading error",
+             "Average heading error", "Percent of maze traversed", "Latency", "Score", "Initial heading error",
              "Entropy", "Distance to swim path centroid", "Average distance to centre of maze",
              "Percent in angular corridor", "Percent in annulus zone", "Percent in smaller thigmotaxis zone",
-             "Percent in full thigmotaxis zone", "Strategy (manual)", "File"])
+             "Percent in full thigmotaxis zone", "Strategy (manual)"])
         writer.writerow(headersToWrite)  # write to the csv
 
         dayNum = 0
@@ -2465,8 +2468,7 @@ class mainClass:
                  round(averageHeadingError, 2), round(percentTraversed, 2), round(latency, 2), score,
                  initialHeadingError, round(entropyResult, 2), round(averageDistanceToSwimPathCentroid, 2),
                  round(averageDistanceToCentre, 2), round(corridorAverage, 2), round(annulusCounter / i, 2),
-                 round(smallThigmoCounter / i, 2), round(fullThigmoCounter / i, 2), str(strategyManual),
-                 str(aTrial.getfile())])
+                 round(smallThigmoCounter / i, 2), round(fullThigmoCounter / i, 2), str(strategyManual)])
             writer.writerow(dataToWrite)  # writing to csv file
 
             f.flush()
