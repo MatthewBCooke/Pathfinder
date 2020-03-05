@@ -575,27 +575,20 @@ class mainClass:
         self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                               400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
-        if (startX - goalCentre[1] == 0):
-            aArcTangent = 270
-        else:
-            aArcTangent = math.degrees(math.atan(-(startY - goalCentre[0]) / (startX - goalCentre[1])))
-            # aArcTangent = math.degrees(math.atan2(startY - goalCentre[0], startX - goalCentre[1]))
-
+        if (startX - goalCentre[1] == 0): aArcTangent = 270
+        else: aArcTangent = math.degrees(math.atan(-(startY - goalCentre[0]) / (startX - goalCentre[1])))
         upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
         lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
 
         m1 = math.tan(math.radians(upperCorridor))
         c1 = startY - m1 * startX
         endX1 = -c1 / m1
-        endY1 = 0
-
         m2 = math.tan(math.radians(lowerCorridor))
         c2 = startY - m2 * startX
         endX2 = -c2 / m2
-        endY2 = 0
 
-        self.upperCorridorLine = canvas.create_line(startX, startY, endX1, endY1, fill="blue", width=2)
-        self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, endY2, fill="blue", width=2)
+        self.upperCorridorLine = canvas.create_line(startX, startY, endX1, 0, fill="blue", width=2)
+        self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, 0, fill="blue", width=2)
 
         self.centerLine = canvas.create_line(200, 200 + scale * radius, 200, 200 - scale * radius, dash=(1, 1))
         self.centerLine = canvas.create_line(200 - scale * radius, 200, 200 + scale * radius, 200, dash=(1, 1))
@@ -624,7 +617,7 @@ class mainClass:
 
                 mazeX, mazeY = mazeCentreStringVar.get().split(",")
                 mazeCentre = [float(mazeX), float(mazeY)]
-
+                startX, startY = 200, 200 + scale * radius
                 goalX, goalY = goalPosStringVar.get().split(",")
                 goalCentre = [200 + (float(goalX)) - mazeCentre[0], 200 - (float(goalY)) + mazeCentre[1]]
                 goalLBorder = goalCentre[0] - scale * (float(goalDiamStringVar.get()) / 2)
@@ -648,31 +641,20 @@ class mainClass:
                 self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                                       400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
-                if (startX - goalCentre[0] == 0):
-                    aArcTangent = 270
-                else:
-                    aArcTangent = math.degrees(math.atan(-(startY - goalCentre[0]) / (startX - goalCentre[1])))
-                    # if (goalCentre[0] > 200 and goalCentre[1] < 200):
-                    #     aArcTangent = math.degrees(math.atan((startY - goalCentre[0]) / (startX + goalCentre[1])))
-                    # else:
-                    #     aArcTangent = math.degrees(math.atan((startY - goalCentre[0]) / (startX - goalCentre[1])))
-                    # aArcTangent = math.degrees(math.atan2(-(startY - goalCentre[0]), startX - goalCentre[1]))
-
+                if (startX - goalCentre[1] == 0): aArcTangent = 270
+                else: aArcTangent = math.degrees(math.atan(-(startY - goalCentre[0]) / (startX - goalCentre[1])))
                 upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
                 lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
 
                 m1 = math.tan(math.radians(upperCorridor))
                 c1 = startY - m1 * startX
                 endX1 = -c1 / m1
-                endY1 = 0
-
                 m2 = math.tan(math.radians(lowerCorridor))
                 c2 = startY - m2 * startX
                 endX2 = -c2 / m2
-                endY2 = 0
 
-                self.upperCorridorLine = canvas.create_line(startX, startY, endX1, endY1, fill="blue", width=2)
-                self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, endY2, fill="blue", width=2)
+                self.upperCorridorLine = canvas.create_line(startX, startY, endX1, 0, fill="blue", width=2)
+                self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, 0, fill="blue", width=2)
 
                 self.centerLine = canvas.create_line(200, 200 + scale*radius, 200, 200 - scale*radius, dash=(1, 1))
                 self.centerLine = canvas.create_line(200 - scale*radius, 200, 200 + scale*radius, 200, dash=(1, 1))
