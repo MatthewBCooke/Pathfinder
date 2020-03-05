@@ -8,7 +8,7 @@ For a more detailed overview of Pathfinder please visit our [**Wiki**](https://g
 
 ## Synopsis
 
-The Pathfinder package is a search strategy analysis tool for the Morris Water Maze, and can be expanded for other spatial navigation tasks. The program analyses X-Y coordinate data exported from commercially available tracking software. Pathfinder currently supports outputs from: Ethovision, Anymazy, WaterMaze, and ezTrack. We then calculate the best-fit search strategy for the trial. Trials are fit into one of: Direct Swim, Directed Search, Focal Search, Spatial indirect, Chaining, Scanning, Thigmotaxis, and Random Search.
+The Pathfinder package is a search strategy analysis tool for the Morris Water Maze, and can be expanded for other spatial navigation tasks. The program analyses X-Y coordinate data exported from commercially available tracking software. Pathfinder currently supports outputs from: Ethovision, Anymaze, WaterMaze, and ezTrack. We then calculate the best-fit search strategy for the trial. Trials are fit into one of: Direct Swim, Directed Search, Focal Search, Spatial indirect, Chaining, Scanning, Thigmotaxis, and Random Search.
 
 ## Citing
 
