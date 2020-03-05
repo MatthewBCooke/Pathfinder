@@ -2087,9 +2087,6 @@ class mainClass:
         initialHeadingError = 0.0
         initialHeadingErrorCount = 0
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
-            # if dayNum == 9 or dayNum == 14:
-            #     if aDatapoint.gettime() > probeCutVar:
-            #         continue
             currentDistanceFromGoal = math.sqrt(
                 (goalX - aDatapoint.getx()) ** 2 + (goalY - aDatapoint.gety()) ** 2) * scalingFactor
             distanceToSwimPathCentroid = math.sqrt(
@@ -2373,11 +2370,11 @@ class mainClass:
             quadrantThree = 0
             quadrantFour = 0
             quadrantTotal = 0
-            # </editor-fold>
             score = 0
             # Analyze the data ----------------------------------------------------------------------------------------------
-
-            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, fullThigmoCounter, smallThigmoCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
+            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, \
+            percentTraversed, quadrantTotal, totalDistance, latency, fullThigmoCounter, smallThigmoCounter, annulusCounter, i, \
+            arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
                 aTrial, goalX, goalY, mazeCentreX,
                 mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, fullThigmoZone,
                 smallThigmoZone, scalingFactor, mazeRadius, dayNum, goalDiamVar)

@@ -492,26 +492,24 @@ def saveFileAsExperiment(software, filename, filedirectory):
             listReader = list(reader)
             aTrial = Trial()
             aTrial.setname(filename.split("/")[-1])
-            columns = defaultdict(list)  # each value in each column is appended to a list
             aIndex = 0
-            firstX = list(customxyt[0])
-            firstY = list(customxyt[1])
-            firstT = list(customxyt[2])
-
-            for x, y, t in zip(listReader[firstX[1]:][firstX[0]], listReader[firstY[1]:][firstY[0]], listReader[firstT[1]:][firstT[0]]):
+            xCol = customxyt[0][0]
+            yCol = customxyt[1][0]
+            tCol = customxyt[2][0]
+            for row in listReader[customxyt[0][0]:]:
                 try:
+                    x = float(row[xCol])
+                    y = float(row[yCol])
+                    t = row[tCol]
                     hours = float(t.split(':')[0])
                     minutes = float(t.split(':')[1])
                     seconds = float(t.split(':')[2])
                     time = seconds + minutes * 60 + hours * 3600
-                    x = float(x)
-                    y = float(y)
-                    print(time,x,y)
+                    print(time, x, y)
                     aTrial.append(Datapoint(time, x, y))
                 except:
                     aTrial.markDataAsCorrupted()
             trialList.append(aTrial)
-
         else:
             logging.critical("Could not determine trial, saveFileAsTrial")
             return
