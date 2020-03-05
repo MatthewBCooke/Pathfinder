@@ -173,8 +173,8 @@ def openFile():  # opens a dialog to get a single file
     return theFile
 
 
-global xyt
-xyt = []
+global customxyt
+customxyt = []
 
 
 def defineOwnSoftware(root):
@@ -208,14 +208,15 @@ def defineOwnSoftware(root):
         status = Label(frame, textvariable=theStatus, width=50, height=2, relief=SUNKEN, anchor=W, bg="white")
         status.grid(row=0, column=0, columnspan=4)
 
-        global xyt
+        global customxyt
 
         def okButton():
-            if (len(xyt) == 3):
+            if (len(customxyt) == 3):
                 top.attributes('-topmost', False)
-                messagebox.showinfo(None, "First X value: " + str(xyt[0])
-                                    + "\nFirst Y value: " + str(xyt[1])
-                                    + "\nFirst time value: " + str(xyt[2]))
+                messagebox.showinfo(None, "First X value: " + str(customxyt[0])
+                                    + "\nFirst Y value: " + str(customxyt[1])
+                                    + "\nFirst time value: " + str(customxyt[2]))
+
                 top.quit()
                 top.destroy()
             else:
@@ -224,8 +225,8 @@ def defineOwnSoftware(root):
                 top.attributes('-topmost', True)
 
         def resetButton():
-            global xyt
-            xyt = []
+            global customxyt
+            customxyt = []
             theStatus.set("[First X, Y, time values]: ")
 
         def displayTable(data):
@@ -245,13 +246,15 @@ def defineOwnSoftware(root):
         def getXYT(event):
             info = event.widget.grid_info()
             coord = (info["column"], info["row"]-1)
-            xyt.append(coord)
-            theStatus.set("[First X, Y, time values]: " + str(xyt))
+            customxyt.append(coord)
+            theStatus.set("[First X, Y, time values]: " + str(customxyt))
 
+        # display table
         if (file_extension == '.csv'):
-            # display csv as table
             with open(filename, newline="") as file:
-                data = csv.reader(file)
+                dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
+                file.seek(0)
+                data = csv.reader(file, dialect)
                 displayTable(data)
         elif (file_extension == '.xlsx'):
             data = pd.read_excel(filename)
@@ -272,6 +275,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
     trialList = []
     filenameList = []
     experiment = Experiment(filename)
+    dialect = ""
     if filename == "":
         if filedirectory == "":
             logging.error("No files selected")
@@ -288,7 +292,11 @@ def saveFileAsExperiment(software, filename, filedirectory):
         filenameList.append(filename)
 
     for filename in filenameList:
-
+        file_extension = os.path.splitext(filename)[1]
+        if software != "ethovision" and file_extension == '.csv':
+            with open(filename, newline="") as file:
+                dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
+                file.seek(0)
         if software == "ethovision":
             logging.info("Reading file ethovision")
             experiment.setHasAnimalNames(True)
@@ -354,7 +362,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 traceback.print_exc()
                 logging.info("Could not open " + filename)
                 return
-            reader = csv.reader(f, delimiter=",")
+            reader = csv.reader(f, dialect)
             next(reader)
             for row in reader:
                 for (i, v) in enumerate(row):
@@ -392,7 +400,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 logging.info("Could not open " + filename)
                 return
 
-            reader = csv.reader(f, delimiter=",")
+            reader = csv.reader(f, dialect)
             for row in reader:
                 for (i, v) in enumerate(row):
                     columns[i].append(v)
@@ -440,7 +448,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 logging.info("Could not open " + filename)
                 return
 
-            reader = csv.reader(f, delimiter=",")
+            reader = csv.reader(f, dialect)
             listReader = list(reader)
             aTrial = Trial()
             aTrial.setname(filename.split("/")[-1])
@@ -470,6 +478,46 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 except:
                     aTrial.markDataAsCorrupted()
 
+            trialList.append(aTrial)
+
+        elif software == "custom":
+            logging.info("Reading file custom")
+            experiment.setHasAnimalNames(False)
+            experiment.setHasDateInfo(False)
+            experiment.setHasTrialNames(False)
+            try:
+                f = open(filename)
+            except:
+                logging.info("Could not open " + filename)
+                return
+
+            file_extension = os.path.splitext(filename)[1]
+            if (file_extension == '.csv'):
+                reader = csv.reader(f, dialect)
+            elif (file_extension == '.xlsx'):
+                reader = pd.read_excel(filename)
+
+            listReader = list(reader)
+            aTrial = Trial()
+            aTrial.setname(filename.split("/")[-1])
+            columns = defaultdict(list)  # each value in each column is appended to a list
+            aIndex = 0
+            firstX = list(customxyt[0])
+            firstY = list(customxyt[1])
+            firstT = list(customxyt[2])
+
+            for x, y, t in zip(listReader[firstX[1]:][firstX[0]], listReader[firstY[1]:][firstY[0]], listReader[firstT[1]:][firstT[0]]):
+                try:
+                    hours = float(t.split(':')[0])
+                    minutes = float(t.split(':')[1])
+                    seconds = float(t.split(':')[2])
+                    time = seconds + minutes * 60 + hours * 3600
+                    x = float(x)
+                    y = float(y)
+                    print(time,x,y)
+                    aTrial.append(Datapoint(time, x, y))
+                except:
+                    aTrial.markDataAsCorrupted()
             trialList.append(aTrial)
 
         else:

@@ -159,6 +159,8 @@ chainingRadiusStringVar = StringVar()
 chainingRadiusStringVar.set(chainingRadiusVar)
 thigmotaxisZoneSizeStringVar = StringVar()
 thigmotaxisZoneSizeStringVar.set(thigmotaxisZoneSizeVar)
+softwareStringVar = StringVar()
+softwareStringVar.set("")
 softwareScalingFactorStringVar = StringVar()
 softwareScalingFactorStringVar.set("1.0")
 outputFileStringVar = StringVar()
@@ -332,7 +334,7 @@ class mainClass:
                                         value="eztrack", indicatoron=1, width=15, bg="white")
         self.eztrackRadio.grid(row=rowCount, column=4, padx=5, sticky='NW')
 
-        self.defineRadio = Radiobutton(self.softwareBar, text="Define", variable=softwareStringVar, value="define",
+        self.defineRadio = Radiobutton(self.softwareBar, text="Define", variable=softwareStringVar, value="custom",
                                        indicatoron=0, width=15, bg="white", command=self.callDefineOwnSoftware)
         self.defineRadio.grid(row=rowCount, column=5, padx=5, sticky='NW')
         self.softwareBar.pack(side=TOP, fill=X, pady=5)
@@ -573,24 +575,23 @@ class mainClass:
         self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                               400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
-        aArcTangent = math.degrees(math.atan((startY - goalCentre[0]) / (startX - goalCentre[1]+0.000000001)))
-        if (aArcTangent < 0): aArcTangent += 360
-        upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
-        if (upperCorridor < 0): upperCorridor += 360
-        lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
-        if (lowerCorridor < 0): lowerCorridor += 360
+        if (startX - goalCentre[1] == 0):
+            aArcTangent = 270
+        else:
+            aArcTangent = math.degrees(math.atan(-(startY - goalCentre[0]) / (startX - goalCentre[1])))
+            # aArcTangent = math.degrees(math.atan2(startY - goalCentre[0], startX - goalCentre[1]))
 
-        p, q = goalCentre[0] , goalCentre[1]
-        r = radius*scale
+        upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
+        lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
 
         m1 = math.tan(math.radians(upperCorridor))
         c1 = startY - m1 * startX
-        endX1 = -c1/m1
+        endX1 = -c1 / m1
         endY1 = 0
 
         m2 = math.tan(math.radians(lowerCorridor))
         c2 = startY - m2 * startX
-        endX2 = -c2/m2
+        endX2 = -c2 / m2
         endY2 = 0
 
         self.upperCorridorLine = canvas.create_line(startX, startY, endX1, endY1, fill="blue", width=2)
@@ -647,15 +648,18 @@ class mainClass:
                 self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                                       400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
-                aArcTangent = math.degrees(math.atan((startY - goalCentre[0]) / (startX - goalCentre[1] + 0.000000001)))
-                if (aArcTangent < 0): aArcTangent += 360
-                upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
-                if (upperCorridor < 0): upperCorridor += 360
-                lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
-                if (lowerCorridor < 0): lowerCorridor += 360
+                if (startX - goalCentre[0] == 0):
+                    aArcTangent = 270
+                else:
+                    aArcTangent = math.degrees(math.atan(-(startY - goalCentre[0]) / (startX - goalCentre[1])))
+                    # if (goalCentre[0] > 200 and goalCentre[1] < 200):
+                    #     aArcTangent = math.degrees(math.atan((startY - goalCentre[0]) / (startX + goalCentre[1])))
+                    # else:
+                    #     aArcTangent = math.degrees(math.atan((startY - goalCentre[0]) / (startX - goalCentre[1])))
+                    # aArcTangent = math.degrees(math.atan2(-(startY - goalCentre[0]), startX - goalCentre[1]))
 
-                p, q = goalCentre[0], goalCentre[1]
-                r = radius * scale
+                upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
+                lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
 
                 m1 = math.tan(math.radians(upperCorridor))
                 c1 = startY - m1 * startX
@@ -753,7 +757,6 @@ class mainClass:
         global fileDirectory
         global theFile
         software = softwareStringVar.get()
-
         experiment = saveFileAsExperiment(software, theFile, fileDirectory)
         self.guiHeatmap(experiment)
 
@@ -1416,8 +1419,8 @@ class mainClass:
                     yield filename
 
     def callDefineOwnSoftware(self):
-        messagebox.showinfo(None, "Please select a sample input file")
         defineOwnSoftware(root)
+        softwareStringVar.set("custom")
         self.defineRadio['state'] = 'active'
         self.calculateButton['state'] = 'normal'
 
@@ -2266,7 +2269,7 @@ class mainClass:
         skipFlag = False
         software = softwareStringVar.get()
         if (software == "auto"):
-            detectSoftwareType(self)
+            self.detectSoftwareType()
         software = softwareStringVar.get()
 
         try:
@@ -2524,19 +2527,18 @@ class mainClass:
               focalSearchCount, "| Indirect Search: ", indirectSearchCount, "| Semi-focal Search: ",
               semifocalSearchCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ",
               randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
-        if sys.platform.startswith('darwin'):
-            subprocess.call(('open', currentOutputFile))
-        elif os.name == 'nt':  # For Windows
-            os.startfile(currentOutputFile)
-        elif os.name == 'posix':  # For Linux, Mac, etc.
-            subprocess.call(('xdg-open', currentOutputFile))
+        # if sys.platform.startswith('darwin'):
+        #     subprocess.call(('open', currentOutputFile))
+        # elif os.name == 'nt':  # For Windows
+        #     os.startfile(currentOutputFile)
+        # elif os.name == 'posix':  # For Linux, Mac, etc.
+        #     subprocess.call(('xdg-open', currentOutputFile))
         self.updateTasks()
         theStatus.set('')
         self.updateTasks()
         csvfilename = "output/results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
                                                                localtime()))  # update the csv file name for the next run
         outputFileStringVar.set(csvfilename)
-
         return
 
 
