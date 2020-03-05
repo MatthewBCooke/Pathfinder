@@ -672,7 +672,6 @@ class mainClass:
                     roiBottomBorder = roiCentre[1] + scale * float(aTuple[1]) / 2
                     self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
             except:
-                #print("INVALID VAR INPUT")
                 pass
 
         goalDiamStringVar.trace_variable("w", redraw)
@@ -694,8 +693,10 @@ class mainClass:
         ethovision = ['Number of header lines:']
         file_extension = os.path.splitext(theFile)[1]
         if (file_extension == '.csv'):
-            with open(theFile, newline="") as file:
-                data = csv.reader(file)
+            with open(filename, newline="") as file:
+                dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
+                file.seek(0)
+                data = csv.reader(file, dialect)
                 twoRows = [row for idx, row in enumerate(data) if idx in (0, 1)]
                 if (set(anymaze).issubset(twoRows[0])):
                     softwareStringVar.set("anymaze")
@@ -703,15 +704,16 @@ class mainClass:
                     softwareStringVar.set("watermaze")
                 if (set(eztrack).issubset(twoRows[0])):
                     softwareStringVar.set("eztrack")
+                else:
+                    softwareStringVar.set("custom")
         elif (file_extension == '.xlsx'):
             workbook = open_workbook(theFile)
             sheet = workbook.sheet_by_index(0)
             rowNames = sheet.col_values(0)
             if (set(ethovision).issubset(rowNames)):
                 softwareStringVar.set("ethovision")
-        else:
-            self.callDefineOwnSoftware()
-
+            else:
+                softwareStringVar.set("custom")
 
     def openFile(self):  # opens a dialog to get a single file
         logging.debug("Open File...")
@@ -722,7 +724,6 @@ class mainClass:
         fileDirectory = ""
         theFile = filedialog.askopenfilename()  # look for xlsx and xls files
         self.calculateButton['state'] = 'normal'
-        #self.detectSoftwareType()
 
     def openDir(self):  # open dialog to get multiple files
         logging.debug("Open Dir...")
@@ -1401,7 +1402,11 @@ class mainClass:
                     yield filename
 
     def callDefineOwnSoftware(self):
-        defineOwnSoftware(root)
+        global theFile
+        if theFile == "":
+            logging.debug("Open File...")
+            theFile = filedialog.askopenfilename()
+        defineOwnSoftware(root, theFile)
         softwareStringVar.set("custom")
         self.defineRadio['state'] = 'active'
         self.calculateButton['state'] = 'normal'
@@ -2509,6 +2514,7 @@ class mainClass:
               focalSearchCount, "| Indirect Search: ", indirectSearchCount, "| Semi-focal Search: ",
               semifocalSearchCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ",
               randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
+        # TODO
         # if sys.platform.startswith('darwin'):
         #     subprocess.call(('open', currentOutputFile))
         # elif os.name == 'nt':  # For Windows
