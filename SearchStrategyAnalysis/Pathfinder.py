@@ -1062,260 +1062,271 @@ class mainClass:
 
         self.top = Toplevel(root)  # we set this to be the top
         self.top.configure(bg="white")
-        Label(self.top, text="Settings", bg="white", fg="red").grid(row=0, column=0, columnspan=2)  # we title it
+
+        canvas = Canvas(self.top, borderwidth=0, width=400, height=600, bg="white")  # we create the canvas
+        frame = Frame(canvas)  # we place a frame in the canvas
+        frame.configure(bg="white")
+        yscrollbar = Scrollbar(self.top, orient=VERTICAL, command=canvas.yview)  # vertical scroll bar
+        yscrollbar.grid(row=0, column=2, sticky='ns')
+
+        canvas.grid(row=0, column=0) # we pack in the canvas
+        canvas.create_window((4, 4), window=frame, anchor="nw")
+        canvas.configure(yscrollcommand=yscrollbar.set)  # we set the commands for the scroll bars
+        frame.bind("<Configure>", lambda event, canvas=canvas: canvas.configure(scrollregion=canvas.bbox("all")))
+
+
+
+        Label(frame, text="Settings", bg="white", fg="black").grid(row=0, column=0, columnspan=2, padx=100, pady=20)  # we title it
 
         rowCount = 1
 
-        useDirectPathL = Label(self.top, text="Direct Path: ", bg="white")  # we add a direct path label
+        useDirectPathL = Label(frame, text="Direct Path: ", bg="white")  # we add a direct path label
         useDirectPathL.grid(row=rowCount, column=0, sticky=E)  # stick it to row 1
-        useDirectPathC = Checkbutton(self.top, variable=self.useDirectPath, bg="white")  # we add a direct path checkbox
+        useDirectPathC = Checkbutton(frame, variable=self.useDirectPath, bg="white")  # we add a direct path checkbox
         useDirectPathC.grid(row=rowCount, column=1)  # put it beside the label
 
         rowCount += 1
 
-        jslsMaxCustomL = Label(self.top, text="Ideal Path Error [maximum]: ", bg="white")  # label for JSLs
+        jslsMaxCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg="white")  # label for JSLs
         jslsMaxCustomL.grid(row=rowCount, column=0, sticky=E)  # row 2
-        jslsMaxCustomE = Entry(self.top, textvariable=self.jslsMaxCustom)  # entry field
+        jslsMaxCustomE = Entry(frame, textvariable=self.jslsMaxCustom)  # entry field
         jslsMaxCustomE.grid(row=rowCount, column=1)  # right beside
 
         rowCount += 1
 
-        headingErrorCustomL = Label(self.top, text="Heading error [maximum, degrees]: ", bg="white")
+        headingErrorCustomL = Label(frame, text="Heading error [maximum, degrees]: ", bg="white")
         headingErrorCustomL.grid(row=rowCount, column=0, sticky=E)
-        headingErrorCustomE = Entry(self.top, textvariable=self.headingErrorCustom)
+        headingErrorCustomE = Entry(frame, textvariable=self.headingErrorCustom)
         headingErrorCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useFocalSearchL = Label(self.top, text="Focal Search: ", bg="white")
+        useFocalSearchL = Label(frame, text="Focal Search: ", bg="white")
         useFocalSearchL.grid(row=rowCount, column=0, sticky=E)
-        useFocalSearchC = Checkbutton(self.top, variable=self.useFocalSearch, bg="white")
+        useFocalSearchC = Checkbutton(frame, variable=self.useFocalSearch, bg="white")
         useFocalSearchC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToSwimCustomL = Label(self.top, text="Distance to swim path centroid [maximum, % of radius]: ",
+        distanceToSwimCustomL = Label(frame, text="Distance to swim path centroid [maximum, % of radius]: ",
                                       bg="white")
         distanceToSwimCustomL.grid(row=rowCount, column=0, sticky=E)
-        distanceToSwimCustomE = Entry(self.top, textvariable=self.distanceToSwimCustom)
+        distanceToSwimCustomE = Entry(frame, textvariable=self.distanceToSwimCustom)
         distanceToSwimCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToPlatCustomL = Label(self.top, text="Distance to goal [maximum, % of radius]: ", bg="white")
+        distanceToPlatCustomL = Label(frame, text="Distance to goal [maximum, % of radius]: ", bg="white")
         distanceToPlatCustomL.grid(row=rowCount, column=0, sticky=E)
-        distanceToPlatCustomE = Entry(self.top, textvariable=self.distanceToPlatCustom)
+        distanceToPlatCustomE = Entry(frame, textvariable=self.distanceToPlatCustom)
         distanceToPlatCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        focalMinDistanceCustomL = Label(self.top, text="Distance covered (minimum, cm): ", bg="white")
+        focalMinDistanceCustomL = Label(frame, text="Distance covered (minimum, cm): ", bg="white")
         focalMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        focalMinDistanceCustomE = Entry(self.top, textvariable=self.focalMinDistanceCustom)
+        focalMinDistanceCustomE = Entry(frame, textvariable=self.focalMinDistanceCustom)
         focalMinDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        focalMaxDistanceCustomL = Label(self.top, text="Distance covered (maximum, cm): ", bg="white")
+        focalMaxDistanceCustomL = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
         focalMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        focalMaxDistanceCustomE = Entry(self.top, textvariable=self.focalMaxDistanceCustom)
+        focalMaxDistanceCustomE = Entry(frame, textvariable=self.focalMaxDistanceCustom)
         focalMaxDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useDirectedSearchL = Label(self.top, text="Directed Search: ", bg="white")
+        useDirectedSearchL = Label(frame, text="Directed Search: ", bg="white")
         useDirectedSearchL.grid(row=rowCount, column=0, sticky=E)
-        useDirectedSearchC = Checkbutton(self.top, variable=self.useDirectedSearch, bg="white", onvalue=1)
+        useDirectedSearchC = Checkbutton(frame, variable=self.useDirectedSearch, bg="white", onvalue=1)
         useDirectedSearchC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        corridorAverageCustomL = Label(self.top, text="Time in angular corridor [minimum, % of trial]: ", bg="white")
+        corridorAverageCustomL = Label(frame, text="Time in angular corridor [minimum, % of trial]: ", bg="white")
         corridorAverageCustomL.grid(row=rowCount, column=0, sticky=E)
-        corridorAverageCustomE = Entry(self.top, textvariable=self.corridorAverageCustom)
+        corridorAverageCustomE = Entry(frame, textvariable=self.corridorAverageCustom)
         corridorAverageCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        directedSearchMaxDistanceCustomL = Label(self.top, text="Distance covered (maximum, cm): ", bg="white")
+        directedSearchMaxDistanceCustomL = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
         directedSearchMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        directedSearchMaxDistanceCustomE = Entry(self.top, textvariable=self.directedSearchMaxDistanceCustom)
+        directedSearchMaxDistanceCustomE = Entry(frame, textvariable=self.directedSearchMaxDistanceCustom)
         directedSearchMaxDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        corridorJslsCustomL = Label(self.top, text="Ideal Path Error [maximum]: ", bg="white")
+        corridorJslsCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg="white")
         corridorJslsCustomL.grid(row=rowCount, column=0, sticky=E)
-        corridorJslsCustomE = Entry(self.top, textvariable=self.corridorJslsCustom)
+        corridorJslsCustomE = Entry(frame, textvariable=self.corridorJslsCustom)
         corridorJslsCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useIndirectL = Label(self.top, text="Indirect Search: ", bg="white")
+        useIndirectL = Label(frame, text="Indirect Search: ", bg="white")
         useIndirectL.grid(row=rowCount, column=0, sticky=E)
-        useIndirectC = Checkbutton(self.top, variable=self.useIndirect, bg="white")
+        useIndirectC = Checkbutton(frame, variable=self.useIndirect, bg="white")
         useIndirectC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        jslsIndirectCustomL = Label(self.top, text="Ideal Path Error [maximum]: ", bg="white")
+        jslsIndirectCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg="white")
         jslsIndirectCustomL.grid(row=rowCount, column=0, sticky=E)
-        jslsIndirectCustomE = Entry(self.top, textvariable=self.jslsIndirectCustom)
+        jslsIndirectCustomE = Entry(frame, textvariable=self.jslsIndirectCustom)
         jslsIndirectCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        headingIndirectCustomL = Label(self.top, text="Average Heading error [maximum]: ", bg="white")
+        headingIndirectCustomL = Label(frame, text="Average Heading error [maximum]: ", bg="white")
         headingIndirectCustomL.grid(row=rowCount, column=0, sticky=E)
-        headingIndirectCustomE = Entry(self.top, textvariable=self.headingIndirectCustom, bg="white")
+        headingIndirectCustomE = Entry(frame, textvariable=self.headingIndirectCustom, bg="white")
         headingIndirectCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useFocalSearchL2 = Label(self.top, text="Semi-focal Search: ", bg="white")
+        useFocalSearchL2 = Label(frame, text="Semi-focal Search: ", bg="white")
         useFocalSearchL2.grid(row=rowCount, column=0, sticky=E)
-        useFocalSearchC2 = Checkbutton(self.top, variable=self.useFocalSearch2, bg="white")
+        useFocalSearchC2 = Checkbutton(frame, variable=self.useFocalSearch2, bg="white")
         useFocalSearchC2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToSwimCustomL2 = Label(self.top, text="Distance to swim path centroid [maximum, % of radius]: ",
+        distanceToSwimCustomL2 = Label(frame, text="Distance to swim path centroid [maximum, % of radius]: ",
                                        bg="white")
         distanceToSwimCustomL2.grid(row=rowCount, column=0, sticky=E)
-        distanceToSwimCustomE2 = Entry(self.top, textvariable=self.distanceToSwimCustom2)
+        distanceToSwimCustomE2 = Entry(frame, textvariable=self.distanceToSwimCustom2)
         distanceToSwimCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToPlatCustomL2 = Label(self.top, text="Distance to goal [maximum, % of radius]: ", bg="white")
+        distanceToPlatCustomL2 = Label(frame, text="Distance to goal [maximum, % of radius]: ", bg="white")
         distanceToPlatCustomL2.grid(row=rowCount, column=0, sticky=E)
-        distanceToPlatCustomE2 = Entry(self.top, textvariable=self.distanceToPlatCustom2)
+        distanceToPlatCustomE2 = Entry(frame, textvariable=self.distanceToPlatCustom2)
         distanceToPlatCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        focalMinDistanceCustomL2 = Label(self.top, text="Distance covered (minimum, cm): ", bg="white")
+        focalMinDistanceCustomL2 = Label(frame, text="Distance covered (minimum, cm): ", bg="white")
         focalMinDistanceCustomL2.grid(row=rowCount, column=0, sticky=E)
-        focalMinDistanceCustomE2 = Entry(self.top, textvariable=self.focalMinDistanceCustom2)
+        focalMinDistanceCustomE2 = Entry(frame, textvariable=self.focalMinDistanceCustom2)
         focalMinDistanceCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        focalMaxDistanceCustomL2 = Label(self.top, text="Distance covered (maximum, cm): ", bg="white")
+        focalMaxDistanceCustomL2 = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
         focalMaxDistanceCustomL2.grid(row=rowCount, column=0, sticky=E)
-        focalMaxDistanceCustomE2 = Entry(self.top, textvariable=self.focalMaxDistanceCustom2)
+        focalMaxDistanceCustomE2 = Entry(frame, textvariable=self.focalMaxDistanceCustom2)
         focalMaxDistanceCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useChainingL = Label(self.top, text="Chaining: ", bg="white")
+        useChainingL = Label(frame, text="Chaining: ", bg="white")
         useChainingL.grid(row=rowCount, column=0, sticky=E)
-        useChainingC = Checkbutton(self.top, variable=self.useChaining, bg="white")
+        useChainingC = Checkbutton(frame, variable=self.useChaining, bg="white")
         useChainingC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        annulusCustomL = Label(self.top, text="Time in annulus zone [minimum, % of trial]: ", bg="white")
+        annulusCustomL = Label(frame, text="Time in annulus zone [minimum, % of trial]: ", bg="white")
         annulusCustomL.grid(row=rowCount, column=0, sticky=E)
-        annulusCustomE = Entry(self.top, textvariable=self.annulusCustom)
+        annulusCustomE = Entry(frame, textvariable=self.annulusCustom)
         annulusCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        quadrantTotalCustomL = Label(self.top, text="Quadrants visited [minimum]: ", bg="white")
+        quadrantTotalCustomL = Label(frame, text="Quadrants visited [minimum]: ", bg="white")
         quadrantTotalCustomL.grid(row=rowCount, column=0, sticky=E)
-        quadrantTotalCustomE = Entry(self.top, textvariable=self.quadrantTotalCustom)
+        quadrantTotalCustomE = Entry(frame, textvariable=self.quadrantTotalCustom)
         quadrantTotalCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        chainingMaxCoverageCustomL = Label(self.top, text="Area of maze traversed (maximum, % of maze): ", bg="white")
+        chainingMaxCoverageCustomL = Label(frame, text="Area of maze traversed (maximum, % of maze): ", bg="white")
         chainingMaxCoverageCustomL.grid(row=rowCount, column=0, sticky=E)
-        chainingMaxCoverageCustomE = Entry(self.top, textvariable=self.chainingMaxCoverageCustom)
+        chainingMaxCoverageCustomE = Entry(frame, textvariable=self.chainingMaxCoverageCustom)
         chainingMaxCoverageCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useScanningL = Label(self.top, text="Scanning: ", bg="white")
+        useScanningL = Label(frame, text="Scanning: ", bg="white")
         useScanningL.grid(row=rowCount, column=0, sticky=E)
-        useScanningC = Checkbutton(self.top, variable=self.useScanning, bg="white")
+        useScanningC = Checkbutton(frame, variable=self.useScanning, bg="white")
         useScanningC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        percentTraversedCustomL = Label(self.top, text="Area of maze traversed [maximum, % of maze]: ", bg="white")
+        percentTraversedCustomL = Label(frame, text="Area of maze traversed [maximum, % of maze]: ", bg="white")
         percentTraversedCustomL.grid(row=rowCount, column=0, sticky=E)
-        percentTraversedCustomE = Entry(self.top, textvariable=self.percentTraversedCustom)
+        percentTraversedCustomE = Entry(frame, textvariable=self.percentTraversedCustom)
         percentTraversedCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        percentTraversedMinCustomL = Label(self.top, text="Area of maze traversed [minimum, % of maze]: ", bg="white")
+        percentTraversedMinCustomL = Label(frame, text="Area of maze traversed [minimum, % of maze]: ", bg="white")
         percentTraversedMinCustomL.grid(row=rowCount, column=0, sticky=E)
-        percentTraversedMinCustomE = Entry(self.top, textvariable=self.percentTraversedMinCustom)
+        percentTraversedMinCustomE = Entry(frame, textvariable=self.percentTraversedMinCustom)
         percentTraversedMinCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToCentreCustomL = Label(self.top, text="Average distance to maze centre [maximum, % of radius]: ",
+        distanceToCentreCustomL = Label(frame, text="Average distance to maze centre [maximum, % of radius]: ",
                                         bg="white")
         distanceToCentreCustomL.grid(row=rowCount, column=0, sticky=E)
-        distanceToCentreCustomE = Entry(self.top, textvariable=self.distanceToCentreCustom)
+        distanceToCentreCustomE = Entry(frame, textvariable=self.distanceToCentreCustom)
         distanceToCentreCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useThigmoL = Label(self.top, text="Thigmotaxis: ", bg="white")
+        useThigmoL = Label(frame, text="Thigmotaxis: ", bg="white")
         useThigmoL.grid(row=rowCount, column=0, sticky=E)
-        useThigmoC = Checkbutton(self.top, variable=self.useThigmo, bg="white")
+        useThigmoC = Checkbutton(frame, variable=self.useThigmo, bg="white")
         useThigmoC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        fullThigmoCustomL = Label(self.top, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        fullThigmoCustomL = Label(frame, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg="white")
         fullThigmoCustomL.grid(row=rowCount, column=0, sticky=E)
-        fullThigmoCustomE = Entry(self.top, textvariable=self.fullThigmoCustom, bg="white")
+        fullThigmoCustomE = Entry(frame, textvariable=self.fullThigmoCustom, bg="white")
         fullThigmoCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        smallThigmoCustomL = Label(self.top, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ",
-                                   bg="white")
+        smallThigmoCustomL = Label(frame, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg="white")
         smallThigmoCustomL.grid(row=rowCount, column=0, sticky=E)
-        smallThigmoCustomE = Entry(self.top, textvariable=self.smallThigmoCustom)
+        smallThigmoCustomE = Entry(frame, textvariable=self.smallThigmoCustom)
         smallThigmoCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        thigmoMinDistanceCustomL = Label(self.top, text="Total distance covered (minimum, cm): ", bg="white")
+        thigmoMinDistanceCustomL = Label(frame, text="Total distance covered (minimum, cm): ", bg="white")
         thigmoMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        thigmoMinDistanceCustomE = Entry(self.top, textvariable=self.thigmoMinDistanceCustom, bg="white")
+        thigmoMinDistanceCustomE = Entry(frame, textvariable=self.thigmoMinDistanceCustom, bg="white")
         thigmoMinDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useRandomL = Label(self.top, text="Random Search: ", bg="white")
+        useRandomL = Label(frame, text="Random Search: ", bg="white")
         useRandomL.grid(row=rowCount, column=0, sticky=E)
-        useRandomC = Checkbutton(self.top, variable=self.useRandom, bg="white")
+        useRandomC = Checkbutton(frame, variable=self.useRandom, bg="white")
         useRandomC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        percentTraversedRandomCustomL = Label(self.top, text="Area of maze traversed [minimum, % of maze]: ",
-                                              bg="white")
+        percentTraversedRandomCustomL = Label(frame, text="Area of maze traversed [minimum, % of maze]: ", bg="white")
         percentTraversedRandomCustomL.grid(row=rowCount, column=0, sticky=E)
-        percentTraversedRandomCustomE = Entry(self.top, textvariable=self.percentTraversedRandomCustom)
+        percentTraversedRandomCustomE = Entry(frame, textvariable=self.percentTraversedRandomCustom)
         percentTraversedRandomCustomE.grid(row=rowCount, column=1)
 
         # we save the values from the fields and scale them appropriately
 
         rowCount += 1
-
-        Button(self.top, text="Save", command=self.saveCuston).grid(row=rowCount, column=0,
-                                                                    columnspan=2)  # button to save
+        Button(frame, text="Save", command=self.saveCuston).grid(row=rowCount, column=0, columnspan=2)
         rowCount += 1
-        Button(self.top, text="Reset", command=self.resetCustom).grid(row=rowCount, column=0,
-                                                                      columnspan=2)  # button to save
+        Button(frame, text="Reset", command=self.resetCustom).grid(row=rowCount, column=0, columnspan=2)
+
+
 
     def saveCuston(self):  # save the custom values
         logging.debug("Saving custom parameters")

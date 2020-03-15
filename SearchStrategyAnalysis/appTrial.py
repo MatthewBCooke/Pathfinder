@@ -199,7 +199,6 @@ def defineOwnSoftware(root, filename):
     theStatus.set("[First X, Y, time values]: ")
     status = Label(frame, textvariable=theStatus, width=50, height=2, relief=SUNKEN, anchor=W, bg="white")
     status.grid(row=0, column=0, columnspan=4)
-
     global customxyt
 
     def okButton():
@@ -208,7 +207,6 @@ def defineOwnSoftware(root, filename):
             messagebox.showinfo(None, "First X value: " + str(customxyt[0])
                                 + "\nFirst Y value: " + str(customxyt[1])
                                 + "\nFirst time value: " + str(customxyt[2]))
-
             top.quit()
             top.destroy()
         else:
