@@ -494,7 +494,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
             xCol = customxyt[0][0]
             yCol = customxyt[1][0]
             tCol = customxyt[2][0]
-            for row in listReader[customxyt[0][0]:]:
+            for row in listReader[customxyt[0][1]:]:
                 try:
                     x = float(row[xCol])
                     y = float(row[yCol])

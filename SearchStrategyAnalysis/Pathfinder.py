@@ -575,20 +575,31 @@ class mainClass:
         self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                               400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
-        if (startX - goalCentre[1] == 0): aArcTangent = 270
-        else: aArcTangent = math.degrees(math.atan(-(startY - goalCentre[0]) / (startX - goalCentre[1])))
-        upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
-        lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
-
-        m1 = math.tan(math.radians(upperCorridor))
-        c1 = startY - m1 * startX
-        endX1 = -c1 / m1
-        m2 = math.tan(math.radians(lowerCorridor))
-        c2 = startY - m2 * startX
-        endX2 = -c2 / m2
-
-        self.upperCorridorLine = canvas.create_line(startX, startY, endX1, 0, fill="blue", width=2)
-        self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, 0, fill="blue", width=2)
+        # # goalCentre = 250, 250
+        # reflectedGoal = goalCentre
+        # if (goalCentre[0] > 200 and goalCentre[1] < 200):
+        #     reflectedGoal = goalCentre[0], 400-goalCentre[1]
+        # elif (goalCentre[0] > 200 and goalCentre[1] > 200):
+        #     reflectedGoal = 400-goalCentre[0], goalCentre[1]
+        # elif (goalCentre[0] < 200 and goalCentre[1] > 200):
+        #     reflectedGoal = goalCentre[0], 400-goalCentre[1]
+        # elif (goalCentre[0] < 200 and goalCentre[1] < 200):
+        #     reflectedGoal = goalCentre[0], 400-goalCentre[1]
+        #
+        # if (startX - reflectedGoal[1] == 0): aArcTangent = 270
+        # else: aArcTangent = math.degrees(math.atan(-(startY - reflectedGoal[0]) / (startX - reflectedGoal[1])))
+        # upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
+        # lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
+        #
+        # m1 = math.tan(math.radians(upperCorridor))
+        # c1 = startY - m1 * startX
+        # endX1 = -c1 / m1
+        # m2 = math.tan(math.radians(lowerCorridor))
+        # c2 = startY - m2 * startX
+        # endX2 = -c2 / m2
+        #
+        # self.upperCorridorLine = canvas.create_line(startX, startY, endX1, 0, fill="blue", width=2)
+        # self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, 0, fill="blue", width=2)
 
         self.centerLine = canvas.create_line(200, 200 + scale * radius, 200, 200 - scale * radius, dash=(1, 1))
         self.centerLine = canvas.create_line(200 - scale * radius, 200, 200 + scale * radius, 200, dash=(1, 1))
@@ -641,20 +652,30 @@ class mainClass:
                 self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                                       400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
-                if (startX - goalCentre[1] == 0): aArcTangent = 270
-                else: aArcTangent = math.degrees(math.atan(-(startY - goalCentre[0]) / (startX - goalCentre[1])))
-                upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
-                lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
-
-                m1 = math.tan(math.radians(upperCorridor))
-                c1 = startY - m1 * startX
-                endX1 = -c1 / m1
-                m2 = math.tan(math.radians(lowerCorridor))
-                c2 = startY - m2 * startX
-                endX2 = -c2 / m2
-
-                self.upperCorridorLine = canvas.create_line(startX, startY, endX1, 0, fill="blue", width=2)
-                self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, 0, fill="blue", width=2)
+                # reflectedGoal = goalCentre
+                # if (goalCentre[0] > 200 and goalCentre[1] < 200):
+                #     reflectedGoal = 400 - goalCentre[0], goalCentre[1]
+                # elif (goalCentre[0] > 200 and goalCentre[1] > 200):
+                #     reflectedGoal = 400 - goalCentre[0], 400 - goalCentre[1]
+                # elif (goalCentre[0] < 200 and goalCentre[1] > 200):
+                #     reflectedGoal = goalCentre[0], goalCentre[1]
+                # elif (goalCentre[0] < 200 and goalCentre[1] < 200):
+                #     reflectedGoal = goalCentre[0], 400 - goalCentre[1]
+                #
+                # if (startX - reflectedGoal[1] == 0): aArcTangent = 270
+                # else: aArcTangent = math.degrees(math.atan(-(startY - reflectedGoal[0]) / (startX - reflectedGoal[1])))
+                # upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
+                # lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
+                #
+                # m1 = math.tan(math.radians(upperCorridor))
+                # c1 = startY - m1 * startX
+                # endX1 = -c1 / m1
+                # m2 = math.tan(math.radians(lowerCorridor))
+                # c2 = startY - m2 * startX
+                # endX2 = -c2 / m2
+                #
+                # self.upperCorridorLine = canvas.create_line(startX, startY, endX1, 0, fill="blue", width=2)
+                # self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, 0, fill="blue", width=2)
 
                 self.centerLine = canvas.create_line(200, 200 + scale*radius, 200, 200 - scale*radius, dash=(1, 1))
                 self.centerLine = canvas.create_line(200 - scale*radius, 200, 200 + scale*radius, 200, dash=(1, 1))
@@ -870,12 +891,11 @@ class mainClass:
         self.saveButton.config(width=10)
         self.add_button.config(width=10)
         self.container = Frame(self.top4)
-        self.canvas.create_window(0, 0, anchor="nw", window=self.container)
-        Label(self.top4, text="Settings", bg="white", fg="red").pack(side="top")  # we title it
-        self.add_button.pack(side="top")
+        self.canvas.create_window(0, 0, anchor="nw", window=self.container)  # we title it
         self.vsb.pack(side="right", fill="y")
         self.canvas.pack(side="left", fill="both", expand=True)
         self.saveButton.pack(side="bottom")
+        self.add_button.pack(side="bottom")
 
     def addROI(self):
         labelText = "ROI #" + str(int((len(self.entries)) / 2 + 2))
@@ -1427,8 +1447,7 @@ class mainClass:
         self.defineRadio['state'] = 'active'
         self.calculateButton['state'] = 'normal'
 
-    def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, scalingFactor, name, title,
-                   platEstDiam):  # function to graph the data for the not recognized trials
+    def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, scalingFactor, name, title, platEstDiam):  # function to graph the data for the not recognized trials
         wallsX = []
         wallsY = []
         platWallsX = []
@@ -1547,7 +1566,6 @@ class mainClass:
     def saveStrat(self):  # save the manual strategy
         global searchStrategyV
         global searchStrategyStringVar
-
         searchStrategyV = searchStrategyStringVar.get()  # get the value to be saved
         try:  # try and destroy the window
             self.top2.destroy()
@@ -1558,7 +1576,7 @@ class mainClass:
 
         self.top3 = Toplevel(root)  # create a new toplevel window
         self.top3.configure(bg="white")
-        self.top3.geometry('{}x{}'.format(500, 500))
+        self.top3.geometry('{}x{}'.format(200, 300))
         Label(self.top3, text="Heatmap Parameters", bg="white", fg="black", width=15).pack()  # add a title
 
         self.gridSizeL = Label(self.top3, text="Grid Size:", bg="white")
