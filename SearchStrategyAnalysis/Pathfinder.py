@@ -75,12 +75,9 @@ if not os.path.exists("output/plots"):
 if not os.path.exists("output/heatmaps"):
     os.makedirs("output/heatmaps")
 
-logfilename = "output/logs/logfile " + str(
-    strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
-logging.basicConfig(filename=logfilename,
-                    level=logging.DEBUG)  # set the default log type to INFO, can be set to DEBUG for more detailed information
-csvfilename = "output/results/results " + str(
-    strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the default results file
+logfilename = "output/logs/logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
+logging.basicConfig(filename=logfilename, level=logging.DEBUG)  # set the default log type to INFO, can be set to DEBUG for more detailed information
+csvfilename = "output/results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the default results file
 theFile = ""
 fileDirectory = ""
 goalPosVar = "0,0"
@@ -237,6 +234,9 @@ class mainClass:
         logging.debug("GUI is built")
 
     def buildGUI(self, root):  # Called in the __init__ to build the GUI window
+        for widget in root.winfo_children():
+            widget.destroy()
+
         root.wm_title("Pathfinder")
 
         global goalPosVar
@@ -269,8 +269,6 @@ class mainClass:
             accelX = "Ctrl+X"
             accelC = "Ctrl+C"
             accelV = "Ctrl+V"
-
-        #root.geometry('{}x{}'.format(1100, 500))
 
         self.menu = Menu(root)  # create a menu
         root.config(menu=self.menu, bg="white")  # set up the config
@@ -619,6 +617,7 @@ class mainClass:
 
         def redraw(*args):
             try:
+
                 canvas.delete("all")
                 scale = 1/float(softwareScalingFactorStringVar.get())
                 radius = float(mazeDiamStringVar.get()) / 2
@@ -966,6 +965,7 @@ class mainClass:
         chainingRadiusVar = chainingRadiusStringVar.get()
         thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()
         softwareScalingFactorVar = softwareScalingFactorStringVar.get()
+
         self.buildGUI(root)
 
 
@@ -2546,12 +2546,12 @@ class mainClass:
               semifocalSearchCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ",
               randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
         # TODO
-        # if sys.platform.startswith('darwin'):
-        #     subprocess.call(('open', currentOutputFile))
-        # elif os.name == 'nt':  # For Windows
-        #     os.startfile(currentOutputFile)
-        # elif os.name == 'posix':  # For Linux, Mac, etc.
-        #     subprocess.call(('xdg-open', currentOutputFile))
+        if sys.platform.startswith('darwin'):
+            subprocess.call(('open', currentOutputFile))
+        elif os.name == 'nt':  # For Windows
+            os.startfile(currentOutputFile)
+        elif os.name == 'posix':  # For Linux, Mac, etc.
+            subprocess.call(('xdg-open', currentOutputFile))
         self.updateTasks()
         theStatus.set('')
         self.updateTasks()
