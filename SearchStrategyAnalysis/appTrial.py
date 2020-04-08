@@ -242,23 +242,43 @@ def defineOwnSoftware(root, filename):
     # display table
     if (file_extension == '.csv'):
         with open(filename, newline="") as file:
-            dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
-            file.seek(0)
-            data = csv.reader(file, dialect)
-            displayTable(data)
+            try:
+                dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
+                file.seek(0)
+                data = csv.reader(file, dialect)
+                displayTable(data)
+
+                okbutton = Button(frame, text="Save", width=12, height=2, command=okButton)
+                okbutton.grid(row=0, column=4)
+                resetbutton = Button(frame, text="Reset", width=12, height=2, command=resetButton)
+                resetbutton.grid(row=0, column=5)
+
+                top.attributes('-topmost', False)
+                messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
+                top.attributes('-topmost', True)
+                top.mainloop()
+            except:
+                top.attributes('-topmost', False)
+                messagebox.showinfo(None, "Invalid CSV format.")
+                top.destroy()
+                top.mainloop()
     elif (file_extension == '.xlsx'):
-        data = pd.read_excel(filename)
-        displayTable(data.values)
+        try:
+            data = pd.read_excel(filename)
+            displayTable(data.values)
 
-    okbutton = Button(frame, text="Save", width=12, height=2, command=okButton)
-    okbutton.grid(row=0, column=4)
-    resetbutton = Button(frame, text="Reset", width=12, height=2, command=resetButton)
-    resetbutton.grid(row=0, column=5)
+            okbutton = Button(frame, text="Save", width=12, height=2, command=okButton)
+            okbutton.grid(row=0, column=4)
+            resetbutton = Button(frame, text="Reset", width=12, height=2, command=resetButton)
+            resetbutton.grid(row=0, column=5)
 
-    top.attributes('-topmost', False)
-    messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
-    top.attributes('-topmost', True)
-    top.mainloop()
+            top.attributes('-topmost', False)
+            messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
+            top.attributes('-topmost', True)
+            top.mainloop()
+        except:
+            top.attributes('-topmost', False)
+            messagebox.showinfo(None, "Error opening Excel table.")
 
 
 def saveFileAsExperiment(software, filename, filedirectory):

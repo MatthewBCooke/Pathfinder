@@ -182,7 +182,7 @@ useScaling = BooleanVar()
 useScaling.set(False)
 scale = False
 rois = []
-
+destroyedroot = False
 
 def show_message(text):  # popup box with message text
     logging.debug("Displaying message")
@@ -232,6 +232,12 @@ class mainClass:
             self.tryQuit()
             return
         logging.debug("GUI is built")
+
+    ## Helper for callDefineOwnSoftware, tracks if root has been destroyed
+    def root_tracker():
+        destroyedroot = True
+        root.destroy()
+    root.protocol("WM_DELETE_WINDOW", root_tracker)
 
     def buildGUI(self, root):  # Called in the __init__ to build the GUI window
         for widget in root.winfo_children():
@@ -1437,15 +1443,17 @@ class mainClass:
                     filename = os.path.join(root, basename)
                     yield filename
 
+
     def callDefineOwnSoftware(self):
         global theFile
         if theFile == "":
             logging.debug("Open File...")
             theFile = filedialog.askopenfilename()
         defineOwnSoftware(root, theFile)
-        softwareStringVar.set("custom")
-        self.defineRadio['state'] = 'active'
-        self.calculateButton['state'] = 'normal'
+        if destroyedroot==True:
+            softwareStringVar.set('custom')
+            self.defineRadio['state'] = 'active'
+            self.calculateButton['state'] = 'normal'
 
     def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, scalingFactor, name, title, platEstDiam):  # function to graph the data for the not recognized trials
         wallsX = []
