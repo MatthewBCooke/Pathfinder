@@ -766,8 +766,11 @@ class mainClass:
         global fileDirectory
         global theFile
         software = softwareStringVar.get()
-        experiment = saveFileAsExperiment(software, theFile, fileDirectory)
-        self.guiHeatmap(experiment)
+        if theFile == "" and fileDirectory == "":
+            messagebox.showwarning('No file or directory', 'Please upload a file or directory before attempting to generate heatmap.')
+        else:
+            experiment = saveFileAsExperiment(software, theFile, fileDirectory)
+            self.guiHeatmap(experiment)
 
     def on_enter(self, text, event):
         global oldStatus
