@@ -2326,7 +2326,7 @@ class mainClass:
 
         theStatus.set('Calculating Search Strategies...')  # update status bar
         self.updateTasks()
-        currentOutputFile = outputFile + str(goalPosVar) + ".csv"
+        currentOutputFile = outputFileStringVar.get() + str(goalPosVar) + ".csv"
         logging.debug("Calculating search strategies")
         try:  # try to open a csv file for output
             f = open(currentOutputFile, 'wt')
