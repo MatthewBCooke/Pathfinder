@@ -318,9 +318,8 @@ class mainClass:
         # ******* Software Type *******
         self.softwareBar = Frame(root)  # add a toolbar to the frame
         self.softwareBar.config(bg="white")
-        self.autoRadio = Radiobutton(self.softwareBar, text="Auto", variable=softwareStringVar,
-                                           value="auto", indicatoron=1, width=15, bg="white")
-        self.autoRadio.grid(row=rowCount, column=0, padx=5, sticky='NW')  # add the radiobuttons for selection
+        #self.autoRadio = Radiobutton(self.softwareBar, text="Auto", variable=softwareStringVar, value="auto", indicatoron=1, width=15, bg="white")
+        #self.autoRadio.grid(row=rowCount, column=0, padx=5, sticky='NW')  # add the radiobuttons for selection
 
         self.ethovisionRadio = Radiobutton(self.softwareBar, text="Ethovision", variable=softwareStringVar,
                                            value="ethovision", indicatoron=1, width=15, bg="white")
@@ -343,8 +342,8 @@ class mainClass:
         self.defineRadio.grid(row=rowCount, column=5, padx=5, sticky='NW')
         self.softwareBar.pack(side=TOP, fill=X, pady=5)
 
-        self.autoRadio.bind("<Enter>", partial(self.on_enter, "Click for automatic detection of data-type"))
-        self.autoRadio.bind("<Leave>", self.on_leave)
+        #self.autoRadio.bind("<Enter>", partial(self.on_enter, "Click for automatic detection of data-type"))
+        #self.autoRadio.bind("<Leave>", self.on_leave)
         self.ethovisionRadio.bind("<Enter>", partial(self.on_enter, "Click if you used Ethovision to generate your data"))
         self.ethovisionRadio.bind("<Leave>", self.on_leave)
         self.anymazeRadio.bind("<Enter>", partial(self.on_enter, "Click if you used Anymaze to generate your data"))
