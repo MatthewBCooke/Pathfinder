@@ -75,12 +75,9 @@ if not os.path.exists("output/plots"):
 if not os.path.exists("output/heatmaps"):
     os.makedirs("output/heatmaps")
 
-logfilename = "output/logs/logfile " + str(
-    strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
-logging.basicConfig(filename=logfilename,
-                    level=logging.DEBUG)  # set the default log type to INFO, can be set to DEBUG for more detailed information
-csvfilename = "output/results/results " + str(
-    strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the default results file
+logfilename = "output/logs/logfile " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime())) + ".log"  # name of the log file for the run
+logging.basicConfig(filename=logfilename, level=logging.DEBUG)  # set the default log type to INFO, can be set to DEBUG for more detailed information
+csvfilename = "output/results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # name of the default results file
 theFile = ""
 fileDirectory = ""
 goalPosVar = "0,0"
@@ -159,6 +156,8 @@ chainingRadiusStringVar = StringVar()
 chainingRadiusStringVar.set(chainingRadiusVar)
 thigmotaxisZoneSizeStringVar = StringVar()
 thigmotaxisZoneSizeStringVar.set(thigmotaxisZoneSizeVar)
+softwareStringVar = StringVar()
+softwareStringVar.set("")
 softwareScalingFactorStringVar = StringVar()
 softwareScalingFactorStringVar.set("1.0")
 outputFileStringVar = StringVar()
@@ -183,7 +182,7 @@ useScaling = BooleanVar()
 useScaling.set(False)
 scale = False
 rois = []
-
+destroyedroot = False
 
 def show_message(text):  # popup box with message text
     logging.debug("Displaying message")
@@ -234,7 +233,16 @@ class mainClass:
             return
         logging.debug("GUI is built")
 
+    ## Helper for callDefineOwnSoftware, tracks if root has been destroyed
+    def root_tracker():
+        destroyedroot = True
+        root.destroy()
+    root.protocol("WM_DELETE_WINDOW", root_tracker)
+
     def buildGUI(self, root):  # Called in the __init__ to build the GUI window
+        for widget in root.winfo_children():
+            widget.destroy()
+
         root.wm_title("Pathfinder")
 
         global goalPosVar
@@ -267,8 +275,6 @@ class mainClass:
             accelX = "Ctrl+X"
             accelC = "Ctrl+C"
             accelV = "Ctrl+V"
-
-        #root.geometry('{}x{}'.format(1100, 500))
 
         self.menu = Menu(root)  # create a menu
         root.config(menu=self.menu, bg="white")  # set up the config
@@ -332,7 +338,7 @@ class mainClass:
                                         value="eztrack", indicatoron=1, width=15, bg="white")
         self.eztrackRadio.grid(row=rowCount, column=4, padx=5, sticky='NW')
 
-        self.defineRadio = Radiobutton(self.softwareBar, text="Define", variable=softwareStringVar, value="define",
+        self.defineRadio = Radiobutton(self.softwareBar, text="Define", variable=softwareStringVar, value="custom",
                                        indicatoron=0, width=15, bg="white", command=self.callDefineOwnSoftware)
         self.defineRadio.grid(row=rowCount, column=5, padx=5, sticky='NW')
         self.softwareBar.pack(side=TOP, fill=X, pady=5)
@@ -547,6 +553,7 @@ class mainClass:
         mazeX, mazeY = mazeCentreStringVar.get().split(",")
         mazeCentre = [float(mazeX), float(mazeY)]
 
+        startX, startY =  200, 200+scale*radius
         goalX, goalY = goalPosStringVar.get().split(",")
         goalCentre = [200 + (float(goalX)) - mazeCentre[0], 200 - (float(goalY)) + mazeCentre[1]]
         goalLBorder = goalCentre[0] - scale * (float(goalDiamStringVar.get()) / 2)
@@ -572,11 +579,60 @@ class mainClass:
         self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                               400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
+        # # goalCentre = 250, 250
+        # reflectedGoal = goalCentre
+        # if (goalCentre[0] > 200 and goalCentre[1] < 200):
+        #     reflectedGoal = goalCentre[0], 400-goalCentre[1]
+        # elif (goalCentre[0] > 200 and goalCentre[1] > 200):
+        #     reflectedGoal = 400-goalCentre[0], goalCentre[1]
+        # elif (goalCentre[0] < 200 and goalCentre[1] > 200):
+        #     reflectedGoal = goalCentre[0], 400-goalCentre[1]
+        # elif (goalCentre[0] < 200 and goalCentre[1] < 200):
+        #     reflectedGoal = goalCentre[0], 400-goalCentre[1]
+        #
+        # if (startX - reflectedGoal[1] == 0): aArcTangent = 270
+        # else: aArcTangent = math.degrees(math.atan(-(startY - reflectedGoal[0]) / (startX - reflectedGoal[1])))
+        # upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
+        # lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
+        #
+        # m1 = math.tan(math.radians(upperCorridor))
+        # c1 = startY - m1 * startX
+        # endX1 = -c1 / m1
+        # m2 = math.tan(math.radians(lowerCorridor))
+        # c2 = startY - m2 * startX
+        # endX2 = -c2 / m2
+        #
+        # self.upperCorridorLine = canvas.create_line(startX, startY, endX1, 0, fill="blue", width=2)
+        # self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, 0, fill="blue", width=2)
+
         self.centerLine = canvas.create_line(200, 200 + scale * radius, 200, 200 - scale * radius, dash=(1, 1))
         self.centerLine = canvas.create_line(200 - scale * radius, 200, 200 + scale * radius, 200, dash=(1, 1))
+        self.centerToGoalLine = canvas.create_line(200, 200 + scale * radius, goalCentre[0], goalCentre[1], fill="red")
         self.start = canvas.create_oval(195, 195 + scale * radius, 205, 205 + scale * radius, fill="green", width=1)
         self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
-        self.centerToGoalLine = canvas.create_line(200, 200 + scale * radius, goalCentre[0], goalCentre[1], fill="red")
+
+
+        # calculation of angular cooridor, updates to user input and renders blue lines on user interface 
+        # to represent outer bounds of cooridor
+        rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get())/2 + math.degrees(math.atan((float(goalX))/(float(goalY) + radius))))
+        rightCorridorLeftDiameterChordSection = radius + radius* math.tan(rightCorridorSideAngle)
+        rightCorridorRightDiameterChordSection = radius - radius* math.tan(rightCorridorSideAngle)
+        rightCorridorBottomChordSection = radius / math.cos(rightCorridorSideAngle)
+        rightCorridorTopChordSection = (rightCorridorLeftDiameterChordSection*rightCorridorRightDiameterChordSection)/rightCorridorBottomChordSection
+        rightCorridorOnCircleX = radius*math.tan(rightCorridorSideAngle) + rightCorridorTopChordSection*math.sin(rightCorridorSideAngle)
+        rightCorridorOnCircleY = rightCorridorTopChordSection * math.cos(rightCorridorSideAngle)
+        self.rightAngularCooridorLine = canvas.create_line(200, 200 + scale * radius, 200 + scale*(rightCorridorOnCircleX), 200 - (scale * rightCorridorOnCircleY), fill = "blue", width = 2)
+        
+        leftCorridorSideAngle = rightCorridorSideAngle - math.radians(float(corridorWidthStringVar.get()))
+        leftCorridorLeftDiameterChordSection = radius + radius* math.tan(leftCorridorSideAngle)
+        leftCorridorRightDiameterChordSection = radius - radius* math.tan(leftCorridorSideAngle)
+        leftCorridorBottomChordSection = radius / math.cos(leftCorridorSideAngle)
+        leftCorridorTopChordSection = (leftCorridorLeftDiameterChordSection*leftCorridorRightDiameterChordSection)/leftCorridorBottomChordSection
+        leftCorridorOnCircleX = radius*math.tan(leftCorridorSideAngle) + leftCorridorTopChordSection*math.sin(leftCorridorSideAngle)
+        leftCorridorOnCircleY = leftCorridorTopChordSection * math.cos(leftCorridorSideAngle)
+        self.leftAngularCooridorLine = canvas.create_line(200, 200 + scale * radius, 200 + scale*(leftCorridorOnCircleX), 200 - (scale * leftCorridorOnCircleY),fill = "blue", width = 2)
+
+
 
         # draw all rois
         for aTuple in rois:
@@ -590,6 +646,7 @@ class mainClass:
 
         def redraw(*args):
             try:
+
                 canvas.delete("all")
                 scale = 1/float(softwareScalingFactorStringVar.get())
                 radius = float(mazeDiamStringVar.get()) / 2
@@ -599,7 +656,7 @@ class mainClass:
 
                 mazeX, mazeY = mazeCentreStringVar.get().split(",")
                 mazeCentre = [float(mazeX), float(mazeY)]
-
+                startX, startY = 200, 200 + scale * radius
                 goalX, goalY = goalPosStringVar.get().split(",")
                 goalCentre = [200 + (float(goalX)) - mazeCentre[0], 200 - (float(goalY)) + mazeCentre[1]]
                 goalLBorder = goalCentre[0] - scale * (float(goalDiamStringVar.get()) / 2)
@@ -623,11 +680,60 @@ class mainClass:
                 self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                                       400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
+                # reflectedGoal = goalCentre
+                # if (goalCentre[0] > 200 and goalCentre[1] < 200):
+                #     reflectedGoal = 400 - goalCentre[0], goalCentre[1]
+                # elif (goalCentre[0] > 200 and goalCentre[1] > 200):
+                #     reflectedGoal = 400 - goalCentre[0], 400 - goalCentre[1]
+                # elif (goalCentre[0] < 200 and goalCentre[1] > 200):
+                #     reflectedGoal = goalCentre[0], goalCentre[1]
+                # elif (goalCentre[0] < 200 and goalCentre[1] < 200):
+                #     reflectedGoal = goalCentre[0], 400 - goalCentre[1]
+                #
+                # if (startX - reflectedGoal[1] == 0): aArcTangent = 270
+                # else: aArcTangent = math.degrees(math.atan(-(startY - reflectedGoal[0]) / (startX - reflectedGoal[1])))
+                # upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
+                # lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
+                #
+                # m1 = math.tan(math.radians(upperCorridor))
+                # c1 = startY - m1 * startX
+                # endX1 = -c1 / m1
+                # m2 = math.tan(math.radians(lowerCorridor))
+                # c2 = startY - m2 * startX
+                # endX2 = -c2 / m2
+                #
+                # self.upperCorridorLine = canvas.create_line(startX, startY, endX1, 0, fill="blue", width=2)
+                # self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, 0, fill="blue", width=2)
+
                 self.centerLine = canvas.create_line(200, 200 + scale*radius, 200, 200 - scale*radius, dash=(1, 1))
                 self.centerLine = canvas.create_line(200 - scale*radius, 200, 200 + scale*radius, 200, dash=(1, 1))
+                self.centerToGoalLine = canvas.create_line(200, 200 + scale*radius, goalCentre[0], goalCentre[1], fill="red")
                 self.start = canvas.create_oval(195, 195 + scale*radius, 205, 205 + scale*radius, fill="green", width=1)
                 self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
-                self.centerToGoalLine = canvas.create_line(200, 200 + scale*radius, goalCentre[0], goalCentre[1], fill="red")
+
+
+                # calculation of angular cooridor, updates to user input and renders blue lines on user interface 
+                # to represent outer bounds of cooridor
+                rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get())/2 + math.degrees(math.atan((float(goalX))/(float(goalY) + radius))))
+                rightCorridorLeftDiameterChordSection = radius + radius* math.tan(rightCorridorSideAngle)
+                rightCorridorRightDiameterChordSection = radius - radius* math.tan(rightCorridorSideAngle)
+                rightCorridorBottomChordSection = radius / math.cos(rightCorridorSideAngle)
+                rightCorridorTopChordSection = (rightCorridorLeftDiameterChordSection*rightCorridorRightDiameterChordSection)/rightCorridorBottomChordSection
+                rightCorridorOnCircleX = radius*math.tan(rightCorridorSideAngle) + rightCorridorTopChordSection*math.sin(rightCorridorSideAngle)
+                rightCorridorOnCircleY = rightCorridorTopChordSection * math.cos(rightCorridorSideAngle)
+                self.rightAngularCooridorLine = canvas.create_line(200, 200 + scale * radius, 200 + scale*(rightCorridorOnCircleX), 200 - (scale * rightCorridorOnCircleY), fill = "blue", width = 2)
+
+
+                leftCorridorSideAngle = rightCorridorSideAngle - math.radians(float(corridorWidthStringVar.get()))
+                leftCorridorLeftDiameterChordSection = radius + radius* math.tan(leftCorridorSideAngle)
+                leftCorridorRightDiameterChordSection = radius - radius* math.tan(leftCorridorSideAngle)
+                leftCorridorBottomChordSection = radius / math.cos(leftCorridorSideAngle)
+                leftCorridorTopChordSection = (leftCorridorLeftDiameterChordSection*leftCorridorRightDiameterChordSection)/leftCorridorBottomChordSection
+                leftCorridorOnCircleX = radius*math.tan(leftCorridorSideAngle) + leftCorridorTopChordSection*math.sin(leftCorridorSideAngle)
+                leftCorridorOnCircleY = leftCorridorTopChordSection * math.cos(leftCorridorSideAngle)
+                self.leftAngularCooridorLine = canvas.create_line(200, 200 + scale * radius, 200 + scale*(leftCorridorOnCircleX), 200 - (scale * leftCorridorOnCircleY), fill = "blue", width = 2)
+
+
 
                 # draw all rois
                 for aTuple in rois:
@@ -639,7 +745,6 @@ class mainClass:
                     roiBottomBorder = roiCentre[1] + scale * float(aTuple[1]) / 2
                     self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
             except:
-                #print("INVALID VAR INPUT")
                 pass
 
         goalDiamStringVar.trace_variable("w", redraw)
@@ -661,8 +766,10 @@ class mainClass:
         ethovision = ['Number of header lines:']
         file_extension = os.path.splitext(theFile)[1]
         if (file_extension == '.csv'):
-            with open(theFile, newline="") as file:
-                data = csv.reader(file)
+            with open(filename, newline="") as file:
+                dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
+                file.seek(0)
+                data = csv.reader(file, dialect)
                 twoRows = [row for idx, row in enumerate(data) if idx in (0, 1)]
                 if (set(anymaze).issubset(twoRows[0])):
                     softwareStringVar.set("anymaze")
@@ -670,15 +777,16 @@ class mainClass:
                     softwareStringVar.set("watermaze")
                 if (set(eztrack).issubset(twoRows[0])):
                     softwareStringVar.set("eztrack")
+                else:
+                    softwareStringVar.set("custom")
         elif (file_extension == '.xlsx'):
             workbook = open_workbook(theFile)
             sheet = workbook.sheet_by_index(0)
             rowNames = sheet.col_values(0)
             if (set(ethovision).issubset(rowNames)):
                 softwareStringVar.set("ethovision")
-        else:
-            self.callDefineOwnSoftware()
-
+            else:
+                softwareStringVar.set("custom")
 
     def openFile(self):  # opens a dialog to get a single file
         logging.debug("Open File...")
@@ -689,7 +797,6 @@ class mainClass:
         fileDirectory = ""
         theFile = filedialog.askopenfilename()  # look for xlsx and xls files
         self.calculateButton['state'] = 'normal'
-        #self.detectSoftwareType()
 
     def openDir(self):  # open dialog to get multiple files
         logging.debug("Open Dir...")
@@ -706,9 +813,11 @@ class mainClass:
         global fileDirectory
         global theFile
         software = softwareStringVar.get()
-
-        experiment = saveFileAsExperiment(software, theFile, fileDirectory)
-        self.guiHeatmap(experiment)
+        if theFile == "" and fileDirectory == "":
+            messagebox.showwarning('No file or directory', 'Please upload a file or directory before attempting to generate heatmap.')
+        else:
+            experiment = saveFileAsExperiment(software, theFile, fileDirectory)
+            self.guiHeatmap(experiment)
 
     def on_enter(self, text, event):
         global oldStatus
@@ -837,12 +946,11 @@ class mainClass:
         self.saveButton.config(width=10)
         self.add_button.config(width=10)
         self.container = Frame(self.top4)
-        self.canvas.create_window(0, 0, anchor="nw", window=self.container)
-        Label(self.top4, text="Settings", bg="white", fg="red").pack(side="top")  # we title it
-        self.add_button.pack(side="top")
+        self.canvas.create_window(0, 0, anchor="nw", window=self.container)  # we title it
         self.vsb.pack(side="right", fill="y")
         self.canvas.pack(side="left", fill="both", expand=True)
         self.saveButton.pack(side="bottom")
+        self.add_button.pack(side="bottom")
 
     def addROI(self):
         labelText = "ROI #" + str(int((len(self.entries)) / 2 + 2))
@@ -913,6 +1021,7 @@ class mainClass:
         chainingRadiusVar = chainingRadiusStringVar.get()
         thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()
         softwareScalingFactorVar = softwareScalingFactorStringVar.get()
+
         self.buildGUI(root)
 
 
@@ -957,8 +1066,13 @@ class mainClass:
 
         try:
             with open('customobjs.pickle', 'rb') as f:
-                ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, distanceToSwimMaxVal2, distanceToPlatMaxVal2, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, focalMinDistance2, focalMaxDistance2, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, smallThigmoMinVal, fullThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useIndirectV, useFocalSearchV2, useScanningV, useChainingV, useRandomV, useThigmoV = pickle.load(
-                    f)
+                ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, distanceToSwimMaxVal2, \
+                distanceToPlatMaxVal2, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, \
+                focalMaxDistance, focalMinDistance2, focalMaxDistance2, corridoripeMaxVal, annulusCounterMaxVal, \
+                quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, \
+                distanceToCentreMaxVal, thigmoMinDistance, smallThigmoMinVal, fullThigmoMinVal, ipeIndirectMaxVal, \
+                percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, \
+                useIndirectV, useFocalSearchV2, useScanningV, useChainingV, useRandomV, useThigmoV = pickle.load(f)
             params = Parameters(name="Custom", ipeMaxVal=float(ipeMaxVal), headingMaxVal=float(headingMaxVal),
                                 distanceToSwimMaxVal=float(distanceToSwimMaxVal),
                                 distanceToPlatMaxVal=float(distanceToPlatMaxVal),
@@ -1024,260 +1138,271 @@ class mainClass:
 
         self.top = Toplevel(root)  # we set this to be the top
         self.top.configure(bg="white")
-        Label(self.top, text="Settings", bg="white", fg="red").grid(row=0, column=0, columnspan=2)  # we title it
+
+        canvas = Canvas(self.top, borderwidth=0, width=400, height=600, bg="white")  # we create the canvas
+        frame = Frame(canvas)  # we place a frame in the canvas
+        frame.configure(bg="white")
+        yscrollbar = Scrollbar(self.top, orient=VERTICAL, command=canvas.yview)  # vertical scroll bar
+        yscrollbar.grid(row=0, column=2, sticky='ns')
+
+        canvas.grid(row=0, column=0) # we pack in the canvas
+        canvas.create_window((4, 4), window=frame, anchor="nw")
+        canvas.configure(yscrollcommand=yscrollbar.set)  # we set the commands for the scroll bars
+        frame.bind("<Configure>", lambda event, canvas=canvas: canvas.configure(scrollregion=canvas.bbox("all")))
+
+
+
+        Label(frame, text="Settings", bg="white", fg="black").grid(row=0, column=0, columnspan=2, padx=100, pady=20)  # we title it
 
         rowCount = 1
 
-        useDirectPathL = Label(self.top, text="Direct Path: ", bg="white")  # we add a direct path label
+        useDirectPathL = Label(frame, text="Direct Path: ", bg="white")  # we add a direct path label
         useDirectPathL.grid(row=rowCount, column=0, sticky=E)  # stick it to row 1
-        useDirectPathC = Checkbutton(self.top, variable=self.useDirectPath, bg="white")  # we add a direct path checkbox
+        useDirectPathC = Checkbutton(frame, variable=self.useDirectPath, bg="white")  # we add a direct path checkbox
         useDirectPathC.grid(row=rowCount, column=1)  # put it beside the label
 
         rowCount += 1
 
-        jslsMaxCustomL = Label(self.top, text="Ideal Path Error [maximum]: ", bg="white")  # label for JSLs
+        jslsMaxCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg="white")  # label for JSLs
         jslsMaxCustomL.grid(row=rowCount, column=0, sticky=E)  # row 2
-        jslsMaxCustomE = Entry(self.top, textvariable=self.jslsMaxCustom)  # entry field
+        jslsMaxCustomE = Entry(frame, textvariable=self.jslsMaxCustom)  # entry field
         jslsMaxCustomE.grid(row=rowCount, column=1)  # right beside
 
         rowCount += 1
 
-        headingErrorCustomL = Label(self.top, text="Heading error [maximum, degrees]: ", bg="white")
+        headingErrorCustomL = Label(frame, text="Heading error [maximum, degrees]: ", bg="white")
         headingErrorCustomL.grid(row=rowCount, column=0, sticky=E)
-        headingErrorCustomE = Entry(self.top, textvariable=self.headingErrorCustom)
+        headingErrorCustomE = Entry(frame, textvariable=self.headingErrorCustom)
         headingErrorCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useFocalSearchL = Label(self.top, text="Focal Search: ", bg="white")
+        useFocalSearchL = Label(frame, text="Focal Search: ", bg="white")
         useFocalSearchL.grid(row=rowCount, column=0, sticky=E)
-        useFocalSearchC = Checkbutton(self.top, variable=self.useFocalSearch, bg="white")
+        useFocalSearchC = Checkbutton(frame, variable=self.useFocalSearch, bg="white")
         useFocalSearchC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToSwimCustomL = Label(self.top, text="Distance to swim path centroid [maximum, % of radius]: ",
+        distanceToSwimCustomL = Label(frame, text="Distance to swim path centroid [maximum, % of radius]: ",
                                       bg="white")
         distanceToSwimCustomL.grid(row=rowCount, column=0, sticky=E)
-        distanceToSwimCustomE = Entry(self.top, textvariable=self.distanceToSwimCustom)
+        distanceToSwimCustomE = Entry(frame, textvariable=self.distanceToSwimCustom)
         distanceToSwimCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToPlatCustomL = Label(self.top, text="Distance to goal [maximum, % of radius]: ", bg="white")
+        distanceToPlatCustomL = Label(frame, text="Distance to goal [maximum, % of radius]: ", bg="white")
         distanceToPlatCustomL.grid(row=rowCount, column=0, sticky=E)
-        distanceToPlatCustomE = Entry(self.top, textvariable=self.distanceToPlatCustom)
+        distanceToPlatCustomE = Entry(frame, textvariable=self.distanceToPlatCustom)
         distanceToPlatCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        focalMinDistanceCustomL = Label(self.top, text="Distance covered (minimum, cm): ", bg="white")
+        focalMinDistanceCustomL = Label(frame, text="Distance covered (minimum, cm): ", bg="white")
         focalMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        focalMinDistanceCustomE = Entry(self.top, textvariable=self.focalMinDistanceCustom)
+        focalMinDistanceCustomE = Entry(frame, textvariable=self.focalMinDistanceCustom)
         focalMinDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        focalMaxDistanceCustomL = Label(self.top, text="Distance covered (maximum, cm): ", bg="white")
+        focalMaxDistanceCustomL = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
         focalMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        focalMaxDistanceCustomE = Entry(self.top, textvariable=self.focalMaxDistanceCustom)
+        focalMaxDistanceCustomE = Entry(frame, textvariable=self.focalMaxDistanceCustom)
         focalMaxDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useDirectedSearchL = Label(self.top, text="Directed Search: ", bg="white")
+        useDirectedSearchL = Label(frame, text="Directed Search: ", bg="white")
         useDirectedSearchL.grid(row=rowCount, column=0, sticky=E)
-        useDirectedSearchC = Checkbutton(self.top, variable=self.useDirectedSearch, bg="white", onvalue=1)
+        useDirectedSearchC = Checkbutton(frame, variable=self.useDirectedSearch, bg="white", onvalue=1)
         useDirectedSearchC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        corridorAverageCustomL = Label(self.top, text="Time in angular corridor [minimum, % of trial]: ", bg="white")
+        corridorAverageCustomL = Label(frame, text="Time in angular corridor [minimum, % of trial]: ", bg="white")
         corridorAverageCustomL.grid(row=rowCount, column=0, sticky=E)
-        corridorAverageCustomE = Entry(self.top, textvariable=self.corridorAverageCustom)
+        corridorAverageCustomE = Entry(frame, textvariable=self.corridorAverageCustom)
         corridorAverageCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        directedSearchMaxDistanceCustomL = Label(self.top, text="Distance covered (maximum, cm): ", bg="white")
+        directedSearchMaxDistanceCustomL = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
         directedSearchMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        directedSearchMaxDistanceCustomE = Entry(self.top, textvariable=self.directedSearchMaxDistanceCustom)
+        directedSearchMaxDistanceCustomE = Entry(frame, textvariable=self.directedSearchMaxDistanceCustom)
         directedSearchMaxDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        corridorJslsCustomL = Label(self.top, text="Ideal Path Error [maximum]: ", bg="white")
+        corridorJslsCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg="white")
         corridorJslsCustomL.grid(row=rowCount, column=0, sticky=E)
-        corridorJslsCustomE = Entry(self.top, textvariable=self.corridorJslsCustom)
+        corridorJslsCustomE = Entry(frame, textvariable=self.corridorJslsCustom)
         corridorJslsCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useIndirectL = Label(self.top, text="Indirect Search: ", bg="white")
+        useIndirectL = Label(frame, text="Indirect Search: ", bg="white")
         useIndirectL.grid(row=rowCount, column=0, sticky=E)
-        useIndirectC = Checkbutton(self.top, variable=self.useIndirect, bg="white")
+        useIndirectC = Checkbutton(frame, variable=self.useIndirect, bg="white")
         useIndirectC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        jslsIndirectCustomL = Label(self.top, text="Ideal Path Error [maximum]: ", bg="white")
+        jslsIndirectCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg="white")
         jslsIndirectCustomL.grid(row=rowCount, column=0, sticky=E)
-        jslsIndirectCustomE = Entry(self.top, textvariable=self.jslsIndirectCustom)
+        jslsIndirectCustomE = Entry(frame, textvariable=self.jslsIndirectCustom)
         jslsIndirectCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        headingIndirectCustomL = Label(self.top, text="Average Heading error [maximum]: ", bg="white")
+        headingIndirectCustomL = Label(frame, text="Average Heading error [maximum]: ", bg="white")
         headingIndirectCustomL.grid(row=rowCount, column=0, sticky=E)
-        headingIndirectCustomE = Entry(self.top, textvariable=self.headingIndirectCustom, bg="white")
+        headingIndirectCustomE = Entry(frame, textvariable=self.headingIndirectCustom, bg="white")
         headingIndirectCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useFocalSearchL2 = Label(self.top, text="Semi-focal Search: ", bg="white")
+        useFocalSearchL2 = Label(frame, text="Semi-focal Search: ", bg="white")
         useFocalSearchL2.grid(row=rowCount, column=0, sticky=E)
-        useFocalSearchC2 = Checkbutton(self.top, variable=self.useFocalSearch2, bg="white")
+        useFocalSearchC2 = Checkbutton(frame, variable=self.useFocalSearch2, bg="white")
         useFocalSearchC2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToSwimCustomL2 = Label(self.top, text="Distance to swim path centroid [maximum, % of radius]: ",
+        distanceToSwimCustomL2 = Label(frame, text="Distance to swim path centroid [maximum, % of radius]: ",
                                        bg="white")
         distanceToSwimCustomL2.grid(row=rowCount, column=0, sticky=E)
-        distanceToSwimCustomE2 = Entry(self.top, textvariable=self.distanceToSwimCustom2)
+        distanceToSwimCustomE2 = Entry(frame, textvariable=self.distanceToSwimCustom2)
         distanceToSwimCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToPlatCustomL2 = Label(self.top, text="Distance to goal [maximum, % of radius]: ", bg="white")
+        distanceToPlatCustomL2 = Label(frame, text="Distance to goal [maximum, % of radius]: ", bg="white")
         distanceToPlatCustomL2.grid(row=rowCount, column=0, sticky=E)
-        distanceToPlatCustomE2 = Entry(self.top, textvariable=self.distanceToPlatCustom2)
+        distanceToPlatCustomE2 = Entry(frame, textvariable=self.distanceToPlatCustom2)
         distanceToPlatCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        focalMinDistanceCustomL2 = Label(self.top, text="Distance covered (minimum, cm): ", bg="white")
+        focalMinDistanceCustomL2 = Label(frame, text="Distance covered (minimum, cm): ", bg="white")
         focalMinDistanceCustomL2.grid(row=rowCount, column=0, sticky=E)
-        focalMinDistanceCustomE2 = Entry(self.top, textvariable=self.focalMinDistanceCustom2)
+        focalMinDistanceCustomE2 = Entry(frame, textvariable=self.focalMinDistanceCustom2)
         focalMinDistanceCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        focalMaxDistanceCustomL2 = Label(self.top, text="Distance covered (maximum, cm): ", bg="white")
+        focalMaxDistanceCustomL2 = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
         focalMaxDistanceCustomL2.grid(row=rowCount, column=0, sticky=E)
-        focalMaxDistanceCustomE2 = Entry(self.top, textvariable=self.focalMaxDistanceCustom2)
+        focalMaxDistanceCustomE2 = Entry(frame, textvariable=self.focalMaxDistanceCustom2)
         focalMaxDistanceCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useChainingL = Label(self.top, text="Chaining: ", bg="white")
+        useChainingL = Label(frame, text="Chaining: ", bg="white")
         useChainingL.grid(row=rowCount, column=0, sticky=E)
-        useChainingC = Checkbutton(self.top, variable=self.useChaining, bg="white")
+        useChainingC = Checkbutton(frame, variable=self.useChaining, bg="white")
         useChainingC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        annulusCustomL = Label(self.top, text="Time in annulus zone [minimum, % of trial]: ", bg="white")
+        annulusCustomL = Label(frame, text="Time in annulus zone [minimum, % of trial]: ", bg="white")
         annulusCustomL.grid(row=rowCount, column=0, sticky=E)
-        annulusCustomE = Entry(self.top, textvariable=self.annulusCustom)
+        annulusCustomE = Entry(frame, textvariable=self.annulusCustom)
         annulusCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        quadrantTotalCustomL = Label(self.top, text="Quadrants visited [minimum]: ", bg="white")
+        quadrantTotalCustomL = Label(frame, text="Quadrants visited [minimum]: ", bg="white")
         quadrantTotalCustomL.grid(row=rowCount, column=0, sticky=E)
-        quadrantTotalCustomE = Entry(self.top, textvariable=self.quadrantTotalCustom)
+        quadrantTotalCustomE = Entry(frame, textvariable=self.quadrantTotalCustom)
         quadrantTotalCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        chainingMaxCoverageCustomL = Label(self.top, text="Area of maze traversed (maximum, % of maze): ", bg="white")
+        chainingMaxCoverageCustomL = Label(frame, text="Area of maze traversed (maximum, % of maze): ", bg="white")
         chainingMaxCoverageCustomL.grid(row=rowCount, column=0, sticky=E)
-        chainingMaxCoverageCustomE = Entry(self.top, textvariable=self.chainingMaxCoverageCustom)
+        chainingMaxCoverageCustomE = Entry(frame, textvariable=self.chainingMaxCoverageCustom)
         chainingMaxCoverageCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useScanningL = Label(self.top, text="Scanning: ", bg="white")
+        useScanningL = Label(frame, text="Scanning: ", bg="white")
         useScanningL.grid(row=rowCount, column=0, sticky=E)
-        useScanningC = Checkbutton(self.top, variable=self.useScanning, bg="white")
+        useScanningC = Checkbutton(frame, variable=self.useScanning, bg="white")
         useScanningC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        percentTraversedCustomL = Label(self.top, text="Area of maze traversed [maximum, % of maze]: ", bg="white")
+        percentTraversedCustomL = Label(frame, text="Area of maze traversed [maximum, % of maze]: ", bg="white")
         percentTraversedCustomL.grid(row=rowCount, column=0, sticky=E)
-        percentTraversedCustomE = Entry(self.top, textvariable=self.percentTraversedCustom)
+        percentTraversedCustomE = Entry(frame, textvariable=self.percentTraversedCustom)
         percentTraversedCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        percentTraversedMinCustomL = Label(self.top, text="Area of maze traversed [minimum, % of maze]: ", bg="white")
+        percentTraversedMinCustomL = Label(frame, text="Area of maze traversed [minimum, % of maze]: ", bg="white")
         percentTraversedMinCustomL.grid(row=rowCount, column=0, sticky=E)
-        percentTraversedMinCustomE = Entry(self.top, textvariable=self.percentTraversedMinCustom)
+        percentTraversedMinCustomE = Entry(frame, textvariable=self.percentTraversedMinCustom)
         percentTraversedMinCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToCentreCustomL = Label(self.top, text="Average distance to maze centre [maximum, % of radius]: ",
+        distanceToCentreCustomL = Label(frame, text="Average distance to maze centre [maximum, % of radius]: ",
                                         bg="white")
         distanceToCentreCustomL.grid(row=rowCount, column=0, sticky=E)
-        distanceToCentreCustomE = Entry(self.top, textvariable=self.distanceToCentreCustom)
+        distanceToCentreCustomE = Entry(frame, textvariable=self.distanceToCentreCustom)
         distanceToCentreCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useThigmoL = Label(self.top, text="Thigmotaxis: ", bg="white")
+        useThigmoL = Label(frame, text="Thigmotaxis: ", bg="white")
         useThigmoL.grid(row=rowCount, column=0, sticky=E)
-        useThigmoC = Checkbutton(self.top, variable=self.useThigmo, bg="white")
+        useThigmoC = Checkbutton(frame, variable=self.useThigmo, bg="white")
         useThigmoC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        fullThigmoCustomL = Label(self.top, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        fullThigmoCustomL = Label(frame, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg="white")
         fullThigmoCustomL.grid(row=rowCount, column=0, sticky=E)
-        fullThigmoCustomE = Entry(self.top, textvariable=self.fullThigmoCustom, bg="white")
+        fullThigmoCustomE = Entry(frame, textvariable=self.fullThigmoCustom, bg="white")
         fullThigmoCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        smallThigmoCustomL = Label(self.top, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ",
-                                   bg="white")
+        smallThigmoCustomL = Label(frame, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg="white")
         smallThigmoCustomL.grid(row=rowCount, column=0, sticky=E)
-        smallThigmoCustomE = Entry(self.top, textvariable=self.smallThigmoCustom)
+        smallThigmoCustomE = Entry(frame, textvariable=self.smallThigmoCustom)
         smallThigmoCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        thigmoMinDistanceCustomL = Label(self.top, text="Total distance covered (minimum, cm): ", bg="white")
+        thigmoMinDistanceCustomL = Label(frame, text="Total distance covered (minimum, cm): ", bg="white")
         thigmoMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        thigmoMinDistanceCustomE = Entry(self.top, textvariable=self.thigmoMinDistanceCustom, bg="white")
+        thigmoMinDistanceCustomE = Entry(frame, textvariable=self.thigmoMinDistanceCustom, bg="white")
         thigmoMinDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useRandomL = Label(self.top, text="Random Search: ", bg="white")
+        useRandomL = Label(frame, text="Random Search: ", bg="white")
         useRandomL.grid(row=rowCount, column=0, sticky=E)
-        useRandomC = Checkbutton(self.top, variable=self.useRandom, bg="white")
+        useRandomC = Checkbutton(frame, variable=self.useRandom, bg="white")
         useRandomC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        percentTraversedRandomCustomL = Label(self.top, text="Area of maze traversed [minimum, % of maze]: ",
-                                              bg="white")
+        percentTraversedRandomCustomL = Label(frame, text="Area of maze traversed [minimum, % of maze]: ", bg="white")
         percentTraversedRandomCustomL.grid(row=rowCount, column=0, sticky=E)
-        percentTraversedRandomCustomE = Entry(self.top, textvariable=self.percentTraversedRandomCustom)
+        percentTraversedRandomCustomE = Entry(frame, textvariable=self.percentTraversedRandomCustom)
         percentTraversedRandomCustomE.grid(row=rowCount, column=1)
 
         # we save the values from the fields and scale them appropriately
 
         rowCount += 1
-
-        Button(self.top, text="Save", command=self.saveCuston).grid(row=rowCount, column=0,
-                                                                    columnspan=2)  # button to save
+        Button(frame, text="Save", command=self.saveCuston).grid(row=rowCount, column=0, columnspan=2)
         rowCount += 1
-        Button(self.top, text="Reset", command=self.resetCustom).grid(row=rowCount, column=0,
-                                                                      columnspan=2)  # button to save
+        Button(frame, text="Reset", command=self.resetCustom).grid(row=rowCount, column=0, columnspan=2)
+
+
 
     def saveCuston(self):  # save the custom values
         logging.debug("Saving custom parameters")
@@ -1368,14 +1493,19 @@ class mainClass:
                     filename = os.path.join(root, basename)
                     yield filename
 
-    def callDefineOwnSoftware(self):
-        messagebox.showinfo(None, "Please select a sample input file")
-        defineOwnSoftware(root)
-        self.defineRadio['state'] = 'active'
-        self.calculateButton['state'] = 'normal'
 
-    def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, scalingFactor, name, title,
-                   platEstDiam):  # function to graph the data for the not recognized trials
+    def callDefineOwnSoftware(self):
+        global theFile
+        if theFile == "":
+            logging.debug("Open File...")
+            theFile = filedialog.askopenfilename()
+        defineOwnSoftware(root, theFile)
+        if destroyedroot==True:
+            softwareStringVar.set('custom')
+            self.defineRadio['state'] = 'active'
+            self.calculateButton['state'] = 'normal'
+
+    def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, scalingFactor, name, title, platEstDiam):  # function to graph the data for the not recognized trials
         wallsX = []
         wallsY = []
         platWallsX = []
@@ -1494,7 +1624,6 @@ class mainClass:
     def saveStrat(self):  # save the manual strategy
         global searchStrategyV
         global searchStrategyStringVar
-
         searchStrategyV = searchStrategyStringVar.get()  # get the value to be saved
         try:  # try and destroy the window
             self.top2.destroy()
@@ -1505,7 +1634,7 @@ class mainClass:
 
         self.top3 = Toplevel(root)  # create a new toplevel window
         self.top3.configure(bg="white")
-        self.top3.geometry('{}x{}'.format(500, 500))
+        self.top3.geometry('{}x{}'.format(200, 300))
         Label(self.top3, text="Heatmap Parameters", bg="white", fg="black", width=15).pack()  # add a title
 
         self.gridSizeL = Label(self.top3, text="Grid Size:", bg="white")
@@ -2050,9 +2179,6 @@ class mainClass:
         initialHeadingError = 0.0
         initialHeadingErrorCount = 0
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
-            # if dayNum == 9 or dayNum == 14:
-            #     if aDatapoint.gettime() > probeCutVar:
-            #         continue
             currentDistanceFromGoal = math.sqrt(
                 (goalX - aDatapoint.getx()) ** 2 + (goalY - aDatapoint.gety()) ** 2) * scalingFactor
             distanceToSwimPathCentroid = math.sqrt(
@@ -2219,7 +2345,7 @@ class mainClass:
         skipFlag = False
         software = softwareStringVar.get()
         if (software == "auto"):
-            detectSoftwareType(self)
+            self.detectSoftwareType()
         software = softwareStringVar.get()
 
         try:
@@ -2247,7 +2373,7 @@ class mainClass:
 
         theStatus.set('Calculating Search Strategies...')  # update status bar
         self.updateTasks()
-        currentOutputFile = outputFile + str(goalPosVar) + ".csv"
+        currentOutputFile = outputFileStringVar.get() + str(goalPosVar) + ".csv"
         logging.debug("Calculating search strategies")
         try:  # try to open a csv file for output
             f = open(currentOutputFile, 'wt')
@@ -2336,11 +2462,11 @@ class mainClass:
             quadrantThree = 0
             quadrantFour = 0
             quadrantTotal = 0
-            # </editor-fold>
             score = 0
             # Analyze the data ----------------------------------------------------------------------------------------------
-
-            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, percentTraversed, quadrantTotal, totalDistance, latency, fullThigmoCounter, smallThigmoCounter, annulusCounter, i, arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
+            corridorAverage, distanceAverage, averageDistanceToSwimPathCentroid, averageDistanceToCentre, averageHeadingError, \
+            percentTraversed, quadrantTotal, totalDistance, latency, fullThigmoCounter, smallThigmoCounter, annulusCounter, i, \
+            arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
                 aTrial, goalX, goalY, mazeCentreX,
                 mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, fullThigmoZone,
                 smallThigmoZone, scalingFactor, mazeRadius, dayNum, goalDiamVar)
@@ -2477,6 +2603,7 @@ class mainClass:
               focalSearchCount, "| Indirect Search: ", indirectSearchCount, "| Semi-focal Search: ",
               semifocalSearchCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ",
               randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
+        # TODO
         if sys.platform.startswith('darwin'):
             subprocess.call(('open', currentOutputFile))
         elif os.name == 'nt':  # For Windows
@@ -2486,10 +2613,8 @@ class mainClass:
         self.updateTasks()
         theStatus.set('')
         self.updateTasks()
-        csvfilename = "output/results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p",
-                                                               localtime()))  # update the csv file name for the next run
+        csvfilename = "output/results/results " + str(strftime("%Y_%m_%d %I_%M_%S_%p", localtime()))  # update the csv file name for the next run
         outputFileStringVar.set(csvfilename)
-
         return
 
 

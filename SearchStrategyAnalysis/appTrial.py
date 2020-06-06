@@ -172,106 +172,120 @@ def openFile():  # opens a dialog to get a single file
     theFile = filedialog.askopenfilename()
     return theFile
 
+global customxyt
+customxyt = []
 
-global xyt
-xyt = []
 
-
-def defineOwnSoftware(root):
-    filename = openFile()
+def defineOwnSoftware(root, filename):
     file_extension = os.path.splitext(filename)[1]
-    if filename == "":
-        logging.error("Please select a file")
-        print("Please select a file")
-        return
-    else:
-        # main loop
-        top = Toplevel(root)
-        canvas = Canvas(top, borderwidth=0, width=800, height=600, bg="white")  # we create the canvas
-        frame = Frame(canvas)  # we place a frame in the canvas
-        frame.configure(bg="white")
-        xscrollbar = Scrollbar(top, orient=HORIZONTAL, command=canvas.xview)  # we add a horizontal scroll bar
-        yscrollbar = Scrollbar(top, orient="vertical", command=canvas.yview)  # vertical scroll bar
-        xscrollbar.pack(side=BOTTOM, fill=X)  # we put the horizontal scroll bar on the bottom
-        yscrollbar.pack(side="right", fill="y")  # put on right
+    top = Toplevel(root)
+    canvas = Canvas(top, borderwidth=0, width=800, height=600, bg="white")  # we create the canvas
+    frame = Frame(canvas)  # we place a frame in the canvas
+    frame.configure(bg="white")
+    xscrollbar = Scrollbar(top, orient=HORIZONTAL, command=canvas.xview)  # we add a horizontal scroll bar
+    yscrollbar = Scrollbar(top, orient="vertical", command=canvas.yview)  # vertical scroll bar
+    xscrollbar.pack(side=BOTTOM, fill=X)  # we put the horizontal scroll bar on the bottom
+    yscrollbar.pack(side="right", fill="y")  # put on right
 
-        canvas.pack(side="left", fill="both", expand=True)  # we pack in the canvas
-        canvas.create_window((4, 4), window=frame, anchor="nw")  # we create the window for the results
-        canvas.configure(xscrollcommand=xscrollbar.set)
-        canvas.configure(yscrollcommand=yscrollbar.set)  # we set the commands for the scroll bars
-        frame.bind("<Configure>", lambda event, canvas=canvas: canvas.configure(scrollregion=canvas.bbox("all")))
-        top.attributes('-topmost', True)
+    canvas.pack(side="left", fill="both", expand=True)  # we pack in the canvas
+    canvas.create_window((4, 4), window=frame, anchor="nw")  # we create the window for the results
+    canvas.configure(xscrollcommand=xscrollbar.set)
+    canvas.configure(yscrollcommand=yscrollbar.set)  # we set the commands for the scroll bars
+    frame.bind("<Configure>", lambda event, canvas=canvas: canvas.configure(scrollregion=canvas.bbox("all")))
+    top.attributes('-topmost', True)
 
-        # display selected XYT columns using a status bar
-        theStatus = StringVar()
+    # display selected XYT columns using a status bar
+    theStatus = StringVar()
+    theStatus.set("[First X, Y, time values]: ")
+    status = Label(frame, textvariable=theStatus, width=50, height=2, relief=SUNKEN, anchor=W, bg="white")
+    status.grid(row=0, column=0, columnspan=4)
+    global customxyt
+
+    def okButton():
+        if (len(customxyt) == 3):
+            top.attributes('-topmost', False)
+            messagebox.showinfo(None, "First X value: " + str(customxyt[0])
+                                + "\nFirst Y value: " + str(customxyt[1])
+                                + "\nFirst time value: " + str(customxyt[2]))
+            top.quit()
+            top.destroy()
+        else:
+            top.attributes('-topmost', False)
+            messagebox.showinfo(None, "Please select three columns!")
+            top.attributes('-topmost', True)
+
+    def resetButton():
+        global customxyt
+        customxyt = []
         theStatus.set("[First X, Y, time values]: ")
-        status = Label(frame, textvariable=theStatus, width=50, height=2, relief=SUNKEN, anchor=W, bg="white")
-        status.grid(row=0, column=0, columnspan=4)
 
-        global xyt
+    def displayTable(data):
+        r = 0
+        for col in data:
+            c = 0
+            for row in col:
+                coord = (r, c)
+                if (r < 100):
+                    cell = Label(frame, width=12, height=1, text=row, borderwidth=2, relief="groove")
+                    cell.grid(row=r + 1, column=c)
+                    cell.bind("<Button-1>", lambda event: getXYT(event))
+                c += 1
+            r += 1
 
-        def okButton():
-            if (len(xyt) == 3):
-                top.attributes('-topmost', False)
-                messagebox.showinfo(None, "First X value: " + str(xyt[0])
-                                    + "\nFirst Y value: " + str(xyt[1])
-                                    + "\nFirst time value: " + str(xyt[2]))
-                top.quit()
-                top.destroy()
-            else:
-                top.attributes('-topmost', False)
-                messagebox.showinfo(None, "Please select three columns!")
-                top.attributes('-topmost', True)
+    # gets column number from clicked column
+    def getXYT(event):
+        info = event.widget.grid_info()
+        coord = (info["column"], info["row"]-1)
+        customxyt.append(coord)
+        theStatus.set("[First X, Y, time values]: " + str(customxyt))
 
-        def resetButton():
-            global xyt
-            xyt = []
-            theStatus.set("[First X, Y, time values]: ")
-
-        def displayTable(data):
-            r = 0
-            for col in data:
-                c = 0
-                for row in col:
-                    coord = (r, c)
-                    if (r < 100):
-                        cell = Label(frame, width=12, height=1, text=row, borderwidth=2, relief="groove")
-                        cell.grid(row=r + 1, column=c)
-                        cell.bind("<Button-1>", lambda event: getXYT(event))
-                    c += 1
-                r += 1
-
-        # gets column number from clicked column
-        def getXYT(event):
-            info = event.widget.grid_info()
-            coord = (info["column"], info["row"]-1)
-            xyt.append(coord)
-            theStatus.set("[First X, Y, time values]: " + str(xyt))
-
-        if (file_extension == '.csv'):
-            # display csv as table
-            with open(filename, newline="") as file:
-                data = csv.reader(file)
+    # display table
+    if (file_extension == '.csv'):
+        with open(filename, newline="") as file:
+            try:
+                dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
+                file.seek(0)
+                data = csv.reader(file, dialect)
                 displayTable(data)
-        elif (file_extension == '.xlsx'):
+
+                okbutton = Button(frame, text="Save", width=12, height=2, command=okButton)
+                okbutton.grid(row=0, column=4)
+                resetbutton = Button(frame, text="Reset", width=12, height=2, command=resetButton)
+                resetbutton.grid(row=0, column=5)
+
+                top.attributes('-topmost', False)
+                messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
+                top.attributes('-topmost', True)
+                top.mainloop()
+            except:
+                top.attributes('-topmost', False)
+                messagebox.showinfo(None, "Invalid CSV format.")
+                top.destroy()
+                top.mainloop()
+    elif (file_extension == '.xlsx'):
+        try:
             data = pd.read_excel(filename)
             displayTable(data.values)
 
-        okbutton = Button(frame, text="Save", width=12, height=2, command=okButton)
-        okbutton.grid(row=0, column=4)
-        resetbutton = Button(frame, text="Reset", width=12, height=2, command=resetButton)
-        resetbutton.grid(row=0, column=5)
+            okbutton = Button(frame, text="Save", width=12, height=2, command=okButton)
+            okbutton.grid(row=0, column=4)
+            resetbutton = Button(frame, text="Reset", width=12, height=2, command=resetButton)
+            resetbutton.grid(row=0, column=5)
 
-        top.attributes('-topmost', False)
-        messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
-        top.attributes('-topmost', True)
-        top.mainloop()
+            top.attributes('-topmost', False)
+            messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
+            top.attributes('-topmost', True)
+            top.mainloop()
+        except:
+            top.attributes('-topmost', False)
+            messagebox.showinfo(None, "Error opening Excel table.")
 
 
 def saveFileAsExperiment(software, filename, filedirectory):
     trialList = []
     filenameList = []
     experiment = Experiment(filename)
+    dialect = ""
     if filename == "":
         if filedirectory == "":
             logging.error("No files selected")
@@ -288,7 +302,11 @@ def saveFileAsExperiment(software, filename, filedirectory):
         filenameList.append(filename)
 
     for filename in filenameList:
-
+        file_extension = os.path.splitext(filename)[1]
+        if software != "ethovision" and file_extension == '.csv':
+            with open(filename, newline="") as file:
+                dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
+                file.seek(0)
         if software == "ethovision":
             logging.info("Reading file ethovision")
             experiment.setHasAnimalNames(True)
@@ -354,7 +372,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 traceback.print_exc()
                 logging.info("Could not open " + filename)
                 return
-            reader = csv.reader(f, delimiter=",")
+            reader = csv.reader(f, dialect)
             next(reader)
             for row in reader:
                 for (i, v) in enumerate(row):
@@ -392,7 +410,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 logging.info("Could not open " + filename)
                 return
 
-            reader = csv.reader(f, delimiter=",")
+            reader = csv.reader(f, dialect)
             for row in reader:
                 for (i, v) in enumerate(row):
                     columns[i].append(v)
@@ -440,7 +458,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 logging.info("Could not open " + filename)
                 return
 
-            reader = csv.reader(f, delimiter=",")
+            reader = csv.reader(f, dialect)
             listReader = list(reader)
             aTrial = Trial()
             aTrial.setname(filename.split("/")[-1])
@@ -472,6 +490,44 @@ def saveFileAsExperiment(software, filename, filedirectory):
 
             trialList.append(aTrial)
 
+        elif software == "custom":
+            logging.info("Reading file custom")
+            experiment.setHasAnimalNames(False)
+            experiment.setHasDateInfo(False)
+            experiment.setHasTrialNames(False)
+            try:
+                f = open(filename)
+            except:
+                logging.info("Could not open " + filename)
+                return
+
+            file_extension = os.path.splitext(filename)[1]
+            if (file_extension == '.csv'):
+                reader = csv.reader(f, dialect)
+            elif (file_extension == '.xlsx'):
+                reader = pd.read_excel(filename)
+
+            listReader = list(reader)
+            aTrial = Trial()
+            aTrial.setname(filename.split("/")[-1])
+            aIndex = 0
+            xCol = customxyt[0][0]
+            yCol = customxyt[1][0]
+            tCol = customxyt[2][0]
+            for row in listReader[customxyt[0][1]:]:
+                try:
+                    x = float(row[xCol])
+                    y = float(row[yCol])
+                    t = row[tCol]
+                    hours = float(t.split(':')[0])
+                    minutes = float(t.split(':')[1])
+                    seconds = float(t.split(':')[2])
+                    time = seconds + minutes * 60 + hours * 3600
+                    print(time, x, y)
+                    aTrial.append(Datapoint(time, x, y))
+                except:
+                    aTrial.markDataAsCorrupted()
+            trialList.append(aTrial)
         else:
             logging.critical("Could not determine trial, saveFileAsTrial")
             return
