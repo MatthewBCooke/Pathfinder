@@ -225,7 +225,7 @@ def defineOwnSoftware(root, filename):
             c = 0
             for row in col:
                 coord = (r, c)
-                if (r < 25) and (c < 10):
+                if (r < 45) and (c < 10):
                     cell = Label(frame, width=12, height=1, text=row, borderwidth=2, relief="groove")
                     cell.grid(row=r + 1, column=c)
                     cell.bind("<Button-1>", lambda event: getXYT(event))
