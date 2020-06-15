@@ -239,7 +239,7 @@ class mainClass:
             return
         logging.debug("GUI is built")
 
-    ## Helper for callDefineOwnSoftware, tracks if root has been destroyed
+    # Helper for callDefineOwnSoftware, tracks if root has been destroyed
     def root_tracker():
         destroyedroot = True
         root.destroy()
@@ -1503,7 +1503,8 @@ class mainClass:
         if theFile == "":
             logging.debug("Open File...")
             theFile = filedialog.askopenfilename()
-        defineOwnSoftware(root, theFile)
+        if theFile != "":
+            defineOwnSoftware(root, theFile)
         if destroyedroot==True:
             softwareStringVar.set('custom')
             self.defineRadio['state'] = 'active'
