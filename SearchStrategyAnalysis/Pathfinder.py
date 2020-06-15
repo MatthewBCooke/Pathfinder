@@ -318,7 +318,7 @@ class mainClass:
         self.menu.add_cascade(label="Help", menu=self.helpMenu)
         self.helpMenu.add_command(label="Help", command=self.getHelp)
         self.helpMenu.add_command(label="About", command=self.about)
-        self.helpMenu.add_command(label="Update", command=self.updatePathfinder)
+        self.helpMenu.add_command(label="Update with PIP", command=self.updatePathfinder)
 
         rowCount = 0
         # ******* Software Type *******
