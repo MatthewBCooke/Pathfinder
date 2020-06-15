@@ -10,6 +10,7 @@ import os
 import fnmatch
 import datetime
 import tkinter
+from operator import add
 from collections import defaultdict
 from xlrd import open_workbook
 if sys.version_info<(3,0,0):  # tkinter names for python 2
@@ -200,13 +201,12 @@ def defineOwnSoftware(root, filename):
     status = Label(frame, textvariable=theStatus, width=50, height=2, relief=SUNKEN, anchor=W, bg="white")
     status.grid(row=0, column=0, columnspan=4)
     global customxyt
-
     def okButton():
         if (len(customxyt) == 3):
             top.attributes('-topmost', False)
-            messagebox.showinfo(None, "First X value: " + str(customxyt[0])
-                                + "\nFirst Y value: " + str(customxyt[1])
-                                + "\nFirst time value: " + str(customxyt[2]))
+            messagebox.showinfo(None, "First X value: " + str(list(map(add, list(customxyt[0]),[1,1])))
+                                + "\nFirst Y value: " + str(list(map(add, list(customxyt[1]),[1,1])))
+                                + "\nFirst time value: " + str(list(map(add, list(customxyt[2]),[1,1]))))
             top.quit()
             top.destroy()
         else:
@@ -254,7 +254,7 @@ def defineOwnSoftware(root, filename):
                 resetbutton.grid(row=0, column=5)
 
                 top.attributes('-topmost', False)
-                messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
+                messagebox.showinfo(None, "Please select the first X value (e.g. 23.45), then the first Y value, and finally the starting Time value.")
                 top.attributes('-topmost', True)
                 top.mainloop()
             except:
@@ -273,7 +273,7 @@ def defineOwnSoftware(root, filename):
             resetbutton.grid(row=0, column=5)
 
             top.attributes('-topmost', False)
-            messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
+            messagebox.showinfo(None, "Please select the first X value (e.g. 23.45), then the first Y value, and finally the starting Time value.")
             top.attributes('-topmost', True)
             top.mainloop()
         except:
