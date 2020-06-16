@@ -505,26 +505,32 @@ def saveFileAsExperiment(software, filename, filedirectory):
             if (file_extension == '.csv'):
                 reader = csv.reader(f, dialect)
             elif (file_extension == '.xlsx'):
-                reader = pd.read_excel(filename)
+                reader = pd.read_excel(filename, header=None)
 
-            listReader = list(reader)
+
+            # listReader = list(reader)
             aTrial = Trial()
             aTrial.setname(filename.split("/")[-1])
             aIndex = 0
             xCol = customxyt[0][0]
             yCol = customxyt[1][0]
             tCol = customxyt[2][0]
-            for row in listReader[customxyt[0][1]:]:
+            dataStartRow = customxyt[0][1]
+            for index, row in reader.iterrows():
                 try:
                     x = float(row[xCol])
                     y = float(row[yCol])
                     t = row[tCol]
-                    hours = float(t.split(':')[0])
-                    minutes = float(t.split(':')[1])
-                    seconds = float(t.split(':')[2])
-                    time = seconds + minutes * 60 + hours * 3600
+                    if isinstance(t, str) and ':' in t:
+                        hours = float(t.split(':')[0])
+                        minutes = float(t.split(':')[1])
+                        seconds = float(t.split(':')[2])
+                        time = seconds + minutes * 60 + hours * 3600
+                    elif isinstance(t, float):
+                        time = t
                     print(time, x, y)
-                    aTrial.append(Datapoint(time, x, y))
+                    if not math.isnan(x) and not math.isnan(y):
+                        aTrial.append(Datapoint(time, x, y))
                 except:
                     aTrial.markDataAsCorrupted()
             trialList.append(aTrial)
