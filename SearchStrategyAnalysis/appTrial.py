@@ -516,7 +516,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
             yCol = customxyt[1][0]
             tCol = customxyt[2][0]
             dataStartRow = customxyt[0][1]
-            for index, row in reader.iterrows():
+            for index, row in reader.iloc[dataStartRow:].iterrows():
                 try:
                     x = float(row[xCol])
                     y = float(row[yCol])
