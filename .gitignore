@@ -20,3 +20,4 @@ jsl_pathfinder.egg-info/
 jslssa.egg-info/
 
 __pycache__/
+/dist/
