@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: jsl-pathfinder
-Version: 1.2.6
+Version: 1.3.1
 Summary: Morris Water Maze Search Strategy Analysis
 Home-page: https://github.com/MatthewBCooke/Pathfinder
 Author: Matthew Cooke
@@ -16,7 +16,7 @@ Description: # Pathfinder    [![DOI](https://zenodo.org/badge/188258387.svg)](ht
         
         ## Synopsis
         
-        The Pathfinder package is a search strategy analysis tool for the Morris Water Maze, and can be expanded for other spatial navigation tasks. The program analyses X-Y coordinate data exported from commercially available tracking software. Pathfinder currently supports outputs from: Ethovision, Anymazy, WaterMaze, and ezTrack. We then calculate the best-fit search strategy for the trial. Trials are fit into one of: Direct Swim, Directed Search, Focal Search, Spatial indirect, Chaining, Scanning, Thigmotaxis, and Random Search.
+        The Pathfinder package is a search strategy analysis tool for the Morris Water Maze, and can be expanded for other spatial navigation tasks. The program analyses X-Y coordinate data exported from commercially available tracking software. Pathfinder currently supports outputs from: Ethovision, Anymaze, WaterMaze, and ezTrack. We then calculate the best-fit search strategy for the trial. Trials are fit into one of: Direct Swim, Directed Search, Focal Search, Spatial indirect, Chaining, Scanning, Thigmotaxis, and Random Search.
         
         ## Citing
         
@@ -28,7 +28,7 @@ Description: # Pathfinder    [![DOI](https://zenodo.org/badge/188258387.svg)](ht
         
         2. This will open up the main GUI window.
         
-            ![Window Preview](http://snyderlab.com/pathfinder/main.jpg)
+            ![Window Preview](http://snyderlab.com/pathfinder/pathfinder_main.png)
         
         3. You can select an inividual file or a directory containing export files from the **File** drop-down menu.
         
