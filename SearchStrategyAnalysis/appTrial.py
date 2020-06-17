@@ -225,7 +225,7 @@ def defineOwnSoftware(root, filename):
             c = 0
             for row in col:
                 coord = (r, c)
-                if (r < 45) and (c < 10):
+                if (r < 45) and (c < 11):
                     cell = Label(frame, width=12, height=1, text=row, borderwidth=2, relief="groove")
                     cell.grid(row=r + 1, column=c)
                     cell.bind("<Button-1>", lambda event: getXYT(event))
@@ -243,7 +243,7 @@ def defineOwnSoftware(root, filename):
     if (file_extension == '.csv'):
         with open(filename, newline="") as file:
             try:
-                dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
+                dialect = csv.Sniffer().sniff(file.readline())
                 file.seek(0)
                 data = csv.reader(file, dialect)
                 displayTable(data)
@@ -305,7 +305,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
         file_extension = os.path.splitext(filename)[1]
         if software != "ethovision" and file_extension == '.csv':
             with open(filename, newline="") as file:
-                dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
+                dialect = csv.Sniffer().sniff(file.readline())
                 file.seek(0)
         if software == "ethovision":
             logging.info("Reading file ethovision")
@@ -503,7 +503,8 @@ def saveFileAsExperiment(software, filename, filedirectory):
 
             file_extension = os.path.splitext(filename)[1]
             if (file_extension == '.csv'):
-                reader = csv.reader(f, dialect)
+                # reader = csv.reader(f, dialect)
+                reader = pd.read_csv(filename, sep=";|,", header=None)
             elif (file_extension == '.xlsx'):
                 reader = pd.read_excel(filename, header=None)
 
@@ -526,8 +527,8 @@ def saveFileAsExperiment(software, filename, filedirectory):
                         minutes = float(t.split(':')[1])
                         seconds = float(t.split(':')[2])
                         time = seconds + minutes * 60 + hours * 3600
-                    elif isinstance(t, float):
-                        time = t
+                    else:
+                        time = float(t)
                     print(time, x, y)
                     if not math.isnan(x) and not math.isnan(y):
                         aTrial.append(Datapoint(time, x, y))
