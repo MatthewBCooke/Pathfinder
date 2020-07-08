@@ -20,7 +20,8 @@ If you use Pathfinder, please cite: Cooke MB, O'Leary TP, Harris P et al. (2019)
 
 2. This will open up the main GUI window.
 
-    ![Window Preview](http://snyderlab.com/pathfinder/pathfinder_main.png)
+    
+    ![pathfinder_launch](https://user-images.githubusercontent.com/7039454/86945860-69f34c00-c0fe-11ea-9220-fba60491e3ca.gif)
 
 3. You can select an inividual file or a directory containing export files from the **File** drop-down menu.
 
@@ -57,7 +58,7 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 2. The settings button will spawn a parameters panel:
 
-    ![settings parameters](http://snyderlab.com/pathfinder/settings.jpg)
+    ![pathfinder_settings_pane](https://user-images.githubusercontent.com/7039454/86945950-8b543800-c0fe-11ea-8ec0-b0803cc5022d.gif)
 
 
 3. In the settings parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. For definitions of these values see Cooke et al., 2019, in preparation.
@@ -73,7 +74,7 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
 7. Once you are satisfied with your parameters, click calculate. This will begin the process of determining search strategies for the trials. Once calculation is complete, you will be shown a display of the results.
 
-    ![display](http://snyderlab.com/pathfinder/output.jpg)
+    ![pathfinder_calculate](https://user-images.githubusercontent.com/7039454/86945727-3c0e0780-c0fe-11ea-93d2-7cae15306803.gif)
 
 
 8. Your results will be saved as a `.csv` file with whatever name was chosen in the *Output File* field. You will also receive a log file of the excecution, and any generated paths saved in your present working directory. The CSV file will automatically open with whatever default CSV software you use.
