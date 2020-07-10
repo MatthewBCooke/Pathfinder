@@ -4,7 +4,7 @@ Morris Water Maze search strategy and entropy analysis.
 
 Created by **Matthew Cooke** at **The University of British Columbia**, **Jason Snyder Lab**
 
-**For more information about the features and usage of Pathfinder please visit our [**Wiki**](https://github.com/MatthewBCooke/Pathfinder/wiki)**
+**For more information about the features and usage of Pathfinder please visit our [wiki](https://github.com/MatthewBCooke/Pathfinder/wiki)**
 
 ## Synopsis
 
