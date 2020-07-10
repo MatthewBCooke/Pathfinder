@@ -14,32 +14,46 @@ The Pathfinder package is a search strategy analysis tool for the Morris Water M
 
 If you use Pathfinder, please cite: Cooke MB, O'Leary TP, Harris P et al. (2019) Pathfinder: open source software for analyzing spatial navigation search strategies. F1000Research, 8:1521. https://doi.org/10.12688/f1000research.20352.1
 
-## Usage Example
+### Launching Pathfinder
 
-1. The program can be opened by calling `pathfinder` (type `pathfinder` into a terminal window) if installed through PyPi or by navigating to your install location and calling (typing into terminal) `python pathfinder.py` in a terminal window. See [**Installation**](https://github.com/MatthewBCooke/Pathfinder/wiki/Installation) for install instructions.
+1. The program can be opened by calling pathfinder.
+2. This will open up the GUI window.
+![pathfinder_launch](https://user-images.githubusercontent.com/7039454/86947608-d5d6b400-c100-11ea-970c-f1ec05833de7.gif)
+3. You can then select an inividual file or a directory containing files from the File dropdown menu. These files must be Excel files if you are using Ethovision tracking software, and CSV files if you are using Anymaze, Watermaze, or ezTrack software.
 
-2. This will open up the main GUI window.
+### Search Strategy Analysis
 
-    
-    ![pathfinder_launch](https://user-images.githubusercontent.com/7039454/86945860-69f34c00-c0fe-11ea-9220-fba60491e3ca.gif)
+1. For search strategy analysis we have multiple options. To set your own strategy parameters, click custom.
 
-3. You can select an inividual file or a directory containing export files from the **File** drop-down menu.
+2. (Settings) The settings button will spawn a parameters panel
 
-4. From here you can choose to either [(**A**)](https://github.com/MatthewBCooke/Pathfinder/blob/master/README.md#a-generating-heatmaps) generate heatmaps for the chosen trials, or to [(**B**)](https://github.com/MatthewBCooke/Pathfinder/blob/master/README.md#b-search-strategy-analysis) calculate search strategies.
+![pathfinder_settings_pane](https://user-images.githubusercontent.com/7039454/86947641-e4bd6680-c100-11ea-8263-3a20f429d2bf.gif)
 
-### (A) Generating Heatmaps
+3. In the custom parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. See https://github.com/MatthewBCooke/Pathfinder/wiki/Description-of-Parameters for detailed description of parameters
 
-The Pathfinder package allows for the efficient generation of heatmaps. To do so, follow these steps.
+4. Once you have chosen your parameters, be sure to select your tracking software. Ethovision, Anymaze, ezTrack and Watermaze are currently supported. 
 
-1. Once a directory or file has been imported, select **File** -> **Generate Heatmaps**
+5. You may then alter the main values to suit your data. Platform position, pool centre, and pool diameter can be automatically calculated for groups of trials using one constant platform location. For all other data you must manually define these values (Example: `Platform Position (x,y) | 6.53,-17.3`).
 
-2. A parameters panel will appear:
+![pathfinder_goal_pos_change](https://user-images.githubusercontent.com/7039454/86947673-f3a41900-c100-11ea-82a5-c1245e0d02af.gif)
 
-    ![Heatmap parameters](http://snyderlab.com/pathfinder/heatmapparams.jpg)
+6. There are 3 checkboxes above the **Calculate** button. The first, *Scale Values* is used to automatically scale the default values in an attempt to better match your data. This uses the Pixels/cm and the pool diameter to determine a constant C with which to multiply some parameters. (*Note: If you are using custom values, it is best to disable scaling*) The two other checkboxes enable manual categorization. Manual categorization can be used for trials in which our algorithm was unable to make a determination (**Manual categorization for uncategorized trials**) or for all trials (**Manual categorization for all trials**). 
 
-3. The parameters panel lets you tailor the output to your needs:
+![manual categorization](http://snyderlab.com/pathfinder/manual.jpg)
 
-    1. Grid size. This roughly translates into how many bins to put the data in. For more information on grid size see matplotlib documentation [(here)](http://matplotlib.org/devdocs/api/_as_gen/matplotlib.axes.Axes.hexbin.html).
+7. Once you are satisfied with your parameters, click calculate. This will begin the process of determining search strategies for the trials. Once calculation is complete you will be shown a display of the results.
+
+![pathfinder_calculate](https://user-images.githubusercontent.com/7039454/86947699-00287180-c101-11ea-978c-89d4bd95e3c5.gif)
+
+8. Your results will be saved as a `.csv` file with whatever name was chosen in the *Output File* field. You will also receive a log file of the excecution, and any generated paths saved in your present working directory.
+
+### Heatmaps
+
+![Heatmap parameters](http://snyderlab.com/pathfinder/heatmapparams.jpg)
+
+1. The parameters panel lets you tailor the output to your needs:
+
+    1. Grid size. This roughly translates into how many bins to put the data in. For more information on grid size see matplotlib documentation: http://matplotlib.org/devdocs/api/_as_gen/matplotlib.axes.Axes.hexbin.html
 
     2. Maximum Value. This will allow you to change at which value the points in the heatmap will become their most saturated (dark red). Setting 'Auto' will dynamically assign the maximum value to be equal to the value of the maximum grid.
 
@@ -48,36 +62,32 @@ The Pathfinder package allows for the efficient generation of heatmaps. To do so
 
     4. Trial: A trial or range of trials on the above selected days. (E.g. All or 1-4 or 2)
 
-4. You can then click generate, and our software will plot a heatmap of your trial data.
+2. You can then click generate, and our software will plot a heatmap of your trial data.
 
-    ![heatmap display](http://snyderlab.com/pathfinder/heatmap.jpg)
-
-### (B) Search Strategy Analysis
-
-1. For search strategy analysis we have multiple options. To set your own strategy parameters, click settings.
-
-2. The settings button will spawn a parameters panel:
-
-    ![pathfinder_settings_pane](https://user-images.githubusercontent.com/7039454/86945950-8b543800-c0fe-11ea-8ec0-b0803cc5022d.gif)
+![heatmap display](http://snyderlab.com/pathfinder/heatmap.jpg)
 
 
-3. In the settings parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. For definitions of these values see Cooke et al., 2019, in preparation.
+### Multiple ROI
 
-4. Once you have chosen your parameters, be sure to select your tracking software. Ethovision, Anymaze, WaterMaze, and ezTrack are currently supported. 
+![ROI](http://snyderlab.com/pathfinder/pathfinder_addROI.png)
 
-5. You may then alter the main values to suit your data. Platform position, pool centre, and pool diameter can be automatically calculated for groups of trials with a consistent single platform location. For all other data, you must manually define these values (Example: `Platform Position (x,y) | 6.53,-17.3`). For more in-depth explanations of these values, see Cooke et al., 2019, in preparation.
+1. You can use the 'Add Goal...' button to add an unlimited number of goal locations or regions of interest. The will allow Pathfinder to calculate relative to each position.
 
-6. There are 4 checkboxes above the **Calculate** button. The first, *Scale Values* is used to automatically scale the default values in an attempt to better match your data. This uses the Pixels/cm and the pool diameter to determine a constant C with which to multiply some parameters. (*Note: If you are using custom values, it is best to disable scaling*) The two following checkboxes enable manual categorization. Manual categorization can be used for trials in which our algorithm was unable to make a determination (**Manual categorization for uncategorized trials**) or for all trials (**Manual categorization for all trials**). The last checkbox enables the calculation of entropy for the trial. This requires MATLAB.
+### Defining Software
 
-    ![manual categorization](http://snyderlab.com/pathfinder/manual.jpg)
+Defining software allows Pathfinder to accept data from CSV or Excel that we haven't yet added support for. This works by prompting the user to select a sample file, and by selecting relevant cells, instructs Pathfinder where to look when dealing with the dataset. 
 
+![pathfinder_define](https://user-images.githubusercontent.com/7039454/86947754-0f0f2400-c101-11ea-8489-b06b47634c97.gif)
 
-7. Once you are satisfied with your parameters, click calculate. This will begin the process of determining search strategies for the trials. Once calculation is complete, you will be shown a display of the results.
+1. You can use the "Define.." button if Pathfinder is unable to read your software files.
 
-    ![pathfinder_calculate](https://user-images.githubusercontent.com/7039454/86945727-3c0e0780-c0fe-11ea-93d2-7cae15306803.gif)
+2. Click on the Define button on the main View pane and a popup will appear. Select a sample file that is the same format as your dataset.
 
+3. A window will open asking you to select a sample file from your dataset.
+    1. You will then select the appropriate X, Y, and Time columns in your sample file.
+4. IT IS IMPORTANT THAT YOU THEN RE-OPEN THE DATASET USING THE FILE MENU, EITHER BY OPEN DIRECTORY OR FILE, BEFORE ATTEMPTING TO CALCULATE.
 
-8. Your results will be saved as a `.csv` file with whatever name was chosen in the *Output File* field. You will also receive a log file of the excecution, and any generated paths saved in your present working directory. The CSV file will automatically open with whatever default CSV software you use.
+![pathfinder_open_directory](https://user-images.githubusercontent.com/7039454/86947834-2e0db600-c101-11ea-8e7c-f12d2117f3b8.gif)
 
 
 ## Motivation
@@ -144,3 +154,4 @@ GNU GENERAL PUBLIC LICENSE
  Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
  Everyone is permitted to copy and distribute verbatim copies
  of this license document, but changing it is not allowed.
+
