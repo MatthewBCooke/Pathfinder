@@ -12,7 +12,7 @@ The Pathfinder package is a search strategy analysis tool for the Morris Water M
 
 ## Citing
 
-If you use Pathfinder, please cite: Cooke MB, O'Leary TP, Harris P et al. (2019) Pathfinder: open source software for analyzing spatial navigation search strategies. F1000Research, 8:1521. https://doi.org/10.12688/f1000research.20352.1
+If you use Pathfinder, please cite: Cooke MB, O'Leary TP, Harris P et al. (2019) Pathfinder: open source software for analyzing spatial navigation search strategies. F1000Research, 8:1521. https://doi.org/10.12688/f1000research.20352.2
 
 ### Launching Pathfinder
 
