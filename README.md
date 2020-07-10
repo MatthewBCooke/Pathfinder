@@ -18,7 +18,9 @@ If you use Pathfinder, please cite: Cooke MB, O'Leary TP, Harris P et al. (2019)
 
 1. The program can be opened by calling pathfinder.
 2. This will open up the GUI window.
+
 ![pathfinder_launch](https://user-images.githubusercontent.com/7039454/86947608-d5d6b400-c100-11ea-970c-f1ec05833de7.gif)
+
 3. You can then select an inividual file or a directory containing files from the File dropdown menu. These files must be Excel files if you are using Ethovision tracking software, and CSV files if you are using Anymaze, Watermaze, or ezTrack software.
 
 ### Search Strategy Analysis
