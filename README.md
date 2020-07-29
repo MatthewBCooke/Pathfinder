@@ -21,7 +21,7 @@ If you use Pathfinder, please cite: Cooke MB, O'Leary TP, Harris P et al. (2019)
 
 ![pathfinder_launch](https://user-images.githubusercontent.com/7039454/86947608-d5d6b400-c100-11ea-970c-f1ec05833de7.gif)
 
-3. You can then select an inividual file or a directory containing files from the File dropdown menu. These files must be Excel files if you are using Ethovision tracking software, and CSV files if you are using Anymaze, Watermaze, or ezTrack software.
+3. You can then select an inividual file or a directory containing files from the File dropdown menu. These files must be Excel files if you are using Ethovision tracking software, and CSV files if you are using Anymaze, Watermaze, or ezTrack software. Define supports both Excel and CSV files.
 
 ### Search Strategy Analysis
 
@@ -33,7 +33,7 @@ If you use Pathfinder, please cite: Cooke MB, O'Leary TP, Harris P et al. (2019)
 
 3. In the custom parameters pane, you can select and deselect any of the search strategies. Deselecting Strategies will remove them from consideration. You can also define the cutoff values for each strategy. See https://github.com/MatthewBCooke/Pathfinder/wiki/Description-of-Parameters for detailed description of parameters
 
-4. Once you have chosen your parameters, be sure to select your tracking software. Ethovision, Anymaze, ezTrack and Watermaze are currently supported. 
+4. Once you have chosen your parameters, be sure to select your tracking software. Ethovision, Anymaze, ezTrack and Watermaze are currently supported. We also have a "Define" button that allows users to import most non-supported files.
 
 5. You may then alter the main values to suit your data. Platform position, pool centre, and pool diameter can be automatically calculated for groups of trials using one constant platform location. For all other data you must manually define these values (Example: `Platform Position (x,y) | 6.53,-17.3`).
 
@@ -47,7 +47,7 @@ If you use Pathfinder, please cite: Cooke MB, O'Leary TP, Harris P et al. (2019)
 
 ![pathfinder_calculate](https://user-images.githubusercontent.com/7039454/86947699-00287180-c101-11ea-978c-89d4bd95e3c5.gif)
 
-8. Your results will be saved as a `.csv` file with whatever name was chosen in the *Output File* field. You will also receive a log file of the excecution, and any generated paths saved in your present working directory.
+8. Your results will be saved as a `.csv` file with whatever name was chosen in the *Output File* field. You will also receive a log file of the excecution ("Logs" folder), and any generated paths from manual catagorization will be saved under "Paths" in your present working directory.
 
 ### Heatmaps
 
@@ -64,7 +64,7 @@ If you use Pathfinder, please cite: Cooke MB, O'Leary TP, Harris P et al. (2019)
 
     4. Trial: A trial or range of trials on the above selected days. (E.g. All or 1-4 or 2)
 
-2. You can then click generate, and our software will plot a heatmap of your trial data.
+2. You can then click generate, and our software will plot a heatmap of your trial data. These will be saved in the "Heatmaps" subfolder.
 
 ![heatmap display](http://snyderlab.com/pathfinder/heatmap.jpg)
 
