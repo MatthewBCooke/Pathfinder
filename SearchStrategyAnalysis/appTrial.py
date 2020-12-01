@@ -235,7 +235,7 @@ def defineOwnSoftware(root, filename):
     # gets column number from clicked column
     def getXYT(event):
         info = event.widget.grid_info()
-        coord = (info["column"], info["row"]-1)
+        coord = (int(info["column"]), int(info["row"])-1)
         customxyt.append(coord)
         theStatus.set("[First X, Y, time values]: " + str(customxyt))
 
