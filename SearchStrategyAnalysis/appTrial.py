@@ -522,11 +522,15 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     x = float(row[xCol])
                     y = float(row[yCol])
                     t = row[tCol]
-                    if isinstance(t, str) and ':' in t:
+                    if isinstance(t, str) and t.count(':') == 2:
                         hours = float(t.split(':')[0])
                         minutes = float(t.split(':')[1])
                         seconds = float(t.split(':')[2])
                         time = seconds + minutes * 60 + hours * 3600
+                    if isinstance(t, str) and t.count(':') == 1:
+                        minutes = float(t.split(':')[0])
+                        seconds = float(t.split(':')[1])
+                        time = seconds + minutes * 60
                     else:
                         time = float(t)
                     print(time, x, y)
