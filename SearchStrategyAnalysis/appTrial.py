@@ -504,7 +504,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
             file_extension = os.path.splitext(filename)[1]
             if (file_extension == '.csv'):
                 # reader = csv.reader(f, dialect)
-                reader = pd.read_csv(filename, sep=";|,", header=None)
+                reader = pd.read_csv(filename, sep=";|,", header=None, engine='python')
             elif (file_extension == '.xlsx'):
                 reader = pd.read_excel(filename, header=None)
 
@@ -527,13 +527,13 @@ def saveFileAsExperiment(software, filename, filedirectory):
                         minutes = float(t.split(':')[1])
                         seconds = float(t.split(':')[2])
                         time = seconds + minutes * 60 + hours * 3600
-                    if isinstance(t, str) and t.count(':') == 1:
+                    elif isinstance(t, str) and t.count(':') == 1:
                         minutes = float(t.split(':')[0])
                         seconds = float(t.split(':')[1])
                         time = seconds + minutes * 60
                     else:
                         time = float(t)
-                    print(time, x, y)
+                    # print(time, x, y)
                     if not math.isnan(x) and not math.isnan(y):
                         aTrial.append(Datapoint(time, x, y))
                 except:
