@@ -441,12 +441,12 @@ class mainClass:
         self.thigmotaxisZoneSize.bind("<Leave>", self.on_leave)
         rowCount = rowCount + 1
 
-        self.softwareScalingFactor = Label(self.paramFrame, text="Pixels/cm for scaling:", bg="white")
+        self.softwareScalingFactor = Label(self.paramFrame, text="Input to cm for scaling:", bg="white")
         self.softwareScalingFactor.grid(row=rowCount, column=0, sticky=E)
         self.softwareScalingFactorE = Entry(self.paramFrame, textvariable=softwareScalingFactorStringVar)
         self.softwareScalingFactorE.grid(row=rowCount, column=1)
         self.softwareScalingFactor.bind("<Enter>", partial(self.on_enter,
-                                                           "This is used to convert Anymaze and Watermaze from Pixels to cm"))
+                                                           "This is used to scale to cm. E.g. Data in mm should have a scaling factor of 10"))
         self.softwareScalingFactor.bind("<Leave>", self.on_leave)
 
         rowCount = rowCount + 1
@@ -522,7 +522,7 @@ class mainClass:
         self.calculateButton = Button(self.paramFrame, text="Calculate", fg="black",
                                       command=self.mainHelper, state='disabled')  # add a button that says calculate
         self.calculateButton.grid(row=rowCount, column=1, columnspan=1)
-        self.settingsButton = Button(self.paramFrame, text="Settings", command=self.settings, fg="black")
+        self.settingsButton = Button(self.paramFrame, text="Settings", command=self.settings, fg="black", bg="white")
         self.settingsButton.grid(row=rowCount, column=0, columnspan=1)  # add custom button
         self.calculateButton.config(width=10)
         self.settingsButton.config(width=10)
@@ -542,197 +542,92 @@ class mainClass:
         self.graphFrame.pack(side=RIGHT, fill=BOTH, padx=5, pady=5)  # place this on the right
         canvas = Canvas(self.graphFrame, width=400, height=400)
         canvas.pack()
-
-        # initialize main maze
-        scale = 1 / float(softwareScalingFactorStringVar.get())
-        radius = float(mazeDiamStringVar.get()) / 2
-        self.circle = canvas.create_oval(200 - scale*radius, 200 - scale*radius,
-                                         200 + scale*radius, 200 + scale*radius, fill="white", width=3)
-
-        mazeX, mazeY = mazeCentreStringVar.get().split(",")
-        mazeCentre = [float(mazeX), float(mazeY)]
-
-        startX, startY =  200, 200+scale*radius
-        goalX, goalY = goalPosStringVar.get().split(",")
-        goalCentre = [200 + (float(goalX)) - mazeCentre[0], 200 - (float(goalY)) + mazeCentre[1]]
-        goalLBorder = goalCentre[0] - scale * (float(goalDiamStringVar.get()) / 2)
-        goalRBorder = goalCentre[0] + scale * (float(goalDiamStringVar.get()) / 2)
-        goalTopBorder = goalCentre[1] - scale * (float(goalDiamStringVar.get()) / 2)
-        goalBottomBorder = goalCentre[1] + scale * (float(goalDiamStringVar.get()) / 2)
-
-        smallChainLBorder = 200 - math.sqrt(
-            ((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + scale * float(chainingRadiusStringVar.get()) / 2
-        smallChainRBorder = 200 + math.sqrt(
-            ((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - scale * float(chainingRadiusStringVar.get()) / 2
-        bigChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - scale * float(chainingRadiusStringVar.get()) / 2
-        bigChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + scale * float(chainingRadiusStringVar.get()) / 2
-        self.bigChain = canvas.create_oval(bigChainLBorder, bigChainLBorder, bigChainRBorder, bigChainRBorder,
-                                           fill="#c7c7c7", width=1)
-        self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder,
-                                             smallChainRBorder, smallChainRBorder, fill="white", width=1)
-
-        bigThigmoRadius = 200 - scale * radius + scale * int(thigmotaxisZoneSizeStringVar.get())
-        smallThigmoRadius = 200 - scale * radius + scale * (int(thigmotaxisZoneSizeStringVar.get()) / 2)
-        self.bigThigmo = canvas.create_oval(bigThigmoRadius, bigThigmoRadius,
-                                            400 - bigThigmoRadius, 400 - bigThigmoRadius, dash=(2, 1))
-        self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
-                                              400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
-
-        # # goalCentre = 250, 250
-        # reflectedGoal = goalCentre
-        # if (goalCentre[0] > 200 and goalCentre[1] < 200):
-        #     reflectedGoal = goalCentre[0], 400-goalCentre[1]
-        # elif (goalCentre[0] > 200 and goalCentre[1] > 200):
-        #     reflectedGoal = 400-goalCentre[0], goalCentre[1]
-        # elif (goalCentre[0] < 200 and goalCentre[1] > 200):
-        #     reflectedGoal = goalCentre[0], 400-goalCentre[1]
-        # elif (goalCentre[0] < 200 and goalCentre[1] < 200):
-        #     reflectedGoal = goalCentre[0], 400-goalCentre[1]
-        #
-        # if (startX - reflectedGoal[1] == 0): aArcTangent = 270
-        # else: aArcTangent = math.degrees(math.atan(-(startY - reflectedGoal[0]) / (startX - reflectedGoal[1])))
-        # upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
-        # lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
-        #
-        # m1 = math.tan(math.radians(upperCorridor))
-        # c1 = startY - m1 * startX
-        # endX1 = -c1 / m1
-        # m2 = math.tan(math.radians(lowerCorridor))
-        # c2 = startY - m2 * startX
-        # endX2 = -c2 / m2
-        #
-        # self.upperCorridorLine = canvas.create_line(startX, startY, endX1, 0, fill="blue", width=2)
-        # self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, 0, fill="blue", width=2)
-
-        self.centerLine = canvas.create_line(200, 200 + scale * radius, 200, 200 - scale * radius, dash=(1, 1))
-        self.centerLine = canvas.create_line(200 - scale * radius, 200, 200 + scale * radius, 200, dash=(1, 1))
-        self.centerToGoalLine = canvas.create_line(200, 200 + scale * radius, goalCentre[0], goalCentre[1], fill="red")
-        self.start = canvas.create_oval(195, 195 + scale * radius, 205, 205 + scale * radius, fill="green", width=1)
-        self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
-
-
-        # calculation of angular cooridor, updates to user input and renders blue lines on user interface 
-        # to represent outer bounds of cooridor
-        rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get())/2 + math.degrees(math.atan((float(goalX))/(float(goalY) + radius))))
-        rightCorridorLeftDiameterChordSection = radius + radius* math.tan(rightCorridorSideAngle)
-        rightCorridorRightDiameterChordSection = radius - radius* math.tan(rightCorridorSideAngle)
-        rightCorridorBottomChordSection = radius / math.cos(rightCorridorSideAngle)
-        rightCorridorTopChordSection = (rightCorridorLeftDiameterChordSection*rightCorridorRightDiameterChordSection)/rightCorridorBottomChordSection
-        rightCorridorOnCircleX = radius*math.tan(rightCorridorSideAngle) + rightCorridorTopChordSection*math.sin(rightCorridorSideAngle)
-        rightCorridorOnCircleY = rightCorridorTopChordSection * math.cos(rightCorridorSideAngle)
-        self.rightAngularCooridorLine = canvas.create_line(200, 200 + scale * radius, 200 + scale*(rightCorridorOnCircleX), 200 - (scale * rightCorridorOnCircleY), fill = "blue", width = 2)
-        
-        leftCorridorSideAngle = rightCorridorSideAngle - math.radians(float(corridorWidthStringVar.get()))
-        leftCorridorLeftDiameterChordSection = radius + radius* math.tan(leftCorridorSideAngle)
-        leftCorridorRightDiameterChordSection = radius - radius* math.tan(leftCorridorSideAngle)
-        leftCorridorBottomChordSection = radius / math.cos(leftCorridorSideAngle)
-        leftCorridorTopChordSection = (leftCorridorLeftDiameterChordSection*leftCorridorRightDiameterChordSection)/leftCorridorBottomChordSection
-        leftCorridorOnCircleX = radius*math.tan(leftCorridorSideAngle) + leftCorridorTopChordSection*math.sin(leftCorridorSideAngle)
-        leftCorridorOnCircleY = leftCorridorTopChordSection * math.cos(leftCorridorSideAngle)
-        self.leftAngularCooridorLine = canvas.create_line(200, 200 + scale * radius, 200 + scale*(leftCorridorOnCircleX), 200 - (scale * leftCorridorOnCircleY),fill = "blue", width = 2)
-
-
-
-        # draw all rois
-        for aTuple in rois:
-            roiX, roiY = aTuple[0].split(",")
-            roiCentre = [200+scale*float(roiX), 200-scale*float(roiY)]
-            roiLBorder = roiCentre[0] - scale*float(aTuple[1])/2
-            roiRBorder = roiCentre[0] + scale*float(aTuple[1])/2
-            roiTopBorder = roiCentre[1] - scale*float(aTuple[1])/2
-            roiBottomBorder = roiCentre[1] + scale*float(aTuple[1])/2
-            self.roi = canvas.create_oval(roiLBorder, roiTopBorder, roiRBorder, roiBottomBorder, fill="red", width=1)
-
         def redraw(*args):
             try:
-
-                canvas.delete("all")
-                scale = 1/float(softwareScalingFactorStringVar.get())
+                try:
+                    canvas.delete("all")
+                except:
+                    pass
+                scale = 1 / float(softwareScalingFactorStringVar.get())
                 radius = float(mazeDiamStringVar.get()) / 2
-                self.circle = canvas.create_oval(200 - scale*(radius), 200 - scale*(radius),
-                                                 200 + scale*(radius), 200 + scale*(radius),
-                                                 fill="white", width=3)
+                self.circle = canvas.create_oval(200 - scale * radius, 200 - scale * radius,
+                                                 200 + scale * radius, 200 + scale * radius, fill="white", width=3)
 
                 mazeX, mazeY = mazeCentreStringVar.get().split(",")
-                mazeCentre = [float(mazeX), float(mazeY)]
+                mazeCentre = [float(mazeX) * scale, float(mazeY) * scale]
+
                 startX, startY = 200, 200 + scale * radius
                 goalX, goalY = goalPosStringVar.get().split(",")
-                goalCentre = [200 + (float(goalX)) - mazeCentre[0], 200 - (float(goalY)) + mazeCentre[1]]
+                goalCentre = [200 + (float(goalX) * scale) - mazeCentre[0],
+                              200 - (float(goalY) * scale) + mazeCentre[1]]
                 goalLBorder = goalCentre[0] - scale * (float(goalDiamStringVar.get()) / 2)
                 goalRBorder = goalCentre[0] + scale * (float(goalDiamStringVar.get()) / 2)
                 goalTopBorder = goalCentre[1] - scale * (float(goalDiamStringVar.get()) / 2)
                 goalBottomBorder = goalCentre[1] + scale * (float(goalDiamStringVar.get()) / 2)
 
-                smallChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + (goalCentre[1] - 200) ** 2) + scale*float(chainingRadiusStringVar.get()) / 2
-                smallChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + (goalCentre[1] - 200) ** 2) - scale*float(chainingRadiusStringVar.get()) / 2
-                bigChainLBorder = 200 - math.sqrt(((goalCentre[0] - 200) ** 2) + (goalCentre[1] - 200) ** 2) - scale*float(chainingRadiusStringVar.get()) / 2
-                bigChainRBorder = 200 + math.sqrt(((goalCentre[0] - 200) ** 2) + (goalCentre[1] - 200) ** 2) + scale*float(chainingRadiusStringVar.get()) / 2
+                smallChainLBorder = 200 - math.sqrt(
+                    ((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + scale * float(
+                    chainingRadiusStringVar.get()) / 2
+                smallChainRBorder = 200 + math.sqrt(
+                    ((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - scale * float(
+                    chainingRadiusStringVar.get()) / 2
+                bigChainLBorder = 200 - math.sqrt(
+                    ((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) - scale * float(
+                    chainingRadiusStringVar.get()) / 2
+                bigChainRBorder = 200 + math.sqrt(
+                    ((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + scale * float(
+                    chainingRadiusStringVar.get()) / 2
                 self.bigChain = canvas.create_oval(bigChainLBorder, bigChainLBorder, bigChainRBorder, bigChainRBorder,
                                                    fill="#c7c7c7", width=1)
                 self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder,
                                                      smallChainRBorder, smallChainRBorder, fill="white", width=1)
 
-                bigThigmoRadius = 200 - scale*radius + scale*int(thigmotaxisZoneSizeStringVar.get())
-                smallThigmoRadius = 200 - scale*radius + scale*(int(thigmotaxisZoneSizeStringVar.get()) / 2)
+                bigThigmoRadius = 200 - scale * radius + scale * int(thigmotaxisZoneSizeStringVar.get())
+                smallThigmoRadius = 200 - scale * radius + scale * (int(thigmotaxisZoneSizeStringVar.get()) / 2)
                 self.bigThigmo = canvas.create_oval(bigThigmoRadius, bigThigmoRadius,
                                                     400 - bigThigmoRadius, 400 - bigThigmoRadius, dash=(2, 1))
                 self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
                                                       400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
 
-                # reflectedGoal = goalCentre
-                # if (goalCentre[0] > 200 and goalCentre[1] < 200):
-                #     reflectedGoal = 400 - goalCentre[0], goalCentre[1]
-                # elif (goalCentre[0] > 200 and goalCentre[1] > 200):
-                #     reflectedGoal = 400 - goalCentre[0], 400 - goalCentre[1]
-                # elif (goalCentre[0] < 200 and goalCentre[1] > 200):
-                #     reflectedGoal = goalCentre[0], goalCentre[1]
-                # elif (goalCentre[0] < 200 and goalCentre[1] < 200):
-                #     reflectedGoal = goalCentre[0], 400 - goalCentre[1]
-                #
-                # if (startX - reflectedGoal[1] == 0): aArcTangent = 270
-                # else: aArcTangent = math.degrees(math.atan(-(startY - reflectedGoal[0]) / (startX - reflectedGoal[1])))
-                # upperCorridor = aArcTangent + float(corridorWidthStringVar.get()) / 2
-                # lowerCorridor = aArcTangent - float(corridorWidthStringVar.get()) / 2
-                #
-                # m1 = math.tan(math.radians(upperCorridor))
-                # c1 = startY - m1 * startX
-                # endX1 = -c1 / m1
-                # m2 = math.tan(math.radians(lowerCorridor))
-                # c2 = startY - m2 * startX
-                # endX2 = -c2 / m2
-                #
-                # self.upperCorridorLine = canvas.create_line(startX, startY, endX1, 0, fill="blue", width=2)
-                # self.lowerCorridorLine = canvas.create_line(startX, startY, endX2, 0, fill="blue", width=2)
+                self.centerLine = canvas.create_line(200, 200 + scale * radius, 200, 200 - scale * radius, dash=(1, 1))
+                self.centerLine = canvas.create_line(200 - scale * radius, 200, 200 + scale * radius, 200, dash=(1, 1))
+                self.centerToGoalLine = canvas.create_line(200, 200 + scale * radius, goalCentre[0], goalCentre[1],
+                                                           fill="red")
+                self.start = canvas.create_oval(195, 195 + scale * radius, 205, 205 + scale * radius, fill="green",
+                                                width=1)
+                self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red",
+                                               width=1)
 
-                self.centerLine = canvas.create_line(200, 200 + scale*radius, 200, 200 - scale*radius, dash=(1, 1))
-                self.centerLine = canvas.create_line(200 - scale*radius, 200, 200 + scale*radius, 200, dash=(1, 1))
-                self.centerToGoalLine = canvas.create_line(200, 200 + scale*radius, goalCentre[0], goalCentre[1], fill="red")
-                self.start = canvas.create_oval(195, 195 + scale*radius, 205, 205 + scale*radius, fill="green", width=1)
-                self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", width=1)
-
-
-                # calculation of angular cooridor, updates to user input and renders blue lines on user interface 
+                # calculation of angular cooridor, updates to user input and renders blue lines on user interface
                 # to represent outer bounds of cooridor
-                rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get())/2 + math.degrees(math.atan((float(goalX))/(float(goalY) + radius))))
-                rightCorridorLeftDiameterChordSection = radius + radius* math.tan(rightCorridorSideAngle)
-                rightCorridorRightDiameterChordSection = radius - radius* math.tan(rightCorridorSideAngle)
+                rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get()) / 2 + math.degrees(
+                    math.atan((float(goalCentre[0])) / (float(goalCentre[1]) + radius))))
+                rightCorridorLeftDiameterChordSection = radius + radius * math.tan(rightCorridorSideAngle)
+                rightCorridorRightDiameterChordSection = radius - radius * math.tan(rightCorridorSideAngle)
                 rightCorridorBottomChordSection = radius / math.cos(rightCorridorSideAngle)
-                rightCorridorTopChordSection = (rightCorridorLeftDiameterChordSection*rightCorridorRightDiameterChordSection)/rightCorridorBottomChordSection
-                rightCorridorOnCircleX = radius*math.tan(rightCorridorSideAngle) + rightCorridorTopChordSection*math.sin(rightCorridorSideAngle)
+                rightCorridorTopChordSection = (
+                                                           rightCorridorLeftDiameterChordSection * rightCorridorRightDiameterChordSection) / rightCorridorBottomChordSection
+                rightCorridorOnCircleX = radius * math.tan(
+                    rightCorridorSideAngle) + rightCorridorTopChordSection * math.sin(rightCorridorSideAngle)
                 rightCorridorOnCircleY = rightCorridorTopChordSection * math.cos(rightCorridorSideAngle)
-                self.rightAngularCooridorLine = canvas.create_line(200, 200 + scale * radius, 200 + scale*(rightCorridorOnCircleX), 200 - (scale * rightCorridorOnCircleY), fill = "blue", width = 2)
-
+                self.rightAngularCooridorLine = canvas.create_line(200, 200 + scale * radius,
+                                                                   200 + scale * (rightCorridorOnCircleX),
+                                                                   200 - (scale * rightCorridorOnCircleY), fill="blue",
+                                                                   width=2)
 
                 leftCorridorSideAngle = rightCorridorSideAngle - math.radians(float(corridorWidthStringVar.get()))
-                leftCorridorLeftDiameterChordSection = radius + radius* math.tan(leftCorridorSideAngle)
-                leftCorridorRightDiameterChordSection = radius - radius* math.tan(leftCorridorSideAngle)
+                leftCorridorLeftDiameterChordSection = radius + radius * math.tan(leftCorridorSideAngle)
+                leftCorridorRightDiameterChordSection = radius - radius * math.tan(leftCorridorSideAngle)
                 leftCorridorBottomChordSection = radius / math.cos(leftCorridorSideAngle)
-                leftCorridorTopChordSection = (leftCorridorLeftDiameterChordSection*leftCorridorRightDiameterChordSection)/leftCorridorBottomChordSection
-                leftCorridorOnCircleX = radius*math.tan(leftCorridorSideAngle) + leftCorridorTopChordSection*math.sin(leftCorridorSideAngle)
+                leftCorridorTopChordSection = (
+                                                          leftCorridorLeftDiameterChordSection * leftCorridorRightDiameterChordSection) / leftCorridorBottomChordSection
+                leftCorridorOnCircleX = radius * math.tan(
+                    leftCorridorSideAngle) + leftCorridorTopChordSection * math.sin(leftCorridorSideAngle)
                 leftCorridorOnCircleY = leftCorridorTopChordSection * math.cos(leftCorridorSideAngle)
-                self.leftAngularCooridorLine = canvas.create_line(200, 200 + scale * radius, 200 + scale*(leftCorridorOnCircleX), 200 - (scale * leftCorridorOnCircleY), fill = "blue", width = 2)
-
-
+                self.leftAngularCooridorLine = canvas.create_line(200, 200 + scale * radius,
+                                                                  200 + scale * (leftCorridorOnCircleX),
+                                                                  200 - (scale * leftCorridorOnCircleY), fill="blue",
+                                                                  width=2)
 
                 # draw all rois
                 for aTuple in rois:
@@ -1138,7 +1033,7 @@ class mainClass:
         self.top = Toplevel(root)  # we set this to be the top
         self.top.configure(bg="white")
 
-        canvas = Canvas(self.top, borderwidth=0, width=400, height=600, bg="white")  # we create the canvas
+        canvas = Canvas(self.top, borderwidth=0, width=600, height=600, bg="white")  # we create the canvas
         frame = Frame(canvas)  # we place a frame in the canvas
         frame.configure(bg="white")
         yscrollbar = Scrollbar(self.top, orient=VERTICAL, command=canvas.yview)  # vertical scroll bar
