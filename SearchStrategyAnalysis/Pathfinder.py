@@ -7,8 +7,7 @@ import csv
 import fnmatch
 import logging
 import math
-import os, subprocess
-import sys
+import os, subprocess, sys
 import webbrowser
 import statistics
 from collections import defaultdict
@@ -22,6 +21,7 @@ import numpy as np
 import pickle
 import datetime
 import scipy.ndimage as sp
+
 
 try:  # Tries to import local dependencies
     from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, \
@@ -188,6 +188,12 @@ def show_message(text):  # popup box with message text
     except:
         logging.info("Couldn't Display message " + text)
 
+def open_file(filename):
+    if sys.platform == "win32":
+        os.startfile(filename)
+    else:
+        opener ="open" if sys.platform == "darwin" else "xdg-open"
+        subprocess.call([opener, filename])
 
 class EntryWithPlaceholder(Entry):
     def __init__(self, master=None, placeholder="PLACEHOLDER", color='grey'):
@@ -228,7 +234,7 @@ class mainClass:
             return
         logging.debug("GUI is built")
 
-    ## Helper for callDefineOwnSoftware, tracks if root has been destroyed
+    # Helper for callDefineOwnSoftware, tracks if root has been destroyed
     def root_tracker():
         destroyedroot = True
         root.destroy()
@@ -306,7 +312,7 @@ class mainClass:
         self.menu.add_cascade(label="Help", menu=self.helpMenu)
         self.helpMenu.add_command(label="Help", command=self.getHelp)
         self.helpMenu.add_command(label="About", command=self.about)
-        self.helpMenu.add_command(label="Update", command=self.updatePathfinder)
+        self.helpMenu.add_command(label="Update with PIP", command=self.updatePathfinder)
 
         rowCount = 0
         # ******* Software Type *******
@@ -1356,13 +1362,13 @@ class mainClass:
                     filename = os.path.join(root, basename)
                     yield filename
 
-
     def callDefineOwnSoftware(self):
         global theFile
         if theFile == "":
             logging.debug("Open File...")
             theFile = filedialog.askopenfilename()
-        defineOwnSoftware(root, theFile)
+        if theFile != "":
+            defineOwnSoftware(root, theFile)
         if destroyedroot==True:
             softwareStringVar.set('custom')
             self.defineRadio['state'] = 'active'
@@ -2472,13 +2478,11 @@ class mainClass:
               focalSearchCount, "| Indirect Search: ", indirectSearchCount, "| Semi-focal Search: ",
               semifocalSearchCount, "| Chaining: ", chainingCount, "| Scanning: ", scanningCount, "| Random Search: ",
               randomCount, "| Thigmotaxis: ", thigmotaxisCount, "| Not Recognized: ", notRecognizedCount)
-        # TODO
-        if sys.platform.startswith('darwin'):
-            subprocess.call(('open', currentOutputFile))
-        elif os.name == 'nt':  # For Windows
-            os.startfile(currentOutputFile)
-        elif os.name == 'posix':  # For Linux, Mac, etc.
-            subprocess.call(('xdg-open', currentOutputFile))
+        try:
+            open_file(currentOutputFile)
+        except:
+            print("The system couldn't find ", currentOutputFile, " please check your output folder.")
+
         self.updateTasks()
         theStatus.set('')
         self.updateTasks()

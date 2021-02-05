@@ -10,6 +10,7 @@ import os
 import fnmatch
 import datetime
 import tkinter
+from operator import add
 from collections import defaultdict
 from xlrd import open_workbook
 if sys.version_info<(3,0,0):  # tkinter names for python 2
@@ -200,13 +201,12 @@ def defineOwnSoftware(root, filename):
     status = Label(frame, textvariable=theStatus, width=50, height=2, relief=SUNKEN, anchor=W, bg="white")
     status.grid(row=0, column=0, columnspan=4)
     global customxyt
-
     def okButton():
         if (len(customxyt) == 3):
             top.attributes('-topmost', False)
-            messagebox.showinfo(None, "First X value: " + str(customxyt[0])
-                                + "\nFirst Y value: " + str(customxyt[1])
-                                + "\nFirst time value: " + str(customxyt[2]))
+            messagebox.showinfo(None, "First X value: " + str(list(map(add, list(customxyt[0]),[1,1])))
+                                + "\nFirst Y value: " + str(list(map(add, list(customxyt[1]),[1,1])))
+                                + "\nFirst time value: " + str(list(map(add, list(customxyt[2]),[1,1]))))
             top.quit()
             top.destroy()
         else:
@@ -225,7 +225,7 @@ def defineOwnSoftware(root, filename):
             c = 0
             for row in col:
                 coord = (r, c)
-                if (r < 100):
+                if (r < 45) and (c < 11):
                     cell = Label(frame, width=12, height=1, text=row, borderwidth=2, relief="groove")
                     cell.grid(row=r + 1, column=c)
                     cell.bind("<Button-1>", lambda event: getXYT(event))
@@ -235,7 +235,7 @@ def defineOwnSoftware(root, filename):
     # gets column number from clicked column
     def getXYT(event):
         info = event.widget.grid_info()
-        coord = (info["column"], info["row"]-1)
+        coord = (int(info["column"]), int(info["row"])-1)
         customxyt.append(coord)
         theStatus.set("[First X, Y, time values]: " + str(customxyt))
 
@@ -243,7 +243,7 @@ def defineOwnSoftware(root, filename):
     if (file_extension == '.csv'):
         with open(filename, newline="") as file:
             try:
-                dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
+                dialect = csv.Sniffer().sniff(file.readline())
                 file.seek(0)
                 data = csv.reader(file, dialect)
                 displayTable(data)
@@ -254,7 +254,7 @@ def defineOwnSoftware(root, filename):
                 resetbutton.grid(row=0, column=5)
 
                 top.attributes('-topmost', False)
-                messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
+                messagebox.showinfo(None, "Please select the first X value (e.g. 23.45), then the first Y value, and finally the starting Time value.")
                 top.attributes('-topmost', True)
                 top.mainloop()
             except:
@@ -273,7 +273,7 @@ def defineOwnSoftware(root, filename):
             resetbutton.grid(row=0, column=5)
 
             top.attributes('-topmost', False)
-            messagebox.showinfo(None, "Please select in order: first X value, first Y value, first time value.")
+            messagebox.showinfo(None, "Please select the first X value (e.g. 23.45), then the first Y value, and finally the starting Time value.")
             top.attributes('-topmost', True)
             top.mainloop()
         except:
@@ -305,7 +305,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
         file_extension = os.path.splitext(filename)[1]
         if software != "ethovision" and file_extension == '.csv':
             with open(filename, newline="") as file:
-                dialect = csv.Sniffer().sniff(file.read(1024), delimiters=";,")
+                dialect = csv.Sniffer().sniff(file.readline())
                 file.seek(0)
         if software == "ethovision":
             logging.info("Reading file ethovision")
@@ -503,28 +503,39 @@ def saveFileAsExperiment(software, filename, filedirectory):
 
             file_extension = os.path.splitext(filename)[1]
             if (file_extension == '.csv'):
-                reader = csv.reader(f, dialect)
+                # reader = csv.reader(f, dialect)
+                reader = pd.read_csv(filename, sep=";|,", header=None, engine='python')
             elif (file_extension == '.xlsx'):
-                reader = pd.read_excel(filename)
+                reader = pd.read_excel(filename, header=None)
 
-            listReader = list(reader)
+
+            # listReader = list(reader)
             aTrial = Trial()
             aTrial.setname(filename.split("/")[-1])
             aIndex = 0
             xCol = customxyt[0][0]
             yCol = customxyt[1][0]
             tCol = customxyt[2][0]
-            for row in listReader[customxyt[0][1]:]:
+            dataStartRow = customxyt[0][1]
+            for index, row in reader.iloc[dataStartRow:].iterrows():
                 try:
                     x = float(row[xCol])
                     y = float(row[yCol])
                     t = row[tCol]
-                    hours = float(t.split(':')[0])
-                    minutes = float(t.split(':')[1])
-                    seconds = float(t.split(':')[2])
-                    time = seconds + minutes * 60 + hours * 3600
-                    print(time, x, y)
-                    aTrial.append(Datapoint(time, x, y))
+                    if isinstance(t, str) and t.count(':') == 2:
+                        hours = float(t.split(':')[0])
+                        minutes = float(t.split(':')[1])
+                        seconds = float(t.split(':')[2])
+                        time = seconds + minutes * 60 + hours * 3600
+                    elif isinstance(t, str) and t.count(':') == 1:
+                        minutes = float(t.split(':')[0])
+                        seconds = float(t.split(':')[1])
+                        time = seconds + minutes * 60
+                    else:
+                        time = float(t)
+                    # print(time, x, y)
+                    if not math.isnan(x) and not math.isnan(y):
+                        aTrial.append(Datapoint(time, x, y))
                 except:
                     aTrial.markDataAsCorrupted()
             trialList.append(aTrial)
