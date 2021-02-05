@@ -2145,7 +2145,7 @@ class mainClass:
         while idealDistance > math.ceil(float(goalDiam) / 2):
             idealCumulativeDistance += idealDistance
             idealDistance = (idealDistance - velocity * sampleRate)
-            if (idealCumulativeDistance > 10000):
+            if (idealCumulativeDistance > 10000/scale):
                 break
 
         ipe = float(distanceFromGoalSummed - idealCumulativeDistance) * sampleRate
@@ -2254,13 +2254,13 @@ class mainClass:
             aExperiment, goalX, goalY, goalPosVar, mazeCentreX, mazeCentreY, mazeCentreVar, mazeDiamVar, software,
             goalDiamVar)
         if scale:
-            scalingFactor = softwareScalingFactorVar
+            scalingFactor = 1/softwareScalingFactorVar
         else:
             scalingFactor = 1.0
 
-        thigmotaxisZoneSize = float(thigmotaxisZoneSizeVar) * scalingFactor  # update the thigmotaxis zone
-        chainingRadius = float(chainingRadiusVar) * scalingFactor  # update the chaining radius
-        corridorWidth = (int(corridorWidthVar) / 2) * scalingFactor  # update the corridor width
+        thigmotaxisZoneSize = float(thigmotaxisZoneSizeVar)  # update the thigmotaxis zone
+        chainingRadius = float(chainingRadiusVar)  # update the chaining radius
+        corridorWidth = (int(corridorWidthVar) / 2)  # update the corridor width
 
         smallThigmoZone = mazeRadius - math.ceil(thigmotaxisZoneSize / 2)  # update the smaller wall zone
         fullThigmoZone = mazeRadius - thigmotaxisZoneSize  # and bigger wall zone
