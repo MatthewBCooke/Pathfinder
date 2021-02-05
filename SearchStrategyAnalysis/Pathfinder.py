@@ -158,8 +158,6 @@ thigmotaxisZoneSizeStringVar = StringVar()
 thigmotaxisZoneSizeStringVar.set(thigmotaxisZoneSizeVar)
 softwareStringVar = StringVar()
 softwareStringVar.set("")
-softwareScalingFactorStringVar = StringVar()
-softwareScalingFactorStringVar.set("1.0")
 outputFileStringVar = StringVar()
 outputFileStringVar.set(outputFile)
 maxValStringVar = StringVar()
@@ -178,9 +176,6 @@ useEntropy = BooleanVar()
 useEntropy.set(False)
 truncate = BooleanVar()
 truncate.set(False)
-useScaling = BooleanVar()
-useScaling.set(False)
-scale = False
 rois = []
 destroyedroot = False
 
@@ -258,7 +253,6 @@ class mainClass:
         global useEntropyFlag
         global truncateFlag
         global softwareStringVar
-        global softwareScalingFactorStringVar
 
         softwareStringVar = StringVar()
         softwareStringVar.set("auto")
@@ -366,7 +360,7 @@ class mainClass:
 
         try:
             with open('mainobjs.pickle', 'rb') as f:
-                # goalPosVar, goalDiamVar, mazeDiamVar, mazeCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar, softwareScalingFactorVar = pickle.load(f)
+                # goalPosVar, goalDiamVar, mazeDiamVar, mazeCentreVar, corridorWidthVar, chainingRadiusVar, thigmotaxisZoneSizeVar = pickle.load(f)
                 goalPosStringVar.set(goalPosVar)
                 goalDiamStringVar.set(goalDiamVar)
                 mazeDiamStringVar.set(mazeDiamVar)
@@ -374,7 +368,6 @@ class mainClass:
                 corridorWidthStringVar.set(corridorWidthVar)
                 chainingRadiusStringVar.set(chainingRadiusVar)
                 thigmotaxisZoneSizeStringVar.set(thigmotaxisZoneSizeVar)
-                softwareScalingFactorStringVar.set(softwareScalingFactorVar)
         except:
             pass
 
@@ -439,15 +432,6 @@ class mainClass:
         self.thigmotaxisZoneSize.bind("<Enter>", partial(self.on_enter,
                                                          "Size of the zone in which thigmotaxis is considered (from the outer wall)"))
         self.thigmotaxisZoneSize.bind("<Leave>", self.on_leave)
-        rowCount = rowCount + 1
-
-        self.softwareScalingFactor = Label(self.paramFrame, text="Input to cm for scaling:", bg="white")
-        self.softwareScalingFactor.grid(row=rowCount, column=0, sticky=E)
-        self.softwareScalingFactorE = Entry(self.paramFrame, textvariable=softwareScalingFactorStringVar)
-        self.softwareScalingFactorE.grid(row=rowCount, column=1)
-        self.softwareScalingFactor.bind("<Enter>", partial(self.on_enter,
-                                                           "This is used to scale to cm. E.g. Data in mm should have a scaling factor of 10"))
-        self.softwareScalingFactor.bind("<Leave>", self.on_leave)
 
         rowCount = rowCount + 1
         self.saveDirectory = Label(self.paramFrame, text="Output File (.csv):", bg="white")
@@ -464,17 +448,7 @@ class mainClass:
         useManualForAllFlag = False
         useEntropyFlag = False
         truncateFlag = False
-        rowCount = rowCount + 1
-        self.scalingTickL = Label(self.paramFrame, text="Scale values (convert pixels to cm): ",
-                                  bg="white")  # label for the tickbox
-        self.scalingTickL.grid(row=rowCount, column=0, sticky=E)  # placed here
-        self.scalingTickC = Checkbutton(self.paramFrame, variable=useScaling, bg="white")  # the actual tickbox
-        self.scalingTickC.grid(row=rowCount, column=1)
-        self.scalingTickL.bind("<Enter>",
-                               partial(self.on_enter, "Check if you want to scale the values to fit your maze"))
-        self.scalingTickL.bind("<Leave>", self.on_leave)
 
-        scale = useScaling.get()
         rowCount = rowCount + 1
         self.manualTickL = Label(self.paramFrame, text="Manual categorization for uncategorized trials: ",
                                  bg="white")  # label for the tickbox
@@ -548,8 +522,9 @@ class mainClass:
                     canvas.delete("all")
                 except:
                     pass
-                scale = 1 / float(softwareScalingFactorStringVar.get())
+
                 radius = float(mazeDiamStringVar.get()) / 2
+                scale = 1 / float(2*radius/300)
                 self.circle = canvas.create_oval(200 - scale * radius, 200 - scale * radius,
                                                  200 + scale * radius, 200 + scale * radius, fill="white", width=3)
 
@@ -647,7 +622,6 @@ class mainClass:
         corridorWidthStringVar.trace_variable("w", redraw)
         thigmotaxisZoneSizeStringVar.trace_variable("w", redraw)
         mazeDiamStringVar.trace_variable("w", redraw)
-        softwareScalingFactorStringVar.trace_variable("w", redraw)
         mazeCentreStringVar.trace_variable("w", redraw)
 
     def onFrameConfigure(self, canvas):  # configure the frame
@@ -812,12 +786,11 @@ class mainClass:
         corridorWidthVar = corridorWidthStringVar.get()
         chainingRadiusVar = chainingRadiusStringVar.get()
         thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()  # get important values
-        softwareScalingFactorVar = softwareScalingFactorStringVar.get()
 
         try:
             with open('mainobjs.pickle', 'wb') as f:
                 pickle.dump([goalPosVar, goalDiamVar, mazeDiamVar, mazeCentreVar, corridorWidthVar, chainingRadiusVar,
-                             thigmotaxisZoneSizeVar, softwareScalingFactorVar], f)
+                             thigmotaxisZoneSizeVar], f)
         except:
             pass
         theStatus.set("Loading Files...")
@@ -905,7 +878,6 @@ class mainClass:
         global corridorWidthVar
         global chainingRadiusVar
         global thigmotaxisZoneSizeVar
-        global softwareScalingFactorVar
 
         goalPosVar = goalPosStringVar.get()
         goalDiamVar = goalDiamStringVar.get()
@@ -914,7 +886,6 @@ class mainClass:
         corridorWidthVar = corridorWidthStringVar.get()
         chainingRadiusVar = chainingRadiusStringVar.get()
         thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()
-        softwareScalingFactorVar = softwareScalingFactorStringVar.get()
 
         self.buildGUI(root)
 
@@ -1289,8 +1260,6 @@ class mainClass:
         percentTraversedRandomCustomE = Entry(frame, textvariable=self.percentTraversedRandomCustom)
         percentTraversedRandomCustomE.grid(row=rowCount, column=1)
 
-        # we save the values from the fields and scale them appropriately
-
         rowCount += 1
         Button(frame, text="Save", command=self.saveCuston).grid(row=rowCount, column=0, columnspan=2)
         rowCount += 1
@@ -1399,7 +1368,7 @@ class mainClass:
             self.defineRadio['state'] = 'active'
             self.calculateButton['state'] = 'normal'
 
-    def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, scalingFactor, name, title, platEstDiam):  # function to graph the data for the not recognized trials
+    def plotPoints(self, x, y, mazeDiam, centreX, centreY, platX, platY, name, title, platEstDiam):  # function to graph the data for the not recognized trials
         wallsX = []
         wallsY = []
         platWallsX = []
@@ -1429,7 +1398,7 @@ class mainClass:
         except:
             pass
         photoName = plotName + ".png"  # image name the same as plotname
-        plt.savefig(photoName, dpi=100, figsize=(2, 2))  # save the file
+        plt.savefig(photoName, dpi=100)  # save the file
         plt.clf()  # clear the plot
 
         image = PIL.Image.open(photoName)  # open the saved image
@@ -1925,7 +1894,7 @@ class mainClass:
         return (mazeCentreX, mazeCentreY, goalX, goalY, mazeDiamVar, mazeRadius, platEstDiam)
 
     def calculateValues(self, theTrial, goalX, goalY, mazeCentreX, mazeCentreY, corridorWidth, thigmotaxisZoneSize,
-                        chainingRadius, fullThigmoZone, smallThigmoZone, scalingFactor, mazeradius, dayNum, goalDiam):
+                        chainingRadius, fullThigmoZone, smallThigmoZone, mazeradius, dayNum, goalDiam):
         global mazeCentreVar
         global useEntropyFlag
         global truncateFlag
@@ -1981,8 +1950,7 @@ class mainClass:
         distanceFromStartToGoal = 0
         arrayX = []
         arrayY = []
-        gridCellSize = float(mazeradius * 2) / 10.0
-        Matrix = [[0 for x in range(0, math.ceil(gridCellSize) + 1)] for y in range(0, math.ceil(gridCellSize) + 1)]
+
 
         for aDatapoint in theTrial:  # for each row in our sheet
             if i == 0:
@@ -2001,17 +1969,17 @@ class mainClass:
             arrayY.append(aY)
 
             # Average Distance
-            currentDistanceFromGoal = math.sqrt((goalX - aX) ** 2 + (goalY - aY) ** 2) * scalingFactor
+            currentDistanceFromGoal = math.sqrt((goalX - aX) ** 2 + (goalY - aY) ** 2)
 
             # in zones
-            distanceCenterToGoal = math.sqrt((mazeCentreX - goalX) ** 2 + (mazeCentreY - goalY) ** 2) * scalingFactor
+            distanceCenterToGoal = math.sqrt((mazeCentreX - goalX) ** 2 + (mazeCentreY - goalY) ** 2)
             annulusZoneInner = distanceCenterToGoal - (chainingRadius / 2)
             annulusZoneOuter = distanceCenterToGoal + (chainingRadius / 2)
-            distanceToCenterOfMaze = math.sqrt((mazeCentreX - aX) ** 2 + (mazeCentreY - aY) ** 2) * scalingFactor
+            distanceToCenterOfMaze = math.sqrt((mazeCentreX - aX) ** 2 + (mazeCentreY - aY) ** 2)
             totalDistanceToCenterOfMaze += distanceToCenterOfMaze
-            distanceFromStartToGoal = math.sqrt((goalX - startX) ** 2 + (goalY - startY) ** 2) * scalingFactor
+            distanceFromStartToGoal = math.sqrt((goalX - startX) ** 2 + (goalY - startY) ** 2)
 
-            distance = math.sqrt(abs(oldX - aX) ** 2 + abs(oldY - aY) ** 2) * scalingFactor
+            distance = math.sqrt(abs(oldX - aX) ** 2 + abs(oldY - aY) ** 2)
             distanceFromGoalSummed += currentDistanceFromGoal
             totalDistance += distance
             oldX = aX
@@ -2026,8 +1994,6 @@ class mainClass:
 
             a, b = 0, 0
 
-            Matrix[int(aDatapoint.getx() / gridCellSize)][
-                int(aDatapoint.gety() / gridCellSize)] = 1  # set matrix cells to 1 if we have visited them
 
             if (mazeCentreX - aX) != 0:
                 centerArcTangent = math.degrees(math.atan((mazeCentreY - aY) / (mazeCentreX - aX)))
@@ -2046,6 +2012,23 @@ class mainClass:
                 break
 
         quadrantTotal = quadrantOne + quadrantTwo + quadrantThree + quadrantFour
+
+
+        spreadX = abs((mazeCentreX+mazeradius) - (mazeCentreX-mazeradius))
+        spreadY = abs((mazeCentreY+mazeradius) - (mazeCentreY-mazeradius))
+        normX = []
+        normY = []
+        for xx in arrayX:
+            normX.append(round((((xx - abs((mazeCentreX - mazeradius))) / spreadX)*10),0)*10)
+        for yy in arrayY:
+            normY.append(round((((yy - abs((mazeCentreY - mazeradius))) / spreadY)*10),0)*10)
+        XY = list(zip(normX,normY))
+        XY = list(dict.fromkeys(XY))
+        print(XY)
+        percentTraversed = len(XY)# turn our count into a percentage over how many cells we can visit
+        print(percentTraversed)
+        if percentTraversed > 100:
+            percentTraversed = 100
 
         if i == 0:
             i = 1
@@ -2072,14 +2055,16 @@ class mainClass:
         totalHeadingError = 0.0
         initialHeadingError = 0.0
         initialHeadingErrorCount = 0
+
         for aDatapoint in theTrial:  # go back through all values and calculate distance to the centroid
+
             currentDistanceFromGoal = math.sqrt(
-                (goalX - aDatapoint.getx()) ** 2 + (goalY - aDatapoint.gety()) ** 2) * scalingFactor
+                (goalX - aDatapoint.getx()) ** 2 + (goalY - aDatapoint.gety()) ** 2)
             distanceToSwimPathCentroid = math.sqrt(
-                (xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2) * scalingFactor
+                (xAv - aDatapoint.getx()) ** 2 + (yAv - aDatapoint.gety()) ** 2)
             totalDistanceToSwimPathCentroid += distanceToSwimPathCentroid
             distanceFromStartToCurrent = math.sqrt(
-                (aDatapoint.getx() - startX) ** 2 + (aDatapoint.gety() - startY) ** 2) * scalingFactor
+                (aDatapoint.getx() - startX) ** 2 + (aDatapoint.gety() - startY) ** 2)
 
             if oldItemX != 0 and aDatapoint.getx() - oldItemX != 0 and aDatapoint.getx() - startX != 0:
                 currentToPlat = np.subtract(np.array([goalX, goalY]), np.array([aDatapoint.getx(), aDatapoint.gety()]))
@@ -2123,11 +2108,6 @@ class mainClass:
             averageInitialHeadingError = 0
         cellCounter = 0.0  # initialize our cell counter
 
-        percentTraversed = (((sum(sum(Matrix, []))) / len(Matrix[
-                                                              0]) ** 2) * scalingFactor) * 100.0  # turn our count into a percentage over how many cells we can visit
-        if percentTraversed > 100:
-            percentTraversed = 100
-
         velocity = 0
         idealDistance = distanceFromStartToGoal
         if latency != 0:
@@ -2145,7 +2125,7 @@ class mainClass:
         while idealDistance > math.ceil(float(goalDiam) / 2):
             idealCumulativeDistance += idealDistance
             idealDistance = (idealDistance - velocity * sampleRate)
-            if (idealCumulativeDistance > 10000/scale):
+            if (idealCumulativeDistance > 1000000):
                 break
 
         ipe = float(distanceFromGoalSummed - idealCumulativeDistance) * sampleRate
@@ -2204,7 +2184,6 @@ class mainClass:
         corridorWidthVar = corridorWidthStringVar.get()
         chainingRadiusVar = chainingRadiusStringVar.get()
         thigmotaxisZoneSizeVar = thigmotaxisZoneSizeStringVar.get()  # get important values
-        softwareScalingFactorVar = softwareScalingFactorStringVar.get()
         # basic setup
 
         mazeRadius = 0.0
@@ -2253,10 +2232,6 @@ class mainClass:
         mazeCentreX, mazeCentreY, goalX, goalY, mazeDiamVar, mazeRadius, goalDiamVar = self.getAutoLocations(
             aExperiment, goalX, goalY, goalPosVar, mazeCentreX, mazeCentreY, mazeCentreVar, mazeDiamVar, software,
             goalDiamVar)
-        if scale:
-            scalingFactor = 1/softwareScalingFactorVar
-        else:
-            scalingFactor = 1.0
 
         thigmotaxisZoneSize = float(thigmotaxisZoneSizeVar)  # update the thigmotaxis zone
         chainingRadius = float(chainingRadiusVar)  # update the chaining radius
@@ -2363,7 +2338,7 @@ class mainClass:
             arrayX, arrayY, velocity, ipe, initialHeadingError, entropyResult = self.calculateValues(
                 aTrial, goalX, goalY, mazeCentreX,
                 mazeCentreY, corridorWidth, thigmotaxisZoneSize, chainingRadius, fullThigmoZone,
-                smallThigmoZone, scalingFactor, mazeRadius, dayNum, goalDiamVar)
+                smallThigmoZone, mazeRadius, dayNum, goalDiamVar)
 
             strategyType = ""
             strategyManual = ""
@@ -2435,7 +2410,7 @@ class mainClass:
                     plotName = "Strategy " + str(strategyType) + " Animal " + str(animal) + "  Day " + str(
                         dayNum) + " Trial " + str(trialNum[animal])
                     self.plotPoints(arrayX, arrayY, float(mazeDiamVar), float(mazeCentreX), float(mazeCentreY),
-                                    float(goalX), float(goalY), float(scalingFactor), plotName,
+                                    float(goalX), float(goalY), plotName,
                                     ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(
                                         trialNum[animal])), float(goalDiamVar))  # ask user for answer
                     root.wait_window(self.top2)  # we wait until the user responds
@@ -2462,7 +2437,7 @@ class mainClass:
                 plotName = "Strategy " + str(strategyType) + " Animal " + str(animal) + "  Day " + str(
                     dayNum) + " Trial " + str(trialNum[animal])
                 self.plotPoints(arrayX, arrayY, float(mazeDiamVar), float(mazeCentreX), float(mazeCentreY),
-                                float(goalX), float(goalY), float(scalingFactor), plotName,
+                                float(goalX), float(goalY), plotName,
                                 ("Animal: " + str(animal) + "  Day/Trial: " + str(dayNum) + "/" + str(
                                     trialNum[animal])), float(goalDiamVar))  # ask user for answer
                 root.wait_window(self.top2)  # we wait until the user responds
