@@ -614,24 +614,32 @@ class mainClass:
 
         # calculation of angular cooridor, updates to user input and renders blue lines on user interface 
         # to represent outer bounds of cooridor
-        rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get())/2 + math.degrees(math.atan((float(goalX))/(float(goalY) + radius))))
-        rightCorridorLeftDiameterChordSection = radius + radius* math.tan(rightCorridorSideAngle)
-        rightCorridorRightDiameterChordSection = radius - radius* math.tan(rightCorridorSideAngle)
+        if((goalCentre[0] - 200) == 0):
+            rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get()) / 2)
+        else:
+            rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get()) / 2) + math.atan((goalCentre[0] - 200)/ abs(goalCentre[1] -(200 + scale * radius))) #math.atan((float(goalX) * scale)/((float(goalY) * scale) + 200))
+                
+        rightCorridorLeftDiameterChordSection = radius + radius * math.tan(rightCorridorSideAngle)
+        rightCorridorRightDiameterChordSection = radius - radius * math.tan(rightCorridorSideAngle)
         rightCorridorBottomChordSection = radius / math.cos(rightCorridorSideAngle)
-        rightCorridorTopChordSection = (rightCorridorLeftDiameterChordSection*rightCorridorRightDiameterChordSection)/rightCorridorBottomChordSection
-        rightCorridorOnCircleX = radius*math.tan(rightCorridorSideAngle) + rightCorridorTopChordSection*math.sin(rightCorridorSideAngle)
+        rightCorridorTopChordSection = (rightCorridorLeftDiameterChordSection * rightCorridorRightDiameterChordSection) / rightCorridorBottomChordSection
+        rightCorridorOnCircleX = radius * math.tan(rightCorridorSideAngle) + rightCorridorTopChordSection * math.sin(rightCorridorSideAngle)
         rightCorridorOnCircleY = rightCorridorTopChordSection * math.cos(rightCorridorSideAngle)
-        self.rightAngularCooridorLine = canvas.create_line(200, 200 + scale * radius, 200 + scale*(rightCorridorOnCircleX), 200 - (scale * rightCorridorOnCircleY), fill = "blue", width = 2)
-        
+        self.rightAngularCooridorLine = canvas.create_line(200, 200 + scale * radius,
+                                                                  200 + scale * (rightCorridorOnCircleX),
+                                                                  200 - (scale * rightCorridorOnCircleY), fill="blue",
+                                                                  width=2)
+
+
         leftCorridorSideAngle = rightCorridorSideAngle - math.radians(float(corridorWidthStringVar.get()))
         leftCorridorLeftDiameterChordSection = radius + radius* math.tan(leftCorridorSideAngle)
         leftCorridorRightDiameterChordSection = radius - radius* math.tan(leftCorridorSideAngle)
         leftCorridorBottomChordSection = radius / math.cos(leftCorridorSideAngle)
+
         leftCorridorTopChordSection = (leftCorridorLeftDiameterChordSection*leftCorridorRightDiameterChordSection)/leftCorridorBottomChordSection
         leftCorridorOnCircleX = radius*math.tan(leftCorridorSideAngle) + leftCorridorTopChordSection*math.sin(leftCorridorSideAngle)
         leftCorridorOnCircleY = leftCorridorTopChordSection * math.cos(leftCorridorSideAngle)
-        self.leftAngularCooridorLine = canvas.create_line(200, 200 + scale * radius, 200 + scale*(leftCorridorOnCircleX), 200 - (scale * leftCorridorOnCircleY),fill = "blue", width = 2)
-
+        self.leftAngularCooridorLine = canvas.create_line(200, 200 + scale * radius, 200 + scale*(leftCorridorOnCircleX), 200 - (scale * leftCorridorOnCircleY), fill = "blue", width = 2)
 
 
         # draw all rois
@@ -719,6 +727,7 @@ class mainClass:
                     rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get()) / 2)
                 else:
                     rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get()) / 2) + math.atan((goalCentre[0] - 200)/ abs(goalCentre[1] -(200 + scale * radius))) #math.atan((float(goalX) * scale)/((float(goalY) * scale) + 200))
+                
                 rightCorridorLeftDiameterChordSection = radius + radius * math.tan(rightCorridorSideAngle)
                 rightCorridorRightDiameterChordSection = radius - radius * math.tan(rightCorridorSideAngle)
                 rightCorridorBottomChordSection = radius / math.cos(rightCorridorSideAngle)
@@ -729,7 +738,6 @@ class mainClass:
                                                                   200 + scale * (rightCorridorOnCircleX),
                                                                   200 - (scale * rightCorridorOnCircleY), fill="blue",
                                                                   width=2)
-
 
                 leftCorridorSideAngle = rightCorridorSideAngle - math.radians(float(corridorWidthStringVar.get()))
                 leftCorridorLeftDiameterChordSection = radius + radius* math.tan(leftCorridorSideAngle)
