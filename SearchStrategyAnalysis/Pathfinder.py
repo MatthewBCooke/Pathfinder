@@ -581,8 +581,10 @@ class mainClass:
 
                 # calculation of angular cooridor, updates to user input and renders blue lines on user interface
                 # to represent outer bounds of cooridor
-                rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get()) / 2 + math.degrees(
-                    math.atan((float(goalCentre[0])) / (float(goalCentre[1]) + radius))))
+                if((goalCentre[0] - 200) == 0):
+                    rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get()) / 2)
+                else:
+                    rightCorridorSideAngle = math.radians(float(corridorWidthStringVar.get()) / 2) + math.atan((goalCentre[0] - 200)/ abs(goalCentre[1] -(200 + scale * radius)))
                 rightCorridorLeftDiameterChordSection = radius + radius * math.tan(rightCorridorSideAngle)
                 rightCorridorRightDiameterChordSection = radius - radius * math.tan(rightCorridorSideAngle)
                 rightCorridorBottomChordSection = radius / math.cos(rightCorridorSideAngle)
