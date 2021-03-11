@@ -2285,17 +2285,7 @@ class mainClass:
         curDate = None
         for aTrial in aExperiment:
             animal = aTrial.animal
-            if aExperiment.hasAnimalNames:
-                animal = aTrial.animal.replace("*", "")
-            if aExperiment.hasTrialNames:
-                dayNum = aTrial.day
-                trialNum[animal] = aTrial.trial
-            elif aExperiment.hasDateInfo and aTrial.date.date() != curDate:
-                dayNum += 1
-                curDate = aTrial.date.date()
-                trialNum = {}
-                trialNum[animal] = 1
-            elif animal in trialNum:
+            if animal in trialNum:
                 trialNum[animal] += 1
             else:
                 trialNum[animal] = 1
@@ -2452,12 +2442,7 @@ class mainClass:
                 strategyManual = searchStrategyV  # update the strategyType to that of the user
 
             dataToWrite = []
-            if aExperiment.hasDateInfo:
-                formattedDate = aTrial.date.strftime("%Y-%m-%d")
-                formattedTime = aTrial.date.strftime("%I:%M %p")
-                dataToWrite.append(formattedDate)
-                dataToWrite.append(formattedTime)
-                dataToWrite.append(dayNum)
+
 
             dataToWrite.append(trialNum[animal])
             if aExperiment.hasTrialNames:

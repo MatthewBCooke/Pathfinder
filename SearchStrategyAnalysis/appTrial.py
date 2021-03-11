@@ -1,5 +1,6 @@
 # Module: appTrial.py
 # Holds data structures
+__requires__= 'xlrd==1.2.0'
 
 import sys
 from sys import platform as _platform
@@ -12,6 +13,9 @@ import datetime
 import tkinter
 from operator import add
 from collections import defaultdict
+import pkg_resources
+pkg_resources.require("xlrd==1.2.0")
+
 from xlrd import open_workbook
 if sys.version_info<(3,0,0):  # tkinter names for python 2
     print("Update to Python3 for best results... You may encounter errors")
@@ -332,7 +336,10 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     elif sheet.cell(row, 0).value.upper() == 'TRIAL ID':
                         aTrial.settrial(int(sheet.cell(row, 1).value))
                     elif sheet.cell(row, 0).value.upper() == 'START TIME':
-                        aTrial.setdate(datetime.datetime.strptime(sheet.cell(row, 1).value, "%d/%m/%Y %H:%M:%S"))
+                        try:
+                            aTrial.setdate(datetime.datetime.strptime(sheet.cell(row, 1).value, "%d/%m/%Y %H:%M:%S"))
+                        except:
+                            aTrial.setdate(sheet.cell(row, 1).value)
                     elif sheet.cell(row, 0).value.upper() == 'ANIMAL ID':
                         aTrial.setanimal(sheet.cell(row, 1).value)
                     elif sheet.cell(row, 0).value.upper() == 'DAY':

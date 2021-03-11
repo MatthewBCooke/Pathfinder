@@ -5,7 +5,7 @@ with open('README.md', encoding="utf8") as f:
 
 setup(
     name='jsl-pathfinder',
-    version='1.3.0',
+    version='1.3.5',
     description='Morris Water Maze Search Strategy Analysis',
     url='https://github.com/MatthewBCooke/Pathfinder',
     author='Matthew Cooke',
@@ -27,7 +27,7 @@ setup(
     keywords='morris water maze jason snyder lab search strategy strategies analysis',
     packages=find_packages(),
     install_requires=[
-        'xlrd',
+        'xlrd == 1.2.0',
         'plotly',
         'pillow',
         'matplotlib',
