@@ -316,10 +316,10 @@ def saveFileAsExperiment(software, filename, filedirectory):
             logging.info("Reading file ethovision")
             experiment.setHasAnimalNames(True)
             experiment.setHasDateInfo(False)
-            experiment.setHasTrialNames(False)
+            experiment.setHasTrialNames(True)
 
             try:
-                wb = pd.read_excel(filename, sheet_name = None, header = int(sheet.cell(0, 1).value) - 2)
+                sheet = pd.read_excel(filename, header = None)
                 logging.debug("Opened" + filename)
                 print("Opened", filename)
             except Exception:
@@ -328,12 +328,13 @@ def saveFileAsExperiment(software, filename, filedirectory):
                 print("Unable to open excel file", filename)
                 return
 
-            for sheet in wb:  # for all sheets in the workbook
-                number_of_rows = len(sheet)
-                headerLines = int(sheet.iloc[0][1])  # gets number of header lines in the spreadsheet
-                aTrial = Trial()
+            #for sheet in wb:  # for all sheets in the workbook
+            number_of_rows = len(sheet)
+            headerLines = int(sheet.iloc[0,1])  # gets number of header lines in the spreadsheet
+            aTrial = Trial()
+            print("HEADERLINES: ", headerLines)
 
-                for row in range(1, headerLines):
+            for row in range(1, headerLines):
                     #if sheet.cell(row, 0).value.upper() == 'TRIAL NAME':
                         #aTrial.setname(sheet.cell(row, 1).value)
                     #elif sheet.cell(row, 0).value.upper() == 'TRIAL ID':
@@ -343,30 +344,30 @@ def saveFileAsExperiment(software, filename, filedirectory):
                             #aTrial.setdate(datetime.datetime.strptime(sheet.cell(row, 1).value, "%d/%m/%Y %H:%M:%S"))
                         #except:
                             #aTrial.setdate(sheet.cell(row, 1).value)
-                    if sheet.cell(row, 0).value.upper() == 'ANIMAL ID':
-                        aTrial.setanimal(sheet.iloc[row][1])
+                if str(sheet.iloc[row, 0]).upper() == 'ANIMAL ID':
+                    aTrial.setanimal(sheet.iloc[row,1])
                     #elif sheet.cell(row, 0).value.upper() == 'DAY':
                         #aTrial.setday(sheet.cell(row, 1).value)
-                    #elif sheet.cell(row, 0).value.upper() == 'TRIAL':
-                        #aTrial.settrial(int(sheet.cell(row, 1).value))
+                elif str(sheet.iloc[row, 0]).upper() == 'TRIAL':
+                    aTrial.settrial(int(sheet.iloc[row,1]))
 
-                for row in range(headerLines, number_of_rows):  # for each row
-                    time = sheet.iloc[row][1]
-                    x = sheet.iloc[row][2]
-                    y = sheet.iloc[row][3]
+            for row in range(headerLines, number_of_rows):  # for each row
+                time = sheet.iloc[row,1]
+                x = sheet.iloc[row,2]
+                y = sheet.iloc[row,3]
 
-                    if time == "NaN" or x == "NaN" or y == "NaN":
-                        aTrial.markDataAsCorrupted()
-                        continue
+                if time == "NaN" or x == "NaN" or y == "NaN":
+                    aTrial.markDataAsCorrupted()
+                    continue
 
-                    try:
-                        aTrial.append(Datapoint(float(time), float(x), float(y)))
-                    except ValueError:
-                        aTrial.markDataAsCorrupted()
-                        pass
+                try:
+                    aTrial.append(Datapoint(float(time), float(x), float(y)))
+                except ValueError:
+                    aTrial.markDataAsCorrupted()
+                    pass
 
 
-                trialList.append(aTrial)
+            trialList.append(aTrial)
 
         elif software == "anymaze":
             logging.info("Reading anymaze")

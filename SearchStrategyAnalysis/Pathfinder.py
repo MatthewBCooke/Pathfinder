@@ -25,9 +25,9 @@ import pandas as pd
 
 
 try:  # Tries to import local dependencies
-    from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, \
+    from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, \
         defineOwnSoftware
-    import SearchStrategyAnalysis.heatmap
+    import heatmap
 except:
     from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, defineOwnSoftware
     import heatmap
