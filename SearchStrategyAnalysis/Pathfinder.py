@@ -130,14 +130,14 @@ thigmoMinDistanceCustom = params.thigmoMinDistance
 headingIndirectMaxVal = params.headingIndirectMaxVal
 
 customFlag = False
-useDirectPathV = True
-useFocalSearchV = True
-useDirectedSearchV = True
-useScanningV = True
-useChainingV = True
-useRandomV = True
-useIndirectV = True
-useThigmoV = True
+useDirectPathV = params.useDirect
+useFocalSearchV = params.useFocal
+useDirectedSearchV = params.useDirected
+useScanningV = params.useScanning
+useChainingV = params.useChaining
+useRandomV = params.useRandom
+useIndirectV = params.useIndirect
+useThigmoV = params.useThigmotaxis
 
 root = Tk()  # set up the root
 theStatus = StringVar()  # create the status bar text
@@ -1157,17 +1157,17 @@ class mainClass:
 
         rowCount += 1
 
-        focalMinDistanceCustomL2 = Label(frame, text="Distance covered (minimum, cm): ", bg="white")
-        focalMinDistanceCustomL2.grid(row=rowCount, column=0, sticky=E)
-        focalMinDistanceCustomE2 = Entry(frame, textvariable=self.focalMinDistanceCustom2)
-        focalMinDistanceCustomE2.grid(row=rowCount, column=1)
+        semiFocalMinDistanceCustomL = Label(frame, text="Distance covered (minimum, cm): ", bg="white")
+        semiFocalMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
+        semiFocalMinDistanceCustomE = Entry(frame, textvariable=self.semiFocalMinDistanceCustom)
+        semiFocalMinDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        focalMaxDistanceCustomL2 = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
-        focalMaxDistanceCustomL2.grid(row=rowCount, column=0, sticky=E)
-        focalMaxDistanceCustomE2 = Entry(frame, textvariable=self.focalMaxDistanceCustom2)
-        focalMaxDistanceCustomE2.grid(row=rowCount, column=1)
+        semiFocalMaxDistanceCustomL = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
+        semiFocalMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
+        semiFocalMaxDistanceCustomE = Entry(frame, textvariable=self.semiFocalMaxDistanceCustom)
+        semiFocalMaxDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
