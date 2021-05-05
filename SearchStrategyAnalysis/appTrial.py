@@ -321,33 +321,22 @@ def saveFileAsExperiment(software, filename, filedirectory):
             try:
                 sheet = pd.read_excel(filename, header = None)
                 logging.debug("Opened" + filename)
-                print("Opened", filename)
             except Exception:
                 traceback.print_exc()
                 logging.error("Unable to open excel file " + filename)
-                print("Unable to open excel file", filename)
                 return
 
-            #for sheet in wb:  # for all sheets in the workbook
             number_of_rows = len(sheet)
             headerLines = int(sheet.iloc[0,1])  # gets number of header lines in the spreadsheet
             aTrial = Trial()
-            print("HEADERLINES: ", headerLines)
 
             for row in range(1, headerLines):
-                    #if sheet.cell(row, 0).value.upper() == 'TRIAL NAME':
-                        #aTrial.setname(sheet.cell(row, 1).value)
-                    #elif sheet.cell(row, 0).value.upper() == 'TRIAL ID':
-                        #aTrial.settrial(int(sheet.cell(row, 1).value))
-                    #elif sheet.cell(row, 0).value.upper() == 'START TIME':
-                        #try:
-                            #aTrial.setdate(datetime.datetime.strptime(sheet.cell(row, 1).value, "%d/%m/%Y %H:%M:%S"))
-                        #except:
-                            #aTrial.setdate(sheet.cell(row, 1).value)
-                if str(sheet.iloc[row, 0]).upper() == 'ANIMAL ID':
+                if str(sheet.iloc[row, 0]).upper() == 'TRIAL NAME':
+                        aTrial.setname(sheet.iloc[row,1])
+                elif str(sheet.iloc[row, 0]).upper() == 'TRIAL ID':
+                    aTrial.settrial(int(sheet.iloc[row,1]))
+                elif str(sheet.iloc[row, 0]).upper() == 'ANIMAL ID':
                     aTrial.setanimal(sheet.iloc[row,1])
-                    #elif sheet.cell(row, 0).value.upper() == 'DAY':
-                        #aTrial.setday(sheet.cell(row, 1).value)
                 elif str(sheet.iloc[row, 0]).upper() == 'TRIAL':
                     aTrial.settrial(int(sheet.iloc[row,1]))
 
