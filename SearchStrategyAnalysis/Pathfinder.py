@@ -21,6 +21,7 @@ import numpy as np
 import pickle
 import datetime
 import scipy.ndimage as sp
+import pandas as pd
 
 
 try:  # Tries to import local dependencies
@@ -656,13 +657,8 @@ class mainClass:
                 else:
                     softwareStringVar.set("custom")
         elif (file_extension == '.xlsx'):
-            workbook = open_workbook(theFile)
-            sheet = workbook.sheet_by_index(0)
-            rowNames = sheet.col_values(0)
-            if (set(ethovision).issubset(rowNames)):
-                softwareStringVar.set("ethovision")
-            else:
-                softwareStringVar.set("custom")
+            softwareStringVar.set("ethovision")
+
 
     def openFile(self):  # opens a dialog to get a single file
         logging.debug("Open File...")

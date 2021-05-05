@@ -15,6 +15,7 @@ from operator import add
 from collections import defaultdict
 import pkg_resources
 pkg_resources.require("xlrd==1.2.0")
+import pandas as pd
 
 from xlrd import open_workbook
 if sys.version_info<(3,0,0):  # tkinter names for python 2
@@ -314,43 +315,45 @@ def saveFileAsExperiment(software, filename, filedirectory):
         if software == "ethovision":
             logging.info("Reading file ethovision")
             experiment.setHasAnimalNames(True)
-            experiment.setHasDateInfo(True)
-            experiment.setHasTrialNames(True)
+            experiment.setHasDateInfo(False)
+            experiment.setHasTrialNames(False)
 
             try:
-                wb = open_workbook(filename)
+                wb = pd.read_excel(filename, sheet_name = None, header = int(sheet.cell(0, 1).value) - 2)
                 logging.debug("Opened" + filename)
+                print("Opened", filename)
             except Exception:
                 traceback.print_exc()
                 logging.error("Unable to open excel file " + filename)
+                print("Unable to open excel file", filename)
                 return
 
-            for sheet in wb.sheets():  # for all sheets in the workbook
-                number_of_rows = sheet.nrows
-                headerLines = int(sheet.cell(0, 1).value)  # gets number of header lines in the spreadsheet
+            for sheet in wb:  # for all sheets in the workbook
+                number_of_rows = len(sheet)
+                headerLines = int(sheet.iloc[0][1])  # gets number of header lines in the spreadsheet
                 aTrial = Trial()
 
                 for row in range(1, headerLines):
-                    if sheet.cell(row, 0).value.upper() == 'TRIAL NAME':
-                        aTrial.setname(sheet.cell(row, 1).value)
-                    elif sheet.cell(row, 0).value.upper() == 'TRIAL ID':
-                        aTrial.settrial(int(sheet.cell(row, 1).value))
-                    elif sheet.cell(row, 0).value.upper() == 'START TIME':
-                        try:
-                            aTrial.setdate(datetime.datetime.strptime(sheet.cell(row, 1).value, "%d/%m/%Y %H:%M:%S"))
-                        except:
-                            aTrial.setdate(sheet.cell(row, 1).value)
-                    elif sheet.cell(row, 0).value.upper() == 'ANIMAL ID':
-                        aTrial.setanimal(sheet.cell(row, 1).value)
-                    elif sheet.cell(row, 0).value.upper() == 'DAY':
-                        aTrial.setday(sheet.cell(row, 1).value)
-                    elif sheet.cell(row, 0).value.upper() == 'TRIAL':
-                        aTrial.settrial(int(sheet.cell(row, 1).value))
+                    #if sheet.cell(row, 0).value.upper() == 'TRIAL NAME':
+                        #aTrial.setname(sheet.cell(row, 1).value)
+                    #elif sheet.cell(row, 0).value.upper() == 'TRIAL ID':
+                        #aTrial.settrial(int(sheet.cell(row, 1).value))
+                    #elif sheet.cell(row, 0).value.upper() == 'START TIME':
+                        #try:
+                            #aTrial.setdate(datetime.datetime.strptime(sheet.cell(row, 1).value, "%d/%m/%Y %H:%M:%S"))
+                        #except:
+                            #aTrial.setdate(sheet.cell(row, 1).value)
+                    if sheet.cell(row, 0).value.upper() == 'ANIMAL ID':
+                        aTrial.setanimal(sheet.iloc[row][1])
+                    #elif sheet.cell(row, 0).value.upper() == 'DAY':
+                        #aTrial.setday(sheet.cell(row, 1).value)
+                    #elif sheet.cell(row, 0).value.upper() == 'TRIAL':
+                        #aTrial.settrial(int(sheet.cell(row, 1).value))
 
                 for row in range(headerLines, number_of_rows):  # for each row
-                    time = sheet.cell(row, 1).value
-                    x = sheet.cell(row, 2).value
-                    y = sheet.cell(row, 3).value
+                    time = sheet.iloc[row][1]
+                    x = sheet.iloc[row][2]
+                    y = sheet.iloc[row][3]
 
                     if time == "NaN" or x == "NaN" or y == "NaN":
                         aTrial.markDataAsCorrupted()
@@ -402,7 +405,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
 
             trialList.append(aTrial)
 
-        elif software == "watermaze":
+        elif software == "watermaze":  
             logging.info("Reading watermaze")
             experiment.setHasAnimalNames(True)
             experiment.setHasDateInfo(True)
