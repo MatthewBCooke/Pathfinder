@@ -355,7 +355,6 @@ def saveFileAsExperiment(software, filename, filedirectory):
                     aTrial.markDataAsCorrupted()
                     pass
 
-
             trialList.append(aTrial)
 
         elif software == "anymaze":
