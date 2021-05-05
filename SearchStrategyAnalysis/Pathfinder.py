@@ -15,7 +15,7 @@ from sys import platform as _platform
 from time import localtime, strftime
 import PIL.Image
 from PIL import ImageTk
-from xlrd import open_workbook
+import pandas as pd
 from functools import partial
 import numpy as np
 import pickle

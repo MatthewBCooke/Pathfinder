@@ -1,6 +1,6 @@
 # Module: appTrial.py
 # Holds data structures
-__requires__= 'xlrd==1.2.0'
+
 
 import sys
 from sys import platform as _platform
@@ -14,9 +14,8 @@ import tkinter
 from operator import add
 from collections import defaultdict
 import pkg_resources
-pkg_resources.require("xlrd==1.2.0")
+import pandas as pd
 
-from xlrd import open_workbook
 if sys.version_info<(3,0,0):  # tkinter names for python 2
     print("Update to Python3 for best results... You may encounter errors")
     from Tkinter import *
@@ -318,7 +317,7 @@ def saveFileAsExperiment(software, filename, filedirectory):
             experiment.setHasTrialNames(True)
 
             try:
-                wb = open_workbook(filename)
+                sheet = pd.read_excel(filename, header = None)
                 logging.debug("Opened" + filename)
             except Exception:
                 traceback.print_exc()
