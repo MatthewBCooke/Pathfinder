@@ -929,8 +929,8 @@ class mainClass:
         self.directedSearchMaxDistanceCustom = StringVar()
         self.focalMinDistanceCustom = StringVar()
         self.focalMaxDistanceCustom = StringVar()
-        self.focalMinDistanceCustom2 = StringVar()
-        self.focalMaxDistanceCustom2 = StringVar()
+        self.semiFocalMinDistanceCustom = StringVar()
+        self.semiFocalMaxDistanceCustom = StringVar()
         self.chainingMaxCoverageCustom = StringVar()
         self.thigmoMinDistanceCustom = StringVar()
         self.headingIndirectCustom = StringVar()
@@ -939,7 +939,7 @@ class mainClass:
             with open('customobjs.pickle', 'rb') as f:
                 ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, distanceToSwimMaxVal2, \
                 distanceToPlatMaxVal2, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, \
-                focalMaxDistance, focalMinDistance2, focalMaxDistance2, corridoripeMaxVal, annulusCounterMaxVal, \
+                focalMaxDistance, semiFocalMinDistance, semiFocalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, \
                 quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, \
                 distanceToCentreMaxVal, thigmoMinDistance, smallThigmoMinVal, fullThigmoMinVal, ipeIndirectMaxVal, \
                 percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, \
@@ -952,8 +952,8 @@ class mainClass:
                                 corridorAverageMinVal=float(corridorAverageMinVal),
                                 directedSearchMaxDistance=float(directedSearchMaxDistance),
                                 focalMinDistance=float(focalMinDistance), focalMaxDistance=float(focalMaxDistance),
-                                semiFocalMinDistance=float(focalMinDistance2),
-                                semiFocalMaxDistance=float(focalMaxDistance2),
+                                semiFocalMinDistance=float(semiFocalMinDistance),
+                                semiFocalMaxDistance=float(semiFocalMaxDistance),
                                 corridoripeMaxVal=float(corridoripeMaxVal),
                                 annulusCounterMaxVal=float(annulusCounterMaxVal),
                                 quadrantTotalMaxVal=int(quadrantTotalMaxVal),
@@ -991,8 +991,8 @@ class mainClass:
         self.directedSearchMaxDistanceCustom.set(params.directedSearchMaxDistance)
         self.focalMinDistanceCustom.set(params.focalMinDistance)
         self.focalMaxDistanceCustom.set(params.focalMaxDistance)
-        self.focalMinDistanceCustom2.set(params.semiFocalMinDistance)
-        self.focalMaxDistanceCustom2.set(params.semiFocalMaxDistance)
+        self.semiFocalMinDistanceCustom.set(params.semiFocalMinDistance)
+        self.semiFocalMaxDistanceCustom.set(params.semiFocalMaxDistance)
         self.chainingMaxCoverageCustom.set(params.chainingMaxCoverage)
         self.thigmoMinDistanceCustom.set(params.thigmoMinDistance)
         self.headingIndirectCustom.set(params.headingIndirectMaxVal)
@@ -1157,14 +1157,14 @@ class mainClass:
 
         focalMinDistanceCustomL2 = Label(frame, text="Distance covered (minimum, cm): ", bg="white")
         focalMinDistanceCustomL2.grid(row=rowCount, column=0, sticky=E)
-        focalMinDistanceCustomE2 = Entry(frame, textvariable=self.focalMinDistanceCustom2)
+        focalMinDistanceCustomE2 = Entry(frame, textvariable=self.semiFocalMinDistanceCustom)
         focalMinDistanceCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
         focalMaxDistanceCustomL2 = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
         focalMaxDistanceCustomL2.grid(row=rowCount, column=0, sticky=E)
-        focalMaxDistanceCustomE2 = Entry(frame, textvariable=self.focalMaxDistanceCustom2)
+        focalMaxDistanceCustomE2 = Entry(frame, textvariable=self.semiFocalMaxDistanceCustom)
         focalMaxDistanceCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
@@ -1286,8 +1286,8 @@ class mainClass:
                             directedSearchMaxDistance=float(self.directedSearchMaxDistanceCustom.get()),
                             focalMinDistance=float(self.focalMinDistanceCustom.get()),
                             focalMaxDistance=float(self.focalMaxDistanceCustom.get()),
-                            semiFocalMinDistance=float(self.focalMinDistanceCustom2.get()),
-                            semiFocalMaxDistance=float(self.focalMaxDistanceCustom2.get()),
+                            semiFocalMinDistance=float(self.semiFocalMinDistanceCustom.get()),
+                            semiFocalMaxDistance=float(self.semiFocalMaxDistanceCustom.get()),
                             corridoripeMaxVal=float(self.corridorJslsCustom.get()),
                             annulusCounterMaxVal=float(self.annulusCustom.get()),
                             quadrantTotalMaxVal=int(self.quadrantTotalCustom.get()),
@@ -2154,7 +2154,7 @@ class mainClass:
 
         try:
             with open('customobjs.pickle', 'rb') as f:
-                ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, distanceToSwimMaxVal2, distanceToPlatMaxVal2, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, focalMinDistance2, focalMaxDistance2, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, smallThigmoMinVal, fullThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useIndirectV, useFocalSearchV2, useScanningV, useChainingV, useRandomV, useThigmoV = pickle.load(
+                ipeMaxVal, headingMaxVal, distanceToSwimMaxVal, distanceToPlatMaxVal, distanceToSwimMaxVal2, distanceToPlatMaxVal2, corridorAverageMinVal, directedSearchMaxDistance, focalMinDistance, focalMaxDistance, semiFocalMinDistance, semiFocalMaxDistance, corridoripeMaxVal, annulusCounterMaxVal, quadrantTotalMaxVal, chainingMaxCoverage, percentTraversedMaxVal, percentTraversedMinVal, distanceToCentreMaxVal, thigmoMinDistance, smallThigmoMinVal, fullThigmoMinVal, ipeIndirectMaxVal, percentTraversedRandomMaxVal, headingIndirectMaxVal, useDirectPathV, useFocalSearchV, useDirectedSearchV, useIndirectV, useFocalSearchV2, useScanningV, useChainingV, useRandomV, useThigmoV = pickle.load(
                     f)
             params = Parameters(name="Custom", ipeMaxVal=float(ipeMaxVal), headingMaxVal=float(headingMaxVal),
                                 distanceToSwimMaxVal=float(distanceToSwimMaxVal),
@@ -2163,9 +2163,10 @@ class mainClass:
                                 distanceToPlatMaxVal2=float(distanceToPlatMaxVal2),
                                 corridorAverageMinVal=float(corridorAverageMinVal),
                                 directedSearchMaxDistance=float(directedSearchMaxDistance),
-                                focalMinDistance=float(focalMinDistance), focalMaxDistance=float(focalMaxDistance),
-                                semiFocalMinDistance=float(focalMinDistance2),
-                                semiFocalMaxDistance=float(focalMaxDistance2),
+                                focalMinDistance=float(focalMinDistance), 
+                                focalMaxDistance=float(focalMaxDistance),
+                                semiFocalMinDistance=float(semiFocalMinDistance),
+                                semiFocalMaxDistance=float(semiFocalMaxDistance),
                                 corridoripeMaxVal=float(corridoripeMaxVal),
                                 annulusCounterMaxVal=float(annulusCounterMaxVal),
                                 quadrantTotalMaxVal=int(quadrantTotalMaxVal),
