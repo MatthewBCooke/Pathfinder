@@ -332,13 +332,11 @@ def saveFileAsExperiment(software, filename, filedirectory):
 
             for row in range(1, headerLines):
                 if str(sheet.iloc[row, 0]).upper() == 'TRIAL NAME':
-                        aTrial.setname(sheet.iloc[row,1])
-                elif str(sheet.iloc[row, 0]).upper() == 'TRIAL ID':
-                    aTrial.settrial(int(sheet.iloc[row,1]))
+                    aTrial.setname(sheet.iloc[row,1])
                 elif str(sheet.iloc[row, 0]).upper() == 'ANIMAL ID':
                     aTrial.setanimal(sheet.iloc[row,1])
                 elif str(sheet.iloc[row, 0]).upper() == 'TRIAL':
-                    aTrial.settrial(int(sheet.iloc[row,1]))
+                    aTrial.settrial(sheet.iloc[row,1])
 
             for row in range(headerLines, number_of_rows):  # for each row
                 time = sheet.iloc[row,1]
