@@ -138,7 +138,7 @@ class Parameters:
         self.focalMinDistance = focalMinDistance
         self.focalMaxDistance = focalMaxDistance
         self.semiFocalMinDistance = semiFocalMinDistance
-        self.semiFocalMaxDistance = semiFocalMinDistance
+        self.semiFocalMaxDistance = semiFocalMaxDistance
         self.corridoripeMaxVal = corridoripeMaxVal
         self.annulusCounterMaxVal = annulusCounterMaxVal
         self.quadrantTotalMaxVal = quadrantTotalMaxVal
