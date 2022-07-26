@@ -25,11 +25,11 @@ import pandas as pd
 
 
 try:  # Tries to import local dependencies
-    from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, \
+    from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, \
         defineOwnSoftware
     import heatmap
 except:
-    from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, defineOwnSoftware
+    from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, defineOwnSoftware
     import heatmap
 from scipy.stats import norm
 import re
