@@ -379,17 +379,27 @@ def saveFileAsExperiment(software, filename, filedirectory):
             aTrial.setname(filename.split("/")[-1])
 
             for time, x, y in zip(columns[0][1:], columns[1][1:], columns[2][1:]):
-                try:
-                    hours = float(time.split(':')[0])
-                    minutes = float(time.split(':')[1])
-                    seconds = float(time.split(':')[2])
-                    time = seconds + minutes*60 + hours*3600
-                    x = float(x)
-                    y = float(y)
-                    aTrial.append(Datapoint(time, x, y))
-                except:
-                    aTrial.markDataAsCorrupted()
-
+                print("TIME: ",time)
+                if (sum(map(lambda x : 1 if ':' in x else 0, time))>0):
+                    try:
+                        if (sum(map(lambda x : 1 if ':' in x else 0, time)) == 2):
+                            hours = float(time.split(':')[0])
+                            minutes = float(time.split(':')[1])
+                            seconds = float(time.split(':')[2])
+                        else:
+                            minutes = float(time.split(':')[0])
+                            seconds = float(time.split(':')[1])
+                            hours = 0
+                        time = seconds + minutes*60 + hours*3600
+                    except:
+                        aTrial.markDataAsCorrupted()
+                else:
+                    time = float(time)
+ 
+                x = float(x)
+                y = float(y)
+                aTrial.append(Datapoint(time, x, y))
+                
             trialList.append(aTrial)
 
         elif software == "watermaze":  

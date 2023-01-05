@@ -1,7 +1,10 @@
 import math
 import os
 import sys
-from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters
+try:
+    from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters
+except:
+    from appTrial import Trial, Experiment, Parameters
 from time import localtime, strftime
 
 if sys.version_info<(3,0,0):  # tkinter names for python 2

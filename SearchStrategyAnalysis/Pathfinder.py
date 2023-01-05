@@ -25,11 +25,12 @@ import pandas as pd
 
 
 try:  # Tries to import local dependencies
-    from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, \
-        defineOwnSoftware
-    import heatmap
-except:
     from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, defineOwnSoftware
+    import SearchStrategyAnalysis.heatmap
+    
+except:
+    from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, \
+        defineOwnSoftware
     import heatmap
 from scipy.stats import norm
 import re
@@ -1971,7 +1972,7 @@ class mainClass:
             ySummed += float(aDatapoint.gety())
             aX = float(aDatapoint.getx())
             aY = float(aDatapoint.gety())
-
+            print(aX)
             arrayX.append(aX)
             arrayY.append(aY)
 
