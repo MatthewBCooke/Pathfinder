@@ -108,14 +108,14 @@ Installation Instructions:
 
 Windows:
 
-Installing from the Python Package Index:
+1. Installing from the Python Package Index:
 Launch a CMD window by launching `run` from the start menu, and typing `CMD` in Run.
 
 Once the CMD shell has opened, type `pip install jsl-pathfinder`
 
 Press enter
 
-Installing from GitHub
+2. Installing from GitHub:
 
 Download and install Git here: https://git-scm.com
 
@@ -131,7 +131,7 @@ Press enter
 
 Mac:
 
-Installing from the Python Package Index:
+1. Installing from the Python Package Index:
 
 Open a terminal window (located in your utilities folder under the Applications directory.
 
@@ -139,7 +139,7 @@ Type `pip install jsl-pathfinder`
 
 Press return
 
-Installing from GitHub
+2. Installing from GitHub:
 
 Open a terminal window Navigate to the folder you wish to install Pathfinder into
 
