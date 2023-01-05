@@ -24,11 +24,11 @@ import scipy.ndimage as sp
 import pandas as pd
 
 
-try:  # Tries to import local dependencies
+try:  # Tries to import local dependencies (pypi install)
     from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, defineOwnSoftware
     import SearchStrategyAnalysis.heatmap
     
-except:
+except: #For local path
     from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, \
         defineOwnSoftware
     import heatmap
