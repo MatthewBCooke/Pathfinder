@@ -2274,7 +2274,7 @@ class mainClass:
         except:
             pass
         headersToWrite.extend(
-            ["Trial Code", "Strategy", "IPE", "Velocity", "Distance covered", "Average distance to goal",
+            ["Trial name", "Trial Code", "Strategy", "IPE", "Velocity", "Distance covered", "Average distance to goal",
              "Average heading error", "Percent of maze traversed", "Latency", "Score", "Initial heading error",
              "Entropy", "Distance to swim path centroid", "Average distance to centre of maze",
              "Percent in angular corridor", "Percent in annulus zone", "Percent in smaller thigmotaxis zone",
@@ -2444,12 +2444,14 @@ class mainClass:
 
             dataToWrite = []
 
-
             dataToWrite.append(trialNum[animal])
-            if aExperiment.hasTrialNames:
+            #if aExperiment.hasTrialNames:
+            if hasattr(aTrial, 'name'):
                 dataToWrite.append(aTrial.name)
-            if aExperiment.hasAnimalNames:
+            elif aExperiment.hasAnimalNames:
                 dataToWrite.append(aTrial.animal)
+            else:
+                dataToWrite.append('')
 
             dataToWrite.extend(
                 [(str(animal) + " " + str(dayNum) + " " + str(trialNum[animal])), strategyType, round(ipe, 2),
