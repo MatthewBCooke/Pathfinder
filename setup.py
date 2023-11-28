@@ -5,7 +5,7 @@ with open('README.md', encoding="utf8") as f:
 
 setup(
     name='jsl-pathfinder',
-    version='1.4.4',
+    version='1.4.5',
     description='Morris Water Maze Search Strategy Analysis',
     url='https://github.com/MatthewBCooke/Pathfinder',
     author='Matthew Cooke',
@@ -32,6 +32,7 @@ setup(
         'pillow',
         'matplotlib',
         'scipy',
+        'pandas',
     ],
     long_description=long_description,
     long_description_content_type='text/markdown',
