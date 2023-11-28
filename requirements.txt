@@ -1,0 +1,6 @@
+xlrd == 1.2.0
+plotly
+pillow
+matplotlib
+scipy
+pandas
