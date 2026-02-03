@@ -1,0 +1,143 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jsl-pathfinder"
+version = "2.0.0"
+description = "Morris Water Maze search strategy analysis - modern Python refactor"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "GPL-3.0-or-later"}
+authors = [
+    {name = "Matthew Cooke", email = "matthew.cooke@ubc.ca"},
+]
+keywords = [
+    "morris-water-maze",
+    "behavioral-analysis",
+    "search-strategies",
+    "neuroscience",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+    "plotly>=5.14",
+    "pillow>=10.0",
+    "pydantic>=2.0",
+    "openpyxl>=3.1",  # Modern Excel handling (replaces xlrd)
+]
+
+[project.optional-dependencies]
+api = [
+    "fastapi>=0.104",
+    "uvicorn>=0.24",
+]
+cli = [
+    "click>=8.1",
+]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pytest-asyncio>=0.21",
+    "mypy>=1.5",
+    "black>=23.9",
+    "ruff>=0.10",
+    "isort>=5.12",
+]
+docs = [
+    "sphinx>=7.2",
+    "sphinx-rtd-theme>=1.3",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/MatthewBCooke/Pathfinder"
+"Documentation" = "https://github.com/MatthewBCooke/Pathfinder/wiki"
+"Repository" = "https://github.com/MatthewBCooke/Pathfinder.git"
+"Bug Tracker" = "https://github.com/MatthewBCooke/Pathfinder/issues"
+
+[project.scripts]
+pathfinder = "SearchStrategyAnalysis.cli:cli"
+pathfinder-api = "SearchStrategyAnalysis.api:app"
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_mode = 3
+include_trailing_comma = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--cov=SearchStrategyAnalysis --cov-report=html --cov-report=term-missing"
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[tool.coverage.run]
+branch = true
+source = ["SearchStrategyAnalysis"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+]
