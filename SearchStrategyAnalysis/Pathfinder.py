@@ -21,6 +21,8 @@ import numpy as np
 import pickle
 import datetime
 import scipy.ndimage as sp
+import platform
+import subprocess
 
 
 try:  # Tries to import local dependencies
@@ -41,6 +43,36 @@ try:  # Imports MATLAB engine if available
 except:  # Notify user that MATLAB is unavailable
     print("MATLAB Engine Unavailable")
     canUseMatlab = False
+
+if not canUseMatlab:
+    try:  # Imports Octave engine if available
+        from oct2py import Oct2Py
+
+        canUseOctave = True
+        print("Using Octave Engine")
+    except:  # Notify user that Octave is unavailable
+        print("Octave Engine Unavailable")
+        print("Install MATLAB or Octave if you wish to run entropy calculations")
+        canUseOctave = False
+
+def is_dark_mode():  # Detect if system is in Dark Mode for MacOS
+    if platform.system() != 'Darwin':
+        return False
+    try:
+        mode = subprocess.run(
+            ["defaults", "read", "-g", "AppleInterfaceStyle"],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True
+        )
+        return 'Dark' in mode.stdout
+    except:
+        return False
+    
+if is_dark_mode():  # set colours depending upon dark mode in MacOS
+    bg_color = '#2b2b2b'
+    fg_color = '#ffffff'
+else:
+    bg_color = '#ffffff'
+    fg_color = '#000000'
 
 if sys.version_info < (3, 0, 0):  # tkinter names for python 2
     print("Update to Python3 for best results... You may encounter errors")
@@ -186,7 +218,7 @@ def show_message(text):  # popup box with message text
     logging.debug("Displaying message")
     try:
         top = Toplevel(root)  # show as toplevel
-        Label(top, text=text).pack()  # label set to text
+        Label(top, text=text, bg=bg_color, fg=fg_color).pack()  # label set to text
         Button(top, text="OK", command=top.destroy).pack(pady=5)  # add ok button
     except:
         logging.info("Couldn't Display message " + text)
@@ -280,7 +312,7 @@ class mainClass:
             accelV = "Ctrl+V"
 
         self.menu = Menu(root)  # create a menu
-        root.config(menu=self.menu, bg="white")  # set up the config
+        root.config(menu=self.menu, bg=bg_color)  # set up the config
         self.fileMenu = Menu(self.menu, tearoff=False)  # create file menu
         self.menu.add_cascade(label="File", menu=self.fileMenu)  # add cascading menus
         self.fileMenu.add_command(label="Open File...", accelerator=accelF,
@@ -320,28 +352,28 @@ class mainClass:
         rowCount = 0
         # ******* Software Type *******
         self.softwareBar = Frame(root)  # add a toolbar to the frame
-        self.softwareBar.config(bg="white")
-        #self.autoRadio = Radiobutton(self.softwareBar, text="Auto", variable=softwareStringVar, value="auto", indicatoron=1, width=15, bg="white")
+        self.softwareBar.config(bg=bg_color)
+        #self.autoRadio = Radiobutton(self.softwareBar, text="Auto", variable=softwareStringVar, value="auto", indicatoron=1, width=15, bg=bg_color, fg=fg_color)
         #self.autoRadio.grid(row=rowCount, column=0, padx=5, sticky='NW')  # add the radiobuttons for selection
 
         self.ethovisionRadio = Radiobutton(self.softwareBar, text="Ethovision", variable=softwareStringVar,
-                                           value="ethovision", indicatoron=1, width=15, bg="white")
+                                           value="ethovision", indicatoron=1, width=15, bg=bg_color, fg=fg_color)
         self.ethovisionRadio.grid(row=rowCount, column=1, padx=5, sticky='NW')
 
         self.anymazeRadio = Radiobutton(self.softwareBar, text="Anymaze", variable=softwareStringVar,
-                                        value="anymaze", indicatoron=1, width=15, bg="white")
+                                        value="anymaze", indicatoron=1, width=15, bg=bg_color, fg=fg_color)
         self.anymazeRadio.grid(row=rowCount, column=2, padx=5, sticky='NW')
 
         self.watermazeRadio = Radiobutton(self.softwareBar, text="Watermaze", variable=softwareStringVar,
-                                          value="watermaze", indicatoron=1, width=15, bg="white")
+                                          value="watermaze", indicatoron=1, width=15, bg=bg_color, fg=fg_color)
         self.watermazeRadio.grid(row=rowCount, column=3, padx=5, sticky='NW')
 
         self.eztrackRadio = Radiobutton(self.softwareBar, text="ezTrack", variable=softwareStringVar,
-                                        value="eztrack", indicatoron=1, width=15, bg="white")
+                                        value="eztrack", indicatoron=1, width=15, bg=bg_color, fg=fg_color)
         self.eztrackRadio.grid(row=rowCount, column=4, padx=5, sticky='NW')
 
         self.defineRadio = Radiobutton(self.softwareBar, text="Define", variable=softwareStringVar, value="custom",
-                                       indicatoron=0, width=15, bg="white", command=self.callDefineOwnSoftware)
+                                       indicatoron=0, width=15, bg=bg_color, fg=fg_color, command=self.callDefineOwnSoftware)
         self.defineRadio.grid(row=rowCount, column=5, padx=5, sticky='NW')
         self.softwareBar.pack(side=TOP, fill=X, pady=5)
 
@@ -360,11 +392,11 @@ class mainClass:
 
         # ******* STATUS BAR *******
         self.status = Label(root, textvariable=theStatus, bd=1, relief=SUNKEN, anchor=W,
-                            bg="white")  # setup the status bar
+                            bg=bg_color, fg=fg_color)  # setup the status bar
         self.status.pack(side=BOTTOM, anchor=W, fill=X)  # place the status bar
 
         # ****** PARAMETERS SIDE ******
-        self.paramFrame = Frame(root, bd=1, bg="white")  # create a frame for the parameters
+        self.paramFrame = Frame(root, bd=1, bg=bg_color)  # create a frame for the parameters
         self.paramFrame.pack(side=LEFT, fill=BOTH, padx=5, pady=5)  # place this on the left
 
         try:
@@ -381,9 +413,9 @@ class mainClass:
             pass
 
         rowCount = rowCount + 1
-        self.goalPos = Label(self.paramFrame, text="Goal Position (x,y):", bg="white")  # add different items (Position)
+        self.goalPos = Label(self.paramFrame, text="Goal Position (x,y):", bg=bg_color, fg=fg_color)  # add different items (Position)
         self.goalPos.grid(row=rowCount, column=0, sticky=E)  # place this in row 0 column 0
-        self.goalPosE = Entry(self.paramFrame, textvariable=goalPosStringVar)  # add an entry text box
+        self.goalPosE = Entry(self.paramFrame, textvariable=goalPosStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)  # add an entry text box
         self.goalPosE.grid(row=rowCount, column=1)  # place this in row 0 column 1
         self.goalPos.bind("<Enter>", partial(self.on_enter, "Goal position. Example: 2.5,-3.72 or Auto"))
         self.goalPos.bind("<Leave>", self.on_leave)
@@ -394,58 +426,58 @@ class mainClass:
         self.otherROIButton.bind("<Leave>", self.on_leave)
         self.otherROIButton.config(width=10)
         rowCount = rowCount + 1
-        self.goalDiam = Label(self.paramFrame, text="Goal Diameter (cm):", bg="white")
+        self.goalDiam = Label(self.paramFrame, text="Goal Diameter (cm):", bg=bg_color, fg=fg_color)
         self.goalDiam.grid(row=rowCount, column=0, sticky=E)
-        self.goalDiamE = Entry(self.paramFrame, textvariable=goalDiamStringVar)
+        self.goalDiamE = Entry(self.paramFrame, textvariable=goalDiamStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         self.goalDiamE.grid(row=rowCount, column=1)
         self.goalDiam.bind("<Enter>", partial(self.on_enter, "Goal diameter. Use the same unit as the data"))
         self.goalDiam.bind("<Leave>", self.on_leave)
         rowCount = rowCount + 1
-        self.mazeDiam = Label(self.paramFrame, text="Maze Diameter (cm):", bg="white")
+        self.mazeDiam = Label(self.paramFrame, text="Maze Diameter (cm):", bg=bg_color, fg=fg_color)
         self.mazeDiam.grid(row=rowCount, column=0, sticky=E)
-        self.mazeDiamE = Entry(self.paramFrame, textvariable=mazeDiamStringVar)
+        self.mazeDiamE = Entry(self.paramFrame, textvariable=mazeDiamStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         self.mazeDiamE.grid(row=rowCount, column=1)
         self.mazeDiam.bind("<Enter>", partial(self.on_enter, "The diameter of the maze. Use the same unit as the data"))
         self.mazeDiam.bind("<Leave>", self.on_leave)
         rowCount = rowCount + 1
-        self.mazeCentre = Label(self.paramFrame, text="Maze Centre (x,y):", bg="white")
+        self.mazeCentre = Label(self.paramFrame, text="Maze Centre (x,y):", bg=bg_color, fg=fg_color)
         self.mazeCentre.grid(row=rowCount, column=0, sticky=E)
-        self.mazeCentreE = Entry(self.paramFrame, textvariable=mazeCentreStringVar)
+        self.mazeCentreE = Entry(self.paramFrame, textvariable=mazeCentreStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         self.mazeCentreE.grid(row=rowCount, column=1)
         self.mazeCentre.bind("<Enter>", partial(self.on_enter, "Maze Centre. Example: 0.0,0.0 or Auto"))
         self.mazeCentre.bind("<Leave>", self.on_leave)
         rowCount = rowCount + 1
 
-        self.headingError = Label(self.paramFrame, text="Angular Corridor Width (degrees):", bg="white")
+        self.headingError = Label(self.paramFrame, text="Angular Corridor Width (degrees):", bg=bg_color, fg=fg_color)
         self.headingError.grid(row=rowCount, column=0, sticky=E)
-        self.headingErrorE = Entry(self.paramFrame, textvariable=corridorWidthStringVar)
+        self.headingErrorE = Entry(self.paramFrame, textvariable=corridorWidthStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         self.headingErrorE.grid(row=rowCount, column=1)
         self.headingError.bind("<Enter>", partial(self.on_enter,
                                                   "This is an angular corridor (in degrees) in which the animal must face"))
         self.headingError.bind("<Leave>", self.on_leave)
         rowCount = rowCount + 1
 
-        self.chainingRadius = Label(self.paramFrame, text="Chaining Annulus Width (cm):", bg="white")
+        self.chainingRadius = Label(self.paramFrame, text="Chaining Annulus Width (cm):", bg=bg_color, fg=fg_color)
         self.chainingRadius.grid(row=rowCount, column=0, sticky=E)
-        self.chainingRadiusE = Entry(self.paramFrame, textvariable=chainingRadiusStringVar)
+        self.chainingRadiusE = Entry(self.paramFrame, textvariable=chainingRadiusStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         self.chainingRadiusE.grid(row=rowCount, column=1)
         self.chainingRadius.bind("<Enter>", partial(self.on_enter,
                                                     "The diameter of the ring in which chaining is considered (centered on goal)"))
         self.chainingRadius.bind("<Leave>", self.on_leave)
 
         rowCount = rowCount + 1
-        self.thigmotaxisZoneSize = Label(self.paramFrame, text="Thigmotaxis Zone Size (cm):", bg="white")
+        self.thigmotaxisZoneSize = Label(self.paramFrame, text="Thigmotaxis Zone Size (cm):", bg=bg_color, fg=fg_color)
         self.thigmotaxisZoneSize.grid(row=rowCount, column=0, sticky=E)
-        self.thigmotaxisZoneSizeE = Entry(self.paramFrame, textvariable=thigmotaxisZoneSizeStringVar)
+        self.thigmotaxisZoneSizeE = Entry(self.paramFrame, textvariable=thigmotaxisZoneSizeStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         self.thigmotaxisZoneSizeE.grid(row=rowCount, column=1)
         self.thigmotaxisZoneSize.bind("<Enter>", partial(self.on_enter,
                                                          "Size of the zone in which thigmotaxis is considered (from the outer wall)"))
         self.thigmotaxisZoneSize.bind("<Leave>", self.on_leave)
 
         rowCount = rowCount + 1
-        self.saveDirectory = Label(self.paramFrame, text="Output File (.csv):", bg="white")
+        self.saveDirectory = Label(self.paramFrame, text="Output File (.csv):", bg=bg_color, fg=fg_color)
         self.saveDirectory.grid(row=rowCount, column=0, sticky=E)
-        self.saveDirectoryE = Entry(self.paramFrame, textvariable=outputFileStringVar)
+        self.saveDirectoryE = Entry(self.paramFrame, textvariable=outputFileStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         self.saveDirectoryE.grid(row=rowCount, column=1)
         self.saveDirectory.bind("<Enter>", partial(self.on_enter, "The csv file to store the results"))
         self.saveDirectory.bind("<Leave>", self.on_leave)
@@ -460,38 +492,38 @@ class mainClass:
 
         rowCount = rowCount + 1
         self.manualTickL = Label(self.paramFrame, text="Manual categorization for uncategorized trials: ",
-                                 bg="white")  # label for the tickbox
+                                 bg=bg_color, fg=fg_color)  # label for the tickbox
         self.manualTickL.grid(row=rowCount, column=0, sticky=E)  # placed here
-        self.manualTickC = Checkbutton(self.paramFrame, variable=useManual, bg="white")  # the actual tickbox
+        self.manualTickC = Checkbutton(self.paramFrame, variable=useManual, bg=bg_color, fg=fg_color)  # the actual tickbox
         self.manualTickC.grid(row=rowCount, column=1)
         self.manualTickL.bind("<Enter>", partial(self.on_enter,
                                                  "Unrecognized strategies will popup so you can manually categorize them"))
         self.manualTickL.bind("<Leave>", self.on_leave)
         rowCount = rowCount + 1
         self.manualForAllL = Label(self.paramFrame, text="Manual categorization for all trials: ",
-                                   bg="white")  # label for the tickbox
+                                   bg=bg_color, fg=fg_color)  # label for the tickbox
         self.manualForAllL.grid(row=rowCount, column=0, sticky=E)  # placed here
-        self.manualForAllC = Checkbutton(self.paramFrame, variable=useManualForAll, bg="white")  # the actual tickbox
+        self.manualForAllC = Checkbutton(self.paramFrame, variable=useManualForAll, bg=bg_color, fg=fg_color)  # the actual tickbox
         self.manualForAllC.grid(row=rowCount, column=1)
         self.manualForAllL.bind("<Enter>",
                                 partial(self.on_enter, "All trials will popup so you can manually categorize them"))
         self.manualForAllL.bind("<Leave>", self.on_leave)
         rowCount = rowCount + 1
 
-        if canUseMatlab:
+        if canUseMatlab or canUseOctave:
             self.entropyL = Label(self.paramFrame, text="Run entropy calculation: ",
-                                  bg="white")  # label for the tickbox
+                                  bg=bg_color, fg=fg_color)  # label for the tickbox
             self.entropyL.grid(row=rowCount, column=0, sticky=E)  # placed here
-            self.entropyC = Checkbutton(self.paramFrame, variable=useEntropy, bg="white")  # the actual tickbox
+            self.entropyC = Checkbutton(self.paramFrame, variable=useEntropy, bg=bg_color, fg=fg_color)  # the actual tickbox
             self.entropyC.grid(row=rowCount, column=1)
             self.entropyL.bind("<Enter>", partial(self.on_enter, "Calculates the entropy of the trial (slow)"))
             self.entropyL.bind("<Leave>", self.on_leave)
             rowCount = rowCount + 1
 
         self.truncateL = Label(self.paramFrame, text="Truncate trials when animal reaches goal location: ",
-                               bg="white")  # label for the tickbox
+                               bg=bg_color, fg=fg_color)  # label for the tickbox
         self.truncateL.grid(row=rowCount, column=0, sticky=E)  # placed here
-        self.truncateC = Checkbutton(self.paramFrame, variable=truncate, bg="white")  # the actual tickbox
+        self.truncateC = Checkbutton(self.paramFrame, variable=truncate, bg=bg_color, fg=fg_color)  # the actual tickbox
         self.truncateC.grid(row=rowCount, column=1)
         self.truncateL.bind("<Enter>",
                             partial(self.on_enter, "Will end the trial onces the animal reaches the goal location."))
@@ -505,7 +537,7 @@ class mainClass:
         self.calculateButton = Button(self.paramFrame, text="Calculate", fg="black",
                                       command=self.mainHelper, state='disabled')  # add a button that says calculate
         self.calculateButton.grid(row=rowCount, column=1, columnspan=1)
-        self.settingsButton = Button(self.paramFrame, text="Settings", command=self.settings, fg="black", bg="white")
+        self.settingsButton = Button(self.paramFrame, text="Settings", command=self.settings, fg="black")
         self.settingsButton.grid(row=rowCount, column=0, columnspan=1)  # add custom button
         self.calculateButton.config(width=10)
         self.settingsButton.config(width=10)
@@ -521,7 +553,7 @@ class mainClass:
 
         # ****** DIAGRAM SIDE ******
         # initialize frame
-        self.graphFrame = Frame(root, bd=1, bg="white")  # create a frame for the diagram
+        self.graphFrame = Frame(root, bd=1, bg=bg_color)  # create a frame for the diagram
         self.graphFrame.pack(side=RIGHT, fill=BOTH, padx=5, pady=5)  # place this on the right
         canvas = Canvas(self.graphFrame, width=400, height=400)
         canvas.pack()
@@ -535,7 +567,7 @@ class mainClass:
                 radius = float(mazeDiamStringVar.get()) / 2
                 scale = 1 / float(2*radius/300)
                 self.circle = canvas.create_oval(200 - scale * radius, 200 - scale * radius,
-                                                 200 + scale * radius, 200 + scale * radius, fill="white", width=3)
+                                                 200 + scale * radius, 200 + scale * radius, fill="white", outline="black", width=3)
 
                 mazeX, mazeY = mazeCentreStringVar.get().split(",")
                 mazeCentre = [float(mazeX) * scale, float(mazeY) * scale]
@@ -562,24 +594,24 @@ class mainClass:
                     ((goalCentre[0] - 200) ** 2) + ((goalCentre[1] - 200) ** 2)) + scale * float(
                     chainingRadiusStringVar.get()) / 2
                 self.bigChain = canvas.create_oval(bigChainLBorder, bigChainLBorder, bigChainRBorder, bigChainRBorder,
-                                                   fill="#c7c7c7", width=1)
+                                                   fill="#c7c7c7", outline="black", width=1)
                 self.smallChain = canvas.create_oval(smallChainLBorder, smallChainLBorder,
-                                                     smallChainRBorder, smallChainRBorder, fill="white", width=1)
+                                                     smallChainRBorder, smallChainRBorder, fill="white", outline="black", width=1)
 
                 bigThigmoRadius = 200 - scale * radius + scale * int(thigmotaxisZoneSizeStringVar.get())
                 smallThigmoRadius = 200 - scale * radius + scale * (int(thigmotaxisZoneSizeStringVar.get()) / 2)
                 self.bigThigmo = canvas.create_oval(bigThigmoRadius, bigThigmoRadius,
-                                                    400 - bigThigmoRadius, 400 - bigThigmoRadius, dash=(2, 1))
+                                                    400 - bigThigmoRadius, 400 - bigThigmoRadius, dash=(2, 1), outline="black")
                 self.smallThigmo = canvas.create_oval(smallThigmoRadius, smallThigmoRadius,
-                                                      400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1))
+                                                      400 - smallThigmoRadius, 400 - smallThigmoRadius, dash=(2, 1), outline="black")
 
-                self.centerLine = canvas.create_line(200, 200 + scale * radius, 200, 200 - scale * radius, dash=(1, 1))
-                self.centerLine = canvas.create_line(200 - scale * radius, 200, 200 + scale * radius, 200, dash=(1, 1))
+                self.centerLine = canvas.create_line(200, 200 + scale * radius, 200, 200 - scale * radius, dash=(1, 1), fill="black")
+                self.centerLine = canvas.create_line(200 - scale * radius, 200, 200 + scale * radius, 200, dash=(1, 1), fill="black")
                 self.centerToGoalLine = canvas.create_line(200, 200 + scale * radius, goalCentre[0], goalCentre[1],
                                                            fill="red")
-                self.start = canvas.create_oval(195, 195 + scale * radius, 205, 205 + scale * radius, fill="green",
+                self.start = canvas.create_oval(195, 195 + scale * radius, 205, 205 + scale * radius, fill="green", outline="black",
                                                 width=1)
-                self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red",
+                self.goal = canvas.create_oval(goalLBorder, goalTopBorder, goalRBorder, goalBottomBorder, fill="red", outline="black",
                                                width=1)
 
                 # calculation of angular cooridor, updates to user input and renders blue lines on user interface
@@ -818,7 +850,7 @@ class mainClass:
         self.top4 = Toplevel(root)  # we set this to be the top
         self.canvas = Canvas(self.top4, width=500, height=200)
         self.vsb = Scrollbar(self.top4, orient="vertical", command=self.canvas.yview)
-        self.canvas.configure(bg="white", yscrollcommand=self.vsb.set)
+        self.canvas.configure(bg=bg_color, yscrollcommand=self.vsb.set)
         self.add_button = Button(self.top4, text="Add Goal", command=self.addROI)
         self.saveButton = Button(self.top4, text="Save", command=self.saveROI)
         self.saveButton.config(width=10)
@@ -832,7 +864,7 @@ class mainClass:
 
     def addROI(self):
         labelText = "ROI #" + str(int((len(self.entries)) / 2 + 2))
-        label = Label(self.container, text=labelText)
+        label = Label(self.container, text=labelText, bg=bg_color, fg=fg_color)
         label.grid(row=int(((len(self.entries)) / 2)), column=0)
         entry1 = EntryWithPlaceholder(self.container, "Location (x,y)")
         entry1.grid(row=int(((len(self.entries)) / 2)), column=1)
@@ -1013,11 +1045,11 @@ class mainClass:
         # all of the above is the same as in snyder, plus the creation of variables to hold values from the custom menu
 
         self.top = Toplevel(root)  # we set this to be the top
-        self.top.configure(bg="white")
+        self.top.configure(bg=bg_color)
 
-        canvas = Canvas(self.top, borderwidth=0, width=600, height=600, bg="white")  # we create the canvas
+        canvas = Canvas(self.top, borderwidth=0, width=600, height=600, bg=bg_color)  # we create the canvas
         frame = Frame(canvas)  # we place a frame in the canvas
-        frame.configure(bg="white")
+        frame.configure(bg=bg_color)
         yscrollbar = Scrollbar(self.top, orient=VERTICAL, command=canvas.yview)  # vertical scroll bar
         yscrollbar.grid(row=0, column=2, sticky='ns')
 
@@ -1028,247 +1060,247 @@ class mainClass:
 
 
 
-        Label(frame, text="Settings", bg="white", fg="black").grid(row=0, column=0, columnspan=2, padx=100, pady=20)  # we title it
+        Label(frame, text="Settings", bg=bg_color, fg=fg_color).grid(row=0, column=0, columnspan=2, padx=100, pady=20)  # we title it
 
         rowCount = 1
 
-        useDirectPathL = Label(frame, text="Direct Path: ", bg="white")  # we add a direct path label
+        useDirectPathL = Label(frame, text="Direct Path: ", bg=bg_color, fg=fg_color)  # we add a direct path label
         useDirectPathL.grid(row=rowCount, column=0, sticky=E)  # stick it to row 1
-        useDirectPathC = Checkbutton(frame, variable=self.useDirectPath, bg="white")  # we add a direct path checkbox
+        useDirectPathC = Checkbutton(frame, variable=self.useDirectPath, bg=bg_color, fg=fg_color)  # we add a direct path checkbox
         useDirectPathC.grid(row=rowCount, column=1)  # put it beside the label
 
         rowCount += 1
 
-        jslsMaxCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg="white")  # label for JSLs
+        jslsMaxCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg=bg_color, fg=fg_color)  # label for JSLs
         jslsMaxCustomL.grid(row=rowCount, column=0, sticky=E)  # row 2
-        jslsMaxCustomE = Entry(frame, textvariable=self.jslsMaxCustom)  # entry field
+        jslsMaxCustomE = Entry(frame, textvariable=self.jslsMaxCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)  # entry field
         jslsMaxCustomE.grid(row=rowCount, column=1)  # right beside
 
         rowCount += 1
 
-        headingErrorCustomL = Label(frame, text="Heading error [maximum, degrees]: ", bg="white")
+        headingErrorCustomL = Label(frame, text="Heading error [maximum, degrees]: ", bg=bg_color, fg=fg_color)
         headingErrorCustomL.grid(row=rowCount, column=0, sticky=E)
-        headingErrorCustomE = Entry(frame, textvariable=self.headingErrorCustom)
+        headingErrorCustomE = Entry(frame, textvariable=self.headingErrorCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         headingErrorCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useFocalSearchL = Label(frame, text="Focal Search: ", bg="white")
+        useFocalSearchL = Label(frame, text="Focal Search: ", bg=bg_color, fg=fg_color)
         useFocalSearchL.grid(row=rowCount, column=0, sticky=E)
-        useFocalSearchC = Checkbutton(frame, variable=self.useFocalSearch, bg="white")
+        useFocalSearchC = Checkbutton(frame, variable=self.useFocalSearch, bg=bg_color, fg=fg_color)
         useFocalSearchC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
         distanceToSwimCustomL = Label(frame, text="Distance to swim path centroid [maximum, % of radius]: ",
-                                      bg="white")
+                                      bg=bg_color, fg=fg_color)
         distanceToSwimCustomL.grid(row=rowCount, column=0, sticky=E)
-        distanceToSwimCustomE = Entry(frame, textvariable=self.distanceToSwimCustom)
+        distanceToSwimCustomE = Entry(frame, textvariable=self.distanceToSwimCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         distanceToSwimCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToPlatCustomL = Label(frame, text="Distance to goal [maximum, % of radius]: ", bg="white")
+        distanceToPlatCustomL = Label(frame, text="Distance to goal [maximum, % of radius]: ", bg=bg_color, fg=fg_color)
         distanceToPlatCustomL.grid(row=rowCount, column=0, sticky=E)
-        distanceToPlatCustomE = Entry(frame, textvariable=self.distanceToPlatCustom)
+        distanceToPlatCustomE = Entry(frame, textvariable=self.distanceToPlatCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         distanceToPlatCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        focalMinDistanceCustomL = Label(frame, text="Distance covered (minimum, cm): ", bg="white")
+        focalMinDistanceCustomL = Label(frame, text="Distance covered (minimum, cm): ", bg=bg_color, fg=fg_color)
         focalMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        focalMinDistanceCustomE = Entry(frame, textvariable=self.focalMinDistanceCustom)
+        focalMinDistanceCustomE = Entry(frame, textvariable=self.focalMinDistanceCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         focalMinDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        focalMaxDistanceCustomL = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
+        focalMaxDistanceCustomL = Label(frame, text="Distance covered (maximum, cm): ", bg=bg_color, fg=fg_color)
         focalMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        focalMaxDistanceCustomE = Entry(frame, textvariable=self.focalMaxDistanceCustom)
+        focalMaxDistanceCustomE = Entry(frame, textvariable=self.focalMaxDistanceCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         focalMaxDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useDirectedSearchL = Label(frame, text="Directed Search: ", bg="white")
+        useDirectedSearchL = Label(frame, text="Directed Search: ", bg=bg_color, fg=fg_color)
         useDirectedSearchL.grid(row=rowCount, column=0, sticky=E)
-        useDirectedSearchC = Checkbutton(frame, variable=self.useDirectedSearch, bg="white", onvalue=1)
+        useDirectedSearchC = Checkbutton(frame, variable=self.useDirectedSearch, bg=bg_color, fg=fg_color, onvalue=1)
         useDirectedSearchC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        corridorAverageCustomL = Label(frame, text="Time in angular corridor [minimum, % of trial]: ", bg="white")
+        corridorAverageCustomL = Label(frame, text="Time in angular corridor [minimum, % of trial]: ", bg=bg_color, fg=fg_color)
         corridorAverageCustomL.grid(row=rowCount, column=0, sticky=E)
-        corridorAverageCustomE = Entry(frame, textvariable=self.corridorAverageCustom)
+        corridorAverageCustomE = Entry(frame, textvariable=self.corridorAverageCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         corridorAverageCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        directedSearchMaxDistanceCustomL = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
+        directedSearchMaxDistanceCustomL = Label(frame, text="Distance covered (maximum, cm): ", bg=bg_color, fg=fg_color)
         directedSearchMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        directedSearchMaxDistanceCustomE = Entry(frame, textvariable=self.directedSearchMaxDistanceCustom)
+        directedSearchMaxDistanceCustomE = Entry(frame, textvariable=self.directedSearchMaxDistanceCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         directedSearchMaxDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        corridorJslsCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg="white")
+        corridorJslsCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg=bg_color, fg=fg_color)
         corridorJslsCustomL.grid(row=rowCount, column=0, sticky=E)
-        corridorJslsCustomE = Entry(frame, textvariable=self.corridorJslsCustom)
+        corridorJslsCustomE = Entry(frame, textvariable=self.corridorJslsCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         corridorJslsCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useIndirectL = Label(frame, text="Indirect Search: ", bg="white")
+        useIndirectL = Label(frame, text="Indirect Search: ", bg=bg_color, fg=fg_color)
         useIndirectL.grid(row=rowCount, column=0, sticky=E)
-        useIndirectC = Checkbutton(frame, variable=self.useIndirect, bg="white")
+        useIndirectC = Checkbutton(frame, variable=self.useIndirect, bg=bg_color, fg=fg_color)
         useIndirectC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        jslsIndirectCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg="white")
+        jslsIndirectCustomL = Label(frame, text="Ideal Path Error [maximum]: ", bg=bg_color, fg=fg_color)
         jslsIndirectCustomL.grid(row=rowCount, column=0, sticky=E)
-        jslsIndirectCustomE = Entry(frame, textvariable=self.jslsIndirectCustom)
+        jslsIndirectCustomE = Entry(frame, textvariable=self.jslsIndirectCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         jslsIndirectCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        headingIndirectCustomL = Label(frame, text="Average Heading error [maximum]: ", bg="white")
+        headingIndirectCustomL = Label(frame, text="Average Heading error [maximum]: ", bg=bg_color, fg=fg_color)
         headingIndirectCustomL.grid(row=rowCount, column=0, sticky=E)
-        headingIndirectCustomE = Entry(frame, textvariable=self.headingIndirectCustom, bg="white")
+        headingIndirectCustomE = Entry(frame, textvariable=self.headingIndirectCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         headingIndirectCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useSemiFocalSearchL = Label(frame, text="Semi-focal Search: ", bg="white")
+        useSemiFocalSearchL = Label(frame, text="Semi-focal Search: ", bg=bg_color, fg=fg_color)
         useSemiFocalSearchL.grid(row=rowCount, column=0, sticky=E)
-        useSemiFocalSearchC = Checkbutton(frame, variable=self.useSemiFocalSearch, bg="white")
+        useSemiFocalSearchC = Checkbutton(frame, variable=self.useSemiFocalSearch, bg=bg_color, fg=fg_color)
         useSemiFocalSearchC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
         distanceToSwimCustomL2 = Label(frame, text="Distance to swim path centroid [maximum, % of radius]: ",
-                                       bg="white")
+                                       bg=bg_color, fg=fg_color)
         distanceToSwimCustomL2.grid(row=rowCount, column=0, sticky=E)
-        distanceToSwimCustomE2 = Entry(frame, textvariable=self.distanceToSwimCustom2)
+        distanceToSwimCustomE2 = Entry(frame, textvariable=self.distanceToSwimCustom2, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         distanceToSwimCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        distanceToPlatCustomL2 = Label(frame, text="Distance to goal [maximum, % of radius]: ", bg="white")
+        distanceToPlatCustomL2 = Label(frame, text="Distance to goal [maximum, % of radius]: ", bg=bg_color, fg=fg_color)
         distanceToPlatCustomL2.grid(row=rowCount, column=0, sticky=E)
-        distanceToPlatCustomE2 = Entry(frame, textvariable=self.distanceToPlatCustom2)
+        distanceToPlatCustomE2 = Entry(frame, textvariable=self.distanceToPlatCustom2, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         distanceToPlatCustomE2.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        semiFocalMinDistanceCustomL = Label(frame, text="Distance covered (minimum, cm): ", bg="white")
+        semiFocalMinDistanceCustomL = Label(frame, text="Distance covered (minimum, cm): ", bg=bg_color, fg=fg_color)
         semiFocalMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        semiFocalMinDistanceCustomE = Entry(frame, textvariable=self.semiFocalMinDistanceCustom)
+        semiFocalMinDistanceCustomE = Entry(frame, textvariable=self.semiFocalMinDistanceCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         semiFocalMinDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        semiFocalMaxDistanceCustomL = Label(frame, text="Distance covered (maximum, cm): ", bg="white")
+        semiFocalMaxDistanceCustomL = Label(frame, text="Distance covered (maximum, cm): ", bg=bg_color, fg=fg_color)
         semiFocalMaxDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        semiFocalMaxDistanceCustomE = Entry(frame, textvariable=self.semiFocalMaxDistanceCustom)
+        semiFocalMaxDistanceCustomE = Entry(frame, textvariable=self.semiFocalMaxDistanceCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         semiFocalMaxDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useChainingL = Label(frame, text="Chaining: ", bg="white")
+        useChainingL = Label(frame, text="Chaining: ", bg=bg_color, fg=fg_color)
         useChainingL.grid(row=rowCount, column=0, sticky=E)
-        useChainingC = Checkbutton(frame, variable=self.useChaining, bg="white")
+        useChainingC = Checkbutton(frame, variable=self.useChaining, bg=bg_color, fg=fg_color)
         useChainingC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        annulusCustomL = Label(frame, text="Time in annulus zone [minimum, % of trial]: ", bg="white")
+        annulusCustomL = Label(frame, text="Time in annulus zone [minimum, % of trial]: ", bg=bg_color, fg=fg_color)
         annulusCustomL.grid(row=rowCount, column=0, sticky=E)
-        annulusCustomE = Entry(frame, textvariable=self.annulusCustom)
+        annulusCustomE = Entry(frame, textvariable=self.annulusCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         annulusCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        quadrantTotalCustomL = Label(frame, text="Quadrants visited [minimum]: ", bg="white")
+        quadrantTotalCustomL = Label(frame, text="Quadrants visited [minimum]: ", bg=bg_color, fg=fg_color)
         quadrantTotalCustomL.grid(row=rowCount, column=0, sticky=E)
-        quadrantTotalCustomE = Entry(frame, textvariable=self.quadrantTotalCustom)
+        quadrantTotalCustomE = Entry(frame, textvariable=self.quadrantTotalCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         quadrantTotalCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        chainingMaxCoverageCustomL = Label(frame, text="Area of maze traversed (maximum, % of maze): ", bg="white")
+        chainingMaxCoverageCustomL = Label(frame, text="Area of maze traversed (maximum, % of maze): ", bg=bg_color, fg=fg_color)
         chainingMaxCoverageCustomL.grid(row=rowCount, column=0, sticky=E)
-        chainingMaxCoverageCustomE = Entry(frame, textvariable=self.chainingMaxCoverageCustom)
+        chainingMaxCoverageCustomE = Entry(frame, textvariable=self.chainingMaxCoverageCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         chainingMaxCoverageCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useScanningL = Label(frame, text="Scanning: ", bg="white")
+        useScanningL = Label(frame, text="Scanning: ", bg=bg_color, fg=fg_color)
         useScanningL.grid(row=rowCount, column=0, sticky=E)
-        useScanningC = Checkbutton(frame, variable=self.useScanning, bg="white")
+        useScanningC = Checkbutton(frame, variable=self.useScanning, bg=bg_color, fg=fg_color)
         useScanningC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        percentTraversedCustomL = Label(frame, text="Area of maze traversed [maximum, % of maze]: ", bg="white")
+        percentTraversedCustomL = Label(frame, text="Area of maze traversed [maximum, % of maze]: ", bg=bg_color, fg=fg_color)
         percentTraversedCustomL.grid(row=rowCount, column=0, sticky=E)
-        percentTraversedCustomE = Entry(frame, textvariable=self.percentTraversedCustom)
+        percentTraversedCustomE = Entry(frame, textvariable=self.percentTraversedCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         percentTraversedCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        percentTraversedMinCustomL = Label(frame, text="Area of maze traversed [minimum, % of maze]: ", bg="white")
+        percentTraversedMinCustomL = Label(frame, text="Area of maze traversed [minimum, % of maze]: ", bg=bg_color, fg=fg_color)
         percentTraversedMinCustomL.grid(row=rowCount, column=0, sticky=E)
-        percentTraversedMinCustomE = Entry(frame, textvariable=self.percentTraversedMinCustom)
+        percentTraversedMinCustomE = Entry(frame, textvariable=self.percentTraversedMinCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         percentTraversedMinCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
         distanceToCentreCustomL = Label(frame, text="Average distance to maze centre [maximum, % of radius]: ",
-                                        bg="white")
+                                        bg=bg_color, fg=fg_color)
         distanceToCentreCustomL.grid(row=rowCount, column=0, sticky=E)
-        distanceToCentreCustomE = Entry(frame, textvariable=self.distanceToCentreCustom)
+        distanceToCentreCustomE = Entry(frame, textvariable=self.distanceToCentreCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         distanceToCentreCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useThigmoL = Label(frame, text="Thigmotaxis: ", bg="white")
+        useThigmoL = Label(frame, text="Thigmotaxis: ", bg=bg_color, fg=fg_color)
         useThigmoL.grid(row=rowCount, column=0, sticky=E)
-        useThigmoC = Checkbutton(frame, variable=self.useThigmo, bg="white")
+        useThigmoC = Checkbutton(frame, variable=self.useThigmo, bg=bg_color, fg=fg_color)
         useThigmoC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        fullThigmoCustomL = Label(frame, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        fullThigmoCustomL = Label(frame, text="Time in full thigmotaxis zone [minimum, % of trial]: ", bg=bg_color, fg=fg_color)
         fullThigmoCustomL.grid(row=rowCount, column=0, sticky=E)
-        fullThigmoCustomE = Entry(frame, textvariable=self.fullThigmoCustom, bg="white")
+        fullThigmoCustomE = Entry(frame, textvariable=self.fullThigmoCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         fullThigmoCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        smallThigmoCustomL = Label(frame, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg="white")
+        smallThigmoCustomL = Label(frame, text="Time in smaller thigmotaxis zone [minimum, % of trial]: ", bg=bg_color, fg=fg_color)
         smallThigmoCustomL.grid(row=rowCount, column=0, sticky=E)
-        smallThigmoCustomE = Entry(frame, textvariable=self.smallThigmoCustom)
+        smallThigmoCustomE = Entry(frame, textvariable=self.smallThigmoCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         smallThigmoCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        thigmoMinDistanceCustomL = Label(frame, text="Total distance covered (minimum, cm): ", bg="white")
+        thigmoMinDistanceCustomL = Label(frame, text="Total distance covered (minimum, cm): ", bg=bg_color, fg=fg_color)
         thigmoMinDistanceCustomL.grid(row=rowCount, column=0, sticky=E)
-        thigmoMinDistanceCustomE = Entry(frame, textvariable=self.thigmoMinDistanceCustom, bg="white")
+        thigmoMinDistanceCustomE = Entry(frame, textvariable=self.thigmoMinDistanceCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         thigmoMinDistanceCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        useRandomL = Label(frame, text="Random Search: ", bg="white")
+        useRandomL = Label(frame, text="Random Search: ", bg=bg_color, fg=fg_color)
         useRandomL.grid(row=rowCount, column=0, sticky=E)
-        useRandomC = Checkbutton(frame, variable=self.useRandom, bg="white")
+        useRandomC = Checkbutton(frame, variable=self.useRandom, bg=bg_color, fg=fg_color)
         useRandomC.grid(row=rowCount, column=1)
 
         rowCount += 1
 
-        percentTraversedRandomCustomL = Label(frame, text="Area of maze traversed [minimum, % of maze]: ", bg="white")
+        percentTraversedRandomCustomL = Label(frame, text="Area of maze traversed [minimum, % of maze]: ", bg=bg_color, fg=fg_color)
         percentTraversedRandomCustomL.grid(row=rowCount, column=0, sticky=E)
-        percentTraversedRandomCustomE = Entry(frame, textvariable=self.percentTraversedRandomCustom)
+        percentTraversedRandomCustomE = Entry(frame, textvariable=self.percentTraversedRandomCustom, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         percentTraversedRandomCustomE.grid(row=rowCount, column=1)
 
         rowCount += 1
@@ -1421,10 +1453,10 @@ class mainClass:
         searchStrategyStringVar.set("Not Recognized")
 
         self.top2 = Toplevel(root)  # create a new toplevel window
-        self.top2.configure(bg="white")
+        self.top2.configure(bg=bg_color)
 
-        Label(self.top2, text=name, bg="white", fg="black", width=40).grid(row=0, column=0, columnspan=7)  # add a title
-        photoimg = Label(self.top2, image=photo)  # add the photo
+        Label(self.top2, text=name, bg=bg_color, fg=fg_color, width=40).grid(row=0, column=0, columnspan=7)  # add a title
+        photoimg = Label(self.top2, image=photo, bg=bg_color, fg=fg_color)  # add the photo
         photoimg.image = photo  # keep a reference
         photoimg.grid(row=1, column=0, columnspan=7)  # place the photo in the window
 
@@ -1435,45 +1467,45 @@ class mainClass:
 
         self.directRadio = Radiobutton(self.top2, text="(1) Direct Path", variable=searchStrategyStringVar,
                                        value="Direct path",
-                                       indicatoron=0, width=15, bg="white")
+                                       indicatoron=0, width=15, bg=bg_color, fg=fg_color)
         self.directRadio.grid(row=3, column=0, columnspan=7, pady=3)  # add the radiobuttons for selection
 
         self.focalRadio = Radiobutton(self.top2, text="(2) Focal Search", variable=searchStrategyStringVar,
                                       value="Focal Search",
-                                      indicatoron=0, width=15, bg="white")
+                                      indicatoron=0, width=15, bg=bg_color, fg=fg_color)
         self.focalRadio.grid(row=4, column=0, columnspan=7, pady=3)
         self.directedRadio = Radiobutton(self.top2, text="(3) Directed Search", variable=searchStrategyStringVar,
-                                         value="Directed Search (m)", indicatoron=0, width=15, bg="white")
+                                         value="Directed Search (m)", indicatoron=0, width=15, bg=bg_color, fg=fg_color)
         self.directedRadio.grid(row=5, column=0, columnspan=7, pady=3)
         self.spatialRadio = Radiobutton(self.top2, text="(4) Indirect Search", variable=searchStrategyStringVar,
-                                        value="Indirect Search", indicatoron=0, width=15, bg="white")
+                                        value="Indirect Search", indicatoron=0, width=15, bg=bg_color, fg=fg_color)
         self.spatialRadio.grid(row=6, column=0, columnspan=7, pady=3)
         self.semiFocalRadio = Radiobutton(self.top2, text="(5) Semi-focal Search", variable=searchStrategyStringVar,
                                        value="Semi-focal Search",
-                                       indicatoron=0, width=15, bg="white")
+                                       indicatoron=0, width=15, bg=bg_color, fg=fg_color)
         self.semiFocalRadio.grid(row=7, column=0, columnspan=7, pady=3)
         self.chainingRadio = Radiobutton(self.top2, text="(6) Chaining", variable=searchStrategyStringVar,
                                          value="Chaining",
-                                         indicatoron=0, width=15, bg="white")
+                                         indicatoron=0, width=15, bg=bg_color, fg=fg_color)
         self.chainingRadio.grid(row=8, column=0, columnspan=7, pady=3)
         self.scanningRadio = Radiobutton(self.top2, text="(7) Scanning", variable=searchStrategyStringVar,
                                          value="Scanning",
-                                         indicatoron=0, width=15, bg="white")
+                                         indicatoron=0, width=15, bg=bg_color, fg=fg_color)
         self.scanningRadio.grid(row=9, column=0, columnspan=7, pady=3)
         self.randomRadio = Radiobutton(self.top2, text="(8) Random Search", variable=searchStrategyStringVar,
                                        value="Random Search",
-                                       indicatoron=0, width=15, bg="white")
+                                       indicatoron=0, width=15, bg=bg_color, fg=fg_color)
         self.randomRadio.grid(row=10, column=0, columnspan=7, pady=3)
         self.thigmoRadio = Radiobutton(self.top2, text="(9) Thigmotaxis", variable=searchStrategyStringVar,
                                        value="Thigmotaxis",
-                                       indicatoron=0, width=15, bg="white")
+                                       indicatoron=0, width=15, bg=bg_color, fg=fg_color)
         self.thigmoRadio.grid(row=11, column=0, columnspan=7, pady=3)
         self.notRecognizedRadio = Radiobutton(self.top2, text="(0) Not Recognized", variable=searchStrategyStringVar,
                                               value="Not Recognized",
-                                              indicatoron=0, width=15, bg="white")
+                                              indicatoron=0, width=15, bg=bg_color, fg=fg_color)
         self.notRecognizedRadio.grid(row=12, column=0, columnspan=7, pady=3)
 
-        Button(self.top2, text="(Return) Save", command=self.saveStrat, fg="black", bg="white", width=15).grid(row=13,
+        Button(self.top2, text="(Return) Save", command=self.saveStrat, bg=bg_color, fg=fg_color, width=15).grid(row=13,
                                                                                                                pady=5)  # save button not mac
 
         self.top2.bind('1', self.select1)
@@ -1507,31 +1539,31 @@ class mainClass:
     def guiHeatmap(self, aExperiment):
 
         self.top3 = Toplevel(root)  # create a new toplevel window
-        self.top3.configure(bg="white")
+        self.top3.configure(bg=bg_color)
         self.top3.geometry('{}x{}'.format(200, 300))
-        Label(self.top3, text="Heatmap Parameters", bg="white", fg="black", width=15).pack()  # add a title
+        Label(self.top3, text="Heatmap Parameters", bg=bg_color, fg=fg_color, width=15).pack()  # add a title
 
-        self.gridSizeL = Label(self.top3, text="Grid Size:", bg="white")
+        self.gridSizeL = Label(self.top3, text="Grid Size:", bg=bg_color, fg=fg_color)
         self.gridSizeL.pack(side=TOP)
-        self.gridSizeE = Entry(self.top3, textvariable=gridSizeStringVar)
+        self.gridSizeE = Entry(self.top3, textvariable=gridSizeStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         self.gridSizeE.pack(side=TOP)
 
-        self.maxValL = Label(self.top3, text="Maximum Value:", bg="white")
+        self.maxValL = Label(self.top3, text="Maximum Value:", bg=bg_color, fg=fg_color)
         self.maxValL.pack(side=TOP)
-        self.maxValE = Entry(self.top3, textvariable=maxValStringVar)
+        self.maxValE = Entry(self.top3, textvariable=maxValStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         self.maxValE.pack(side=TOP)
 
-        self.dayValL = Label(self.top3, text="Day(s) to consider:", bg="white")
+        self.dayValL = Label(self.top3, text="Day(s) to consider:", bg=bg_color, fg=fg_color)
         self.dayValL.pack(side=TOP)
-        self.dayValE = Entry(self.top3, textvariable=dayValStringVar)
+        self.dayValE = Entry(self.top3, textvariable=dayValStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         self.dayValE.pack(side=TOP)
 
-        self.trialValL = Label(self.top3, text="Trial(s) to consider:", bg="white")
+        self.trialValL = Label(self.top3, text="Trial(s) to consider:", bg=bg_color, fg=fg_color)
         self.trialValL.pack(side=TOP)
-        self.trialValE = Entry(self.top3, textvariable=trialValStringVar)
+        self.trialValE = Entry(self.top3, textvariable=trialValStringVar, bg=bg_color, fg=fg_color, insertbackground=fg_color)
         self.trialValE.pack(side=TOP)
 
-        Button(self.top3, text="Generate", command=lambda: self.heatmap(aExperiment), fg="black", bg="white").pack()
+        Button(self.top3, text="Generate", command=lambda: self.heatmap(aExperiment), fg="black").pack()
 
     def heatmap(self, aExperiment):  # Generates heatmaps for inputted trial data
         logging.debug("Heatmap Called")
@@ -1639,6 +1671,7 @@ class mainClass:
         heatmap, xedges, yedges = np.histogram2d(X, Y)
 
         # Plot heatmap
+        plt.figure(figsize=(4, 4))
         maxVal = maxValStringVar.get()
         if maxVal == "Auto" or maxVal == "auto" or maxVal == "automatic" or maxVal == "Automatic" or maxVal == "":
             hb = plt.hexbin(X, Y, gridsize=gridSize, cmap=CM.jet, vmin=0, bins=None)
@@ -1662,7 +1695,8 @@ class mainClass:
         plt.title("Day: " + dayValStringVar.get() + " Trial: " + trialValStringVar.get())
         cb = plt.colorbar()
         photoName = aFileName + ".png"  # image name the same as plotname
-        plt.savefig(photoName, dpi=300, figsize=(4, 4))  # save the file
+        
+        plt.savefig(photoName, dpi=300)  # save the file
         plt.show()
 
     def updateTasks(self):  # called when we want to push an update to the GUI
@@ -1689,16 +1723,25 @@ class mainClass:
     def calculateEntropy(self, theTrial, goalX, goalY):
         xList = []
         yList = []
-        try:
-            eng = matlab.engine.start_matlab()
-            logging.info("Matlab Engine Started")
-        except:
-            logging.info("Matlab Engine Running")
+
+        if canUseOctave:
+            oc = Oct2Py()
+            current_dir = os.path.dirname(__file__)
+            oc.addpath(current_dir)
+        else:
+            try:
+                eng = matlab.engine.start_matlab()
+                logging.info("Matlab Engine Started")
+            except:
+                logging.info("Matlab Engine Running")
+        
         for aDatapoint in theTrial:
             xList.append(float(aDatapoint.getx()))
             yList.append(float(aDatapoint.gety()))
-
-        entropyResult = eng.Entropy(xList, yList, goalX, goalY)
+        if canUseMatlab:
+            entropyResult = eng.Entropy(xList, yList, goalX, goalY)
+        elif canUseOctave:
+            entropyResult = oc.Entropy(xList, yList, goalX, goalY)
         return entropyResult
 
     def getAutoLocations(self, theExperiment, goalX, goalY, goalPosVar, mazeCentreX, mazeCentreY, mazeCentreVar,

@@ -3,3 +3,4 @@ plotly
 pillow
 matplotlib
 scipy
+oct2py

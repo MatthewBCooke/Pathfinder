@@ -32,7 +32,9 @@ setup(
         'pillow',
         'matplotlib',
         'scipy',
+        'oct2py',
     ],
+    include_package_data=True,
     long_description=long_description,
     long_description_content_type='text/markdown',
     entry_points={

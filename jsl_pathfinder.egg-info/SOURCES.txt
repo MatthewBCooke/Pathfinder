@@ -1,5 +1,8 @@
+LICENSE
+MANIFEST.in
 README.md
 setup.py
+SearchStrategyAnalysis/Entropy.m
 SearchStrategyAnalysis/Pathfinder.py
 SearchStrategyAnalysis/__init__.py
 SearchStrategyAnalysis/appTrial.py

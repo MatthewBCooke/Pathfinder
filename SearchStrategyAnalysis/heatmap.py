@@ -86,6 +86,7 @@ def heatmap(self, experiment):
     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
 
     # Plot heatmap
+    plt.figure(figsize=(3,3))
     maxVal = maxValStringVar.get()
     if maxVal == "Auto" or maxVal == "auto" or maxVal == "automatic" or maxVal == "Automatic" or maxVal == "":
         hb = plt.hexbin(X, Y, gridsize=gridSize, cmap=CM.jet, vmin=0, bins=None)
@@ -111,5 +112,6 @@ def heatmap(self, experiment):
     plt.title(aTitle)
     cb = plt.colorbar()
     photoName = aFileName + ".png"  # image name the same as plotname
-    plt.savefig(photoName, dpi=300, figsize=(3,3))  # save the file
+    
+    plt.savefig(photoName, dpi=300)  # save the file
     plt.show()
