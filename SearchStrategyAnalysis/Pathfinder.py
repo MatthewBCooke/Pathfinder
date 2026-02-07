@@ -29,7 +29,7 @@ try:  # Tries to import local dependencies
     from SearchStrategyAnalysis.appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, \
         defineOwnSoftware
     import SearchStrategyAnalysis.heatmap
-except:
+except ImportError:
     from appTrial import Trial, Experiment, Parameters, saveFileAsExperiment, Datapoint, defineOwnSoftware
     import heatmap
 from scipy.stats import norm
@@ -39,7 +39,7 @@ import traceback
 try:  # Imports pure Python entropy function
     from entropy import entropy
     canUseEntropy = True
-except:  # Notify user that entropy module is unavailable
+except ImportError:  # Notify user that entropy module is unavailable
     print("Entropy Module Unavailable")
     canUseEntropy = False
 
@@ -52,7 +52,7 @@ def is_dark_mode():  # Detect if system is in Dark Mode for MacOS
             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True
         )
         return 'Dark' in mode.stdout
-    except:
+    except Exception:
         return False
     
 if is_dark_mode():  # set colours depending upon dark mode in MacOS
@@ -62,17 +62,11 @@ else:
     bg_color = '#ffffff'
     fg_color = '#000000'
 
-if sys.version_info < (3, 0, 0):  # tkinter names for python 2
-    print("Update to Python3 for best results... You may encounter errors")
-    from Tkinter import *
-    import tkMessageBox as messagebox
-    import ttk
-    import tkFileDialog as filedialog
-else:  # tkinter for python 3
-    from tkinter import *
-    from tkinter import messagebox
-    from tkinter import ttk
-    from tkinter import filedialog
+# tkinter for python 3 only
+from tkinter import *
+from tkinter import messagebox
+from tkinter import ttk
+from tkinter import filedialog
 if _platform == "darwin":
     import matplotlib
     matplotlib.use('TkAgg')  # prevent bugs on Mac
@@ -246,6 +240,11 @@ class EntryWithPlaceholder(Entry):
 
 
 class mainClass:
+    # Constants for robustness
+    GRID_CELL_SIZE = 10
+    MAX_CUMULATIVE_DISTANCE = 1000000
+    MAX_ITERATIONS = 100000
+
     def __init__(self, root):  # init is called on runtime
         logging.debug("Initiating Main program")
         try:
@@ -1929,6 +1928,39 @@ class mainClass:
 
     def calculateValues(self, theTrial, goalX, goalY, mazeCentreX, mazeCentreY, corridorWidth, thigmotaxisZoneSize,
                         chainingRadius, fullThigmoZone, smallThigmoZone, mazeradius, dayNum, goalDiam):
+        """
+        Calculate search strategy metrics for a trial.
+        
+        Args:
+            theTrial: Trial object containing datapoints
+            goalX, goalY: Goal position coordinates (must be numeric)
+            mazeCentreX, mazeCentreY: Maze centre coordinates (must be numeric)
+            Other parameters: Float values for zone and corridor calculations
+            
+        Raises:
+            ValueError: If critical numeric parameters are invalid or None
+        """
+        # CRITICAL: Input validation
+        if theTrial is None or len(theTrial.datapointList) == 0:
+            raise ValueError("theTrial cannot be None or empty")
+        
+        # Validate that all required datapoints have necessary methods
+        for datapoint in theTrial.datapointList:
+            if not hasattr(datapoint, 'getx') or not hasattr(datapoint, 'gety') or not hasattr(datapoint, 'gettime'):
+                raise ValueError("Datapoint missing required methods: getx(), gety(), or gettime()")
+        
+        # Validate numeric parameters
+        for param_name, param_value in [
+            ('goalX', goalX), ('goalY', goalY),
+            ('mazeCentreX', mazeCentreX), ('mazeCentreY', mazeCentreY)
+        ]:
+            if param_value is None:
+                raise ValueError(f"Parameter '{param_name}' cannot be None")
+            try:
+                float(param_value)
+            except (TypeError, ValueError):
+                raise ValueError(f"Parameter '{param_name}' must be numeric, got: {param_value}")
+        
         global mazeCentreVar
         global useEntropyFlag
         global truncateFlag
@@ -2048,14 +2080,21 @@ class mainClass:
         quadrantTotal = quadrantOne + quadrantTwo + quadrantThree + quadrantFour
 
 
-        spreadX = abs((mazeCentreX+mazeradius) - (mazeCentreX-mazeradius))
-        spreadY = abs((mazeCentreY+mazeradius) - (mazeCentreY-mazeradius))
-        normX = []
-        normY = []
-        for xx in arrayX:
-            normX.append(round((((xx - abs((mazeCentreX - mazeradius))) / spreadX)*10),0)*10)
-        for yy in arrayY:
-            normY.append(round((((yy - abs((mazeCentreY - mazeradius))) / spreadY)*10),0)*10)
+        # HIGH: Add bounds checking for array access
+        if len(arrayX) == 0 or len(arrayY) == 0:
+            logging.warning("arrayX or arrayY is empty, skipping grid normalization")
+            percentTraversed = 0
+            normX = []
+            normY = []
+        else:
+            spreadX = abs((mazeCentreX+mazeradius) - (mazeCentreX-mazeradius))
+            spreadY = abs((mazeCentreY+mazeradius) - (mazeCentreY-mazeradius))
+            normX = []
+            normY = []
+            for xx in arrayX:
+                normX.append(round((((xx - abs((mazeCentreX - mazeradius))) / spreadX)*self.GRID_CELL_SIZE),0)*self.GRID_CELL_SIZE)
+            for yy in arrayY:
+                normY.append(round((((yy - abs((mazeCentreY - mazeradius))) / spreadY)*self.GRID_CELL_SIZE),0)*self.GRID_CELL_SIZE)
         XY = list(zip(normX,normY))
         XY = list(dict.fromkeys(XY))
         print(XY)
@@ -2120,6 +2159,7 @@ class mainClass:
             totalHeadingError += currentHeadingError
             if truncateFlag and currentDistanceFromGoal < float(goalDiam) / 2.0:
                 break
+        # HIGH: Replace bare except with specific exception handling
         try:
             corridorAverage = corridorCounter / i
             distanceAverage = distanceFromGoalSummed / i  # calculate our average distances to landmarks
@@ -2127,7 +2167,8 @@ class mainClass:
             averageDistanceToOldGoal = totalDistanceToOldGoal / i
             averageDistanceToCentre = totalDistanceToCenterOfMaze / i
             averageHeadingError = totalHeadingError / i
-        except:
+        except ZeroDivisionError:
+            logging.warning("Division by zero in average calculations, setting i=1")
             i = 1
             corridorAverage = corridorCounter / i
             distanceAverage = distanceFromGoalSummed / i  # calculate our average distances to landmarks
@@ -2138,7 +2179,8 @@ class mainClass:
 
         try:
             averageInitialHeadingError = initialHeadingError / initialHeadingErrorCount
-        except:
+        except ZeroDivisionError:
+            logging.warning("Division by zero when calculating averageInitialHeadingError, setting to 0")
             averageInitialHeadingError = 0
         cellCounter = 0.0  # initialize our cell counter
 
@@ -2147,20 +2189,28 @@ class mainClass:
         if latency != 0:
             try:
                 velocity = (totalDistance / latency)
-            except:
+            except ZeroDivisionError:
+                logging.warning("Division by zero when calculating velocity, setting to 0")
                 velocity = 0
-                pass
         idealCumulativeDistance = 0.0
         try:
             sampleRate = (theTrial.datapointList[-1].gettime() - startTime) / (len(theTrial.datapointList) - 1)
-        except:
-            logging.info("Error with sample rate calculation")
+        except (ZeroDivisionError, IndexError) as e:
+            logging.warning(f"Error with sample rate calculation: {type(e).__name__}, setting sampleRate=1")
             sampleRate = 1
-        while idealDistance > math.ceil(float(goalDiam) / 2):
+        
+        # MEDIUM: Add iteration limit to while loop to prevent infinite loops
+        iteration_count = 0
+        while idealDistance > math.ceil(float(goalDiam) / 2) and iteration_count < self.MAX_ITERATIONS:
             idealCumulativeDistance += idealDistance
             idealDistance = (idealDistance - velocity * sampleRate)
-            if (idealCumulativeDistance > 1000000):
+            iteration_count += 1
+            if (idealCumulativeDistance > self.MAX_CUMULATIVE_DISTANCE):
+                logging.warning(f"Max cumulative distance {self.MAX_CUMULATIVE_DISTANCE} exceeded, breaking while loop")
                 break
+        
+        if iteration_count >= self.MAX_ITERATIONS:
+            logging.warning(f"While loop reached MAX_ITERATIONS ({self.MAX_ITERATIONS}), possible infinite loop condition")
 
         ipe = float(distanceFromGoalSummed - idealCumulativeDistance) * sampleRate
 
