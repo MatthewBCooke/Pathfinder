@@ -1,0 +1,260 @@
+================================================================================
+PATHFINDER.PY - FUNCTION LINE NUMBER REFERENCE
+================================================================================
+Quick lookup for navigating the source code during refactoring.
+Total file length: 2564 lines
+
+================================================================================
+PURE ANALYSIS FUNCTIONS (Ready to extract to analysis.py)
+================================================================================
+
+unit_vector()                    Lines: 1789-1794
+  - Helper: Normalizes vector to unit length
+  - Dependencies: numpy
+  - Status: ✅ Clean, ready to move
+
+angle_between()                  Lines: 1796-1799
+  - Helper: Calculates angle between two vectors
+  - Dependencies: numpy
+  - Status: ✅ Clean, ready to move
+
+calculateEntropy()               Lines: 1808-1821
+  - Calculates path entropy for a trial
+  - Dependencies: entropy.py (optional), numpy
+  - Status: ✅ Clean, ready to move
+
+
+================================================================================
+CORE ANALYSIS ENGINE (Needs minor cleanup)
+================================================================================
+
+calculateValues()                Lines: 1823-2211  ⭐ PRIMARY FUNCTION
+  - ⚠️  Line 1835: GUI call (theStatus.set()) - REMOVE
+  - ⚠️  Uses self.calculateEntropy() - make standalone
+  - ⚠️  Uses self.angle_between() - make standalone
+  - ⚠️  Uses global flags - parameterize
+  - Returns: 19-element tuple of metrics
+  - Refactor to: calculate_trial_metrics(trial, config) -> TrialMetrics
+
+
+================================================================================
+MIXED FUNCTIONS (Split into analysis + GUI)
+================================================================================
+
+getAutoLocations()               Lines: 1823-2003
+  - Auto-calculates: maze center, goal position, diameters
+  - 🔀 Lines with GUI calls to remove:
+    * 1973: theStatus.set()
+    * 1974: self.updateTasks()
+    * 1982-1991: messagebox.showwarning() - maze center error
+    * 1993-1997: messagebox.showwarning() - goal error
+    * 2001-2002: messagebox.showwarning() - diameter error
+  - Refactor to: calculate_auto_locations(experiment, overrides) -> dict
+
+heatmap()                        Lines: 1599-1774
+  - Aggregates position data and generates heatmap
+  - 🔀 GUI dependencies throughout:
+    * Status updates (multiple)
+    * matplotlib plotting (plt.hexbin, plt.show, etc.)
+    * File I/O (saving PNG)
+  - Split into:
+    * aggregate_heatmap_data() -> analysis.py
+    * render_heatmap() -> GUI code
+
+mainCalculate()                  Lines: 2213-2551  ⭐ MAIN ORCHESTRATOR
+  - Orchestrates entire analysis pipeline
+  - 🔀 Major GUI dependencies:
+    * 2225: theStatus.set()
+    * 2252: show_message()
+    * 2318: theStatus.set()
+    * 2327-2540: CSV file writing (extensive)
+    * 2428-2461: Strategy classification (PURE - extract this!)
+    * 2464, 2495: self.plotPoints() - manual classification
+    * 2473, 2503: root.wait_window() - blocking
+    * 2542: open_file() - opens CSV
+    * 2548: theStatus.set()
+  - Refactor to: analyze_experiment(experiment, config, params) -> List[StrategyResult]
+
+
+================================================================================
+GUI-ONLY FUNCTIONS (Stay in Pathfinder.py)
+================================================================================
+
+__init__()                       Lines: 250-258
+buildGUI()                       Lines: 260-584
+  - Constructs entire tkinter interface
+  - Massive function with all GUI setup
+
+openFile()                       Lines: 669-676
+  - File dialog for single file selection
+
+openDir()                        Lines: 678-685
+  - Directory picker dialog
+
+generateHeatmap()                Lines: 687-692
+  - Entry point for heatmap generation (calls guiHeatmap)
+
+on_enter()                       Lines: 694-698
+  - Tooltip hover handler
+
+on_leave()                       Lines: 700-702
+  - Tooltip hover handler
+
+maximize()                       Lines: 704-706
+minimize()                       Lines: 708-710
+about()                          Lines: 712-714
+getHelp()                        Lines: 716-718
+updatePathfinder()               Lines: 720-723
+tryQuit()                        Lines: 725-733
+enterManual()                    Lines: 735-737
+ctrlDir()                        Lines: 739-741
+ctrlFile()                       Lines: 743-744
+select1() through select0()     Lines: 746-772
+  - Keyboard shortcuts for strategy selection
+
+enterSave()                      Lines: 774-775
+
+mainHelper()                     Lines: 777-790
+  - Pre-processing before mainCalculate()
+  - Loads parameters from GUI, calls mainCalculate()
+
+otherROI()                       Lines: 792-809
+  - ROI definition popup window
+
+addROI()                         Lines: 811-825
+  - Add ROI entry fields dynamically
+
+saveROI()                        Lines: 827-887
+  - Validate and save ROI data
+
+settings()                       Lines: 889-1188
+  - Massive settings GUI with scrollable frame
+  - Custom parameter configuration
+
+saveCuston()                     Lines: 1190-1364
+  - Saves custom parameters to pickle
+
+resetCustom()                    Lines: 1366-1402
+  - Resets parameters to defaults
+
+find_files()                     Lines: 1404-1409
+  - Utility: searches for files in directory
+
+callDefineOwnSoftware()          Lines: 1411-1420
+  - Opens custom software definition dialog
+
+plotPoints()                     Lines: 1422-1559
+  - Manual classification popup with matplotlib plot
+  - Shows trial path with strategy radio buttons
+  - Keyboard shortcuts for quick selection
+
+saveStrat()                      Lines: 1561-1571
+  - Saves manual strategy selection
+
+guiHeatmap()                     Lines: 1573-1597
+  - Heatmap parameter input dialog
+
+updateTasks()                    Lines: 1776-1781
+  - Forces GUI refresh (root.update())
+
+
+================================================================================
+UTILITY FUNCTIONS (External/Infrastructure)
+================================================================================
+
+show_message()                   Lines: 222-228
+  - Popup message box
+
+open_file()                      Lines: 230-235
+  - Opens file in system default application
+
+is_dark_mode()                   Lines: 166-177
+  - macOS dark mode detection
+
+detectSoftwareType()             Lines: 586-607
+  - Auto-detects data file format
+
+
+================================================================================
+GLOBAL SETUP (Top of file)
+================================================================================
+
+Imports                          Lines: 1-65
+Module metadata                  Lines: 67-71
+Directory creation               Lines: 73-85
+Logging setup                    Lines: 87-88
+Global variables                 Lines: 89-169
+Tkinter root setup               Lines: 171-219
+EntryWithPlaceholder class       Lines: 241-248
+
+
+================================================================================
+MAIN CLASS
+================================================================================
+
+mainClass                        Lines: 250-2551
+  - Entire application wrapped in single class
+  - Contains both GUI and analysis logic (needs separation)
+
+
+================================================================================
+MAIN ENTRY POINT
+================================================================================
+
+main()                           Lines: 2554-2556
+  - Instantiates mainClass and starts tkinter mainloop
+
+if __name__ == "__main__":       Lines: 2559-2560
+  - Program entry point
+
+
+================================================================================
+STRATEGY CLASSIFICATION DECISION TREE
+================================================================================
+
+Location: Lines 2428-2461 (inside mainCalculate)
+
+Order of checks:
+  1. Direct Path        (ipe <= 125 AND heading <= 40)
+  2. Focal Search       (distance to centroid + distance to goal)
+  3. Directed Search    (corridor >= 70% AND ipe <= 1500)
+  4. Indirect Search    (ipe < 300 AND heading < 70)
+  5. Semi-focal Search  (looser focal criteria)
+  6. Chaining           (annulus >= 90% AND quadrants >= 4)
+  7. Scanning           (traversed 5-20% AND near center)
+  8. Thigmotaxis        (thigmo zones AND distance > 400)
+  9. Random Search      (traversed >= 10%)
+  10. Not Recognized    (else)
+
+This logic is PURE and should be extracted to classify_strategy() in analysis.py
+
+
+================================================================================
+CONSTANTS (Should move to AnalysisConfig)
+================================================================================
+
+GRID_CELL_SIZE                   Line: 237 (value: 10)
+MAX_CUMULATIVE_DISTANCE          Line: 238 (value: 1000000)
+MAX_ITERATIONS                   Line: 239 (value: 100000)
+
+
+================================================================================
+NOTES FOR REFACTORING
+================================================================================
+
+Priority 1 (Critical for extraction):
+  - calculateValues() [1823-2211] - Remove line 1835 GUI call
+  - mainCalculate() [2213-2551] - Extract classification logic [2428-2461]
+
+Priority 2 (Complex splits):
+  - getAutoLocations() [1823-2003] - Remove all messagebox/status calls
+  - heatmap() [1599-1774] - Split data processing from visualization
+
+Priority 3 (Supporting):
+  - Extract constants to config
+  - Create data structures (AnalysisConfig, TrialMetrics, StrategyResult)
+  - Add comprehensive tests
+
+================================================================================
+END OF LINE REFERENCE
+================================================================================

@@ -1,0 +1,242 @@
+================================================================================
+PATHFINDER ANALYSIS ENGINE EXTRACTION - EXECUTIVE SUMMARY
+================================================================================
+
+DELIVERABLE: Blueprint for separating GUI from analysis logic
+FILE ANALYZED: /tmp/Pathfinder/SearchStrategyAnalysis/Pathfinder.py (2564 lines)
+DATE: 2026-02-07
+
+================================================================================
+1. PURE ANALYSIS FUNCTIONS (Clean - Ready to Extract)
+================================================================================
+
+✅ calculateEntropy()              [Lines 1808-1821]
+   - Calculates path entropy
+   - Depends on: entropy.py (optional), numpy
+   - STATUS: Ready to move as-is
+
+✅ unit_vector()                   [Lines 1789-1794]
+   - Vector normalization helper
+   - Depends on: numpy
+   - STATUS: Ready to move as-is
+
+✅ angle_between()                 [Lines 1796-1799]
+   - Angle calculation between vectors
+   - Depends on: numpy
+   - STATUS: Ready to move as-is
+
+================================================================================
+2. CORE ANALYSIS FUNCTION (Needs Minor Cleanup)
+================================================================================
+
+⚠️  calculateValues()             [Lines 1823-2211] ⭐ PRIMARY ENGINE
+   - Calculates ALL search strategy metrics for a trial
+   - Returns: 19-value tuple with:
+     * IPE (Ideal Path Error)
+     * Velocity, distance metrics
+     * Heading errors
+     * Zone occupancy (corridor, annulus, thigmotaxis)
+     * Percent of maze traversed
+     * Quadrant analysis, latency
+   
+   ISSUES TO FIX:
+   - Line 1835: theStatus.set() - GUI call, remove it
+   - Uses self.calculateEntropy() - make standalone
+   - Uses self.angle_between() - make standalone
+   - Global flags (useEntropyFlag, truncateFlag) - parameterize
+   
+   REFACTOR TO: calculate_trial_metrics(trial, config) -> TrialMetrics
+
+================================================================================
+3. GUI-ONLY FUNCTIONS (Stay in Pathfinder.py)
+================================================================================
+
+❌ buildGUI()                     [Lines 260-584]
+❌ openFile() / openDir()         [Lines 669-685]
+❌ plotPoints()                   [Lines 1442-1559] - Manual classification popup
+❌ guiHeatmap()                   [Lines 1561-1597] - Heatmap dialog
+❌ settings()                     [Lines 1190-1364] - Settings GUI
+❌ saveStrat()                    [Lines 1561-1571]
+❌ otherROI() / addROI() / saveROI() [Lines 1183-1276]
+❌ updateTasks()                  [Lines 1776-1781]
+❌ Window management functions (maximize, minimize, about, getHelp, etc.)
+
+================================================================================
+4. MIXED FUNCTIONS (Require Splitting)
+================================================================================
+
+🔀 getAutoLocations()             [Lines 1823-2003]
+   ANALYSIS LOGIC:
+   - Auto-calculates maze center from data bounds
+   - Estimates goal position from early endpoints
+   - Estimates maze diameter and goal diameter
+   
+   GUI DEPENDENCIES TO REMOVE:
+   - theStatus.set() - status updates
+   - self.updateTasks() - GUI refresh
+   - messagebox.showwarning() - error dialogs
+   - logging calls
+   
+   REFACTOR TO: calculate_auto_locations(experiment, overrides) -> dict
+   - Raise exceptions instead of showing messageboxes
+   - Let GUI code handle user feedback
+
+
+🔀 heatmap()                      [Lines 1599-1774]
+   ANALYSIS LOGIC:
+   - Filters trials by day/trial range
+   - Aggregates position data
+   - Applies Gaussian filtering
+   - Calculates 2D histogram
+   
+   GUI DEPENDENCIES TO REMOVE:
+   - theStatus.set() / updateTasks()
+   - plt.figure(), plt.hexbin(), plt.show() - matplotlib
+   - File I/O (saving PNG)
+   
+   SPLIT INTO:
+   - aggregate_heatmap_data() -> analysis.py (data processing)
+   - render_heatmap() -> Pathfinder.py (visualization)
+
+
+🔀 mainCalculate()                [Lines 2213-2551]
+   ANALYSIS LOGIC:
+   - Orchestrates analysis pipeline
+   - Calls getAutoLocations()
+   - Iterates trials calling calculateValues()
+   - Applies strategy classification rules
+   - Aggregates strategy counts
+   
+   GUI DEPENDENCIES TO REMOVE:
+   - self.updateTasks() - multiple locations
+   - theStatus.set() - status bar
+   - show_message() - error popup
+   - self.plotPoints() - manual classification dialog
+   - root.wait_window() - blocking wait
+   - CSV file writing
+   - open_file() - opens result in system viewer
+   
+   REFACTOR TO: analyze_experiment(experiment, config, params) -> List[StrategyResult]
+   - Return structured data instead of writing CSV
+   - Add progress_callback for GUI updates
+   - Remove manual classification (let GUI handle)
+
+================================================================================
+5. PROPOSED API (analysis.py)
+================================================================================
+
+DATA STRUCTURES:
+- AnalysisConfig        (goal, maze parameters, flags)
+- TrialMetrics         (replaces 19-element tuple)
+- StrategyResult       (strategy + score + metrics)
+
+HELPER FUNCTIONS:
+- unit_vector(vector) -> ndarray
+- angle_between(v1, v2) -> float
+- calculate_entropy(x, y, goal_x, goal_y) -> Optional[float]
+
+CORE ANALYSIS:
+- calculate_trial_metrics(trial, config) -> TrialMetrics
+- calculate_auto_locations(experiment, overrides) -> dict
+- aggregate_heatmap_data(experiment, filters) -> dict
+
+STRATEGY CLASSIFICATION:
+- classify_strategy(metrics, params) -> (strategy_name, score)
+- analyze_experiment(experiment, config, params) -> List[StrategyResult]
+
+================================================================================
+6. DEPENDENCIES
+================================================================================
+
+analysis.py WILL NEED:
+✅ numpy               (vector math, array operations)
+✅ scipy.ndimage       (Gaussian filtering)
+✅ math                (standard library)
+✅ typing              (type hints)
+✅ dataclasses         (data structures)
+✅ appTrial.py         (Trial, Experiment, Parameters, Datapoint)
+✅ entropy.py          (OPTIONAL - for entropy calculation)
+
+analysis.py WILL NOT NEED:
+❌ tkinter             (all variants)
+❌ matplotlib.pyplot   (visualization stays in GUI)
+❌ PIL / ImageTk       (image handling)
+❌ csv                 (let caller handle I/O)
+❌ logging             (use exceptions instead)
+❌ pickle              (state persistence)
+❌ subprocess          (system calls)
+
+================================================================================
+7. STRATEGY CLASSIFICATION LOGIC (Lines 2428-2461)
+================================================================================
+
+This decision tree is PURE and ready to extract:
+
+IF ipe <= 125 AND heading <= 40                     => Direct Path (score=3)
+ELIF focal conditions met                            => Focal Search (score=2)
+ELIF corridor >= 70% AND ipe <= 1500                => Directed Search (score=2)
+ELIF ipe < 300 AND heading < 70                     => Indirect Search (score=2)
+ELIF semi-focal conditions met                       => Semi-focal Search (score=2)
+ELIF annulus >= 90% AND quadrants >= 4              => Chaining (score=1)
+ELIF traversed 5-20% AND near center                => Scanning (score=1)
+ELIF thigmo zones met AND distance > 400            => Thigmotaxis (score=0)
+ELIF traversed >= 10%                                => Random Search (score=0)
+ELSE                                                  => Not Recognized
+
+================================================================================
+8. KEY REFACTORING NOTES
+================================================================================
+
+calculateValues() Changes:
+1. Remove "self" - make standalone
+2. Remove theStatus.set() on line 1835
+3. Replace self.angle_between() with angle_between()
+4. Replace self.calculateEntropy() with calculate_entropy()
+5. Replace global useEntropyFlag with config.calculate_entropy_flag
+6. Replace global truncateFlag with config.truncate_at_goal
+7. Extract constants (GRID_CELL_SIZE, MAX_CUMULATIVE_DISTANCE, MAX_ITERATIONS)
+8. Return TrialMetrics dataclass instead of tuple
+9. Add comprehensive input validation
+
+getAutoLocations() Changes:
+1. Remove theStatus.set() / self.updateTasks()
+2. Replace messagebox.showwarning() with ValueError exceptions
+3. Remove logging (let caller handle)
+4. Accept dict of overrides instead of strings
+5. Return dict instead of tuple
+
+mainCalculate() Changes:
+1. Remove CSV writing
+2. Remove plotPoints() calls (manual classification)
+3. Remove status bar updates
+4. Remove root.wait_window() blocking
+5. Add progress callback
+6. Return List[StrategyResult]
+
+================================================================================
+9. MIGRATION PHASES
+================================================================================
+
+Phase 1: Create analysis.py with data structures and helpers
+Phase 2: Extract and refactor calculateValues() 
+Phase 3: Extract strategy classification logic
+Phase 4: Extract auto-location calculation
+Phase 5: Extract heatmap data aggregation
+Phase 6: Create analyze_experiment() orchestrator
+Phase 7: Refactor Pathfinder.py to use new API
+
+================================================================================
+10. BENEFITS
+================================================================================
+
+TESTABILITY:    Unit test analysis logic without GUI
+REUSABILITY:    Use in CLI, web API, Jupyter, batch scripts
+MAINTAINABILITY: Clear separation, easier to modify
+PERFORMANCE:    Headless execution, parallel processing
+PORTABILITY:    Analysis engine works anywhere
+
+================================================================================
+END OF SUMMARY
+================================================================================
+
+Full architectural details in: ARCHITECTURE_PROPOSAL.md
