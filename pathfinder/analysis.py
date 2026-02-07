@@ -6,10 +6,11 @@ Refactored from SearchStrategyAnalysis/Pathfinder.py to be pure, testable, and m
 
 import math
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 import numpy as np
+import scipy.ndimage as sp
 
-from pathfinder.types import TrialMetrics, AnalysisConfig
+from pathfinder.types import TrialMetrics, AnalysisConfig, Parameters, HeatmapData, AutoParameters
 
 # Import entropy - handle if module is unavailable
 try:
@@ -474,4 +475,601 @@ def calculate_trial_metrics(
         ipe=ipe,
         average_initial_heading_error=average_initial_heading_error,
         entropy=entropy_result
+    )
+
+
+def classify_strategy(
+    metrics: TrialMetrics,
+    parameters: Parameters,
+    maze_radius: float
+) -> Tuple[str, int]:
+    """
+    Classify a trial's search strategy based on its metrics and thresholds.
+    
+    This is a pure decision tree that classifies Morris Water Maze trials into
+    one of 9 search strategy types based on spatial, kinematic, and coverage metrics.
+    
+    Extracted from SearchStrategyAnalysis/Pathfinder.py lines 2420-2475 (mainCalculate method).
+    
+    Strategy Types (in order of evaluation):
+    1. Direct Path (score=3) - Most efficient, straight to platform
+    2. Focal Search (score=2) - Focused searching near platform
+    3. Directed Search (score=2) - Swimming in corridor toward platform
+    4. Indirect Search (score=2) - Near miss, good heading but misses platform
+    5. Semi-Focal Search (score=2) - Broader focused search
+    6. Chaining (score=1) - Circling annulus zone
+    7. Scanning (score=1) - Systematic coverage of pool
+    8. Thigmotaxis (score=0) - Wall-hugging behavior
+    9. Random Search (score=0) - High coverage, no spatial strategy
+    10. Not Recognized (score=0) - Doesn't fit any category
+    
+    Args:
+        metrics: TrialMetrics object containing all 19 calculated metrics
+        parameters: Parameters object with classification thresholds
+        maze_radius: Radius of the maze/pool (needed for percentage calculations)
+        
+    Returns:
+        Tuple of (strategy_name: str, score: int) where score is 0-3 (higher = better)
+        
+    Example:
+        >>> metrics = calculate_trial_metrics(trial, ...)
+        >>> params = Parameters()  # Use defaults
+        >>> strategy, score = classify_strategy(metrics, params, maze_radius=150)
+        >>> print(f"Strategy: {strategy} (score: {score})")
+        Strategy: Direct Path (score: 3)
+    """
+    # Extract metrics for readability
+    ipe = metrics.ipe
+    average_heading_error = metrics.average_heading_error
+    average_distance_to_swim_path_centroid = metrics.average_distance_to_swim_path_centroid
+    distance_average = metrics.distance_average
+    total_distance = metrics.total_distance
+    corridor_average = metrics.corridor_average
+    percent_traversed = metrics.percent_traversed
+    annulus_counter = metrics.annulus_counter
+    quadrant_total = metrics.quadrant_total
+    average_distance_to_centre = metrics.average_distance_to_centre
+    full_thigmo_counter = metrics.full_thigmo_counter
+    small_thigmo_counter = metrics.small_thigmo_counter
+    sample_count = metrics.sample_count
+    
+    # DIRECT PATH
+    if (ipe <= parameters.ipeMaxVal and 
+        average_heading_error <= parameters.headingMaxVal and 
+        parameters.useDirect):
+        return ("Direct Path", 3)
+    
+    # FOCAL SEARCH
+    elif (average_distance_to_swim_path_centroid < (maze_radius * parameters.distanceToSwimMaxVal / 100) and 
+          distance_average < (parameters.distanceToPlatMaxVal / 100 * maze_radius) and 
+          total_distance < parameters.focalMaxDistance and 
+          total_distance > parameters.focalMinDistance and 
+          parameters.useFocal):
+        return ("Focal Search", 2)
+    
+    # DIRECTED SEARCH
+    elif (corridor_average >= parameters.corridorAverageMinVal / 100 and 
+          ipe <= parameters.corridoripeMaxVal and 
+          total_distance < parameters.directedSearchMaxDistance and 
+          parameters.useDirected):
+        return ("Directed Search", 2)
+    
+    # INDIRECT SEARCH
+    elif (ipe < parameters.ipeIndirectMaxVal and 
+          average_heading_error < parameters.headingIndirectMaxVal and 
+          parameters.useIndirect):
+        return ("Indirect Search", 2)
+    
+    # SEMI-FOCAL SEARCH
+    elif (average_distance_to_swim_path_centroid < (maze_radius * parameters.distanceToSwimMaxVal2 / 100) and 
+          distance_average < (parameters.distanceToPlatMaxVal2 / 100 * maze_radius) and 
+          total_distance < parameters.semiFocalMaxDistance and 
+          total_distance > parameters.semiFocalMinDistance and 
+          parameters.useSemiFocal):
+        return ("Semi-focal Search", 2)
+    
+    # CHAINING
+    elif (float(annulus_counter / sample_count) > parameters.annulusCounterMaxVal / 100 and 
+          quadrant_total >= parameters.quadrantTotalMaxVal and 
+          percent_traversed < parameters.chainingMaxCoverage and 
+          parameters.useChaining):
+        return ("Chaining", 1)
+    
+    # SCANNING
+    elif (parameters.percentTraversedMinVal <= percent_traversed and 
+          parameters.percentTraversedMaxVal > percent_traversed and 
+          average_distance_to_centre <= (parameters.distanceToCentreMaxVal / 100 * maze_radius) and 
+          parameters.useScanning):
+        return ("Scanning", 1)
+    
+    # THIGMOTAXIS
+    elif (full_thigmo_counter / sample_count >= parameters.fullThigmoMinVal / 100 and 
+          small_thigmo_counter / sample_count >= parameters.smallThigmoMinVal / 100 and 
+          total_distance > parameters.thigmoMinDistance and 
+          parameters.useThigmotaxis):
+        return ("Thigmotaxis", 0)
+    
+    # RANDOM SEARCH
+    elif (percent_traversed >= parameters.percentTraversedRandomMaxVal and 
+          parameters.useRandom):
+        return ("Random Search", 0)
+    
+    # NOT RECOGNIZED
+    else:
+        return ("Not Recognized", 0)
+
+
+def aggregate_heatmap_data(
+    experiment,  # Experiment object (iterable of trials)
+    filters: Dict[str, Any],
+    gridsize: int = 50,
+    gaussian_sigma: float = 2.0
+) -> HeatmapData:
+    """
+    Aggregate position data from trials into heatmap array for visualization.
+    
+    Pure analysis function - NO plotting or GUI dependencies.
+    Extracted from SearchStrategyAnalysis/Pathfinder.py heatmap() method (lines 1557-1689).
+    
+    This function:
+    1. Filters trials by day and trial number ranges
+    2. Collects x, y position coordinates from matching trials
+    3. Applies Gaussian smoothing to reduce noise
+    4. Computes spatial extent and 2D histogram
+    5. Returns HeatmapData ready for visualization
+    
+    Args:
+        experiment: Experiment object containing trials (iterable)
+        filters: Dictionary with filter parameters:
+            - 'day_filter': str - "All", "1", "1-3", etc.
+            - 'trial_filter': str - "All", "1", "1-5", etc.
+        gridsize: Grid size for hexbin/heatmap (default: 50)
+        gaussian_sigma: Sigma parameter for Gaussian smoothing (default: 2.0)
+        
+    Returns:
+        HeatmapData object containing:
+            - x_smoothed, y_smoothed: Gaussian-filtered coordinates
+            - x_raw, y_raw: Original coordinates
+            - extent: (xMin, xMax, yMin, yMax)
+            - gridsize: Grid size for visualization
+            - histogram, xedges, yedges: Optional 2D histogram data
+            
+    Example:
+        >>> filters = {'day_filter': 'All', 'trial_filter': '1-3'}
+        >>> heatmap_data = aggregate_heatmap_data(experiment, filters, gridsize=50)
+        >>> # Now pass heatmap_data to visualization function
+    """
+    # Parse filters
+    day_filter = filters.get('day_filter', 'All')
+    trial_filter = filters.get('trial_filter', 'All')
+    
+    # Parse day range
+    day_start_stop: List[float] = []
+    if day_filter == "All" or day_filter == "all" or day_filter == "":
+        day_start_stop = [1, float(math.inf)]
+    elif "-" in day_filter:
+        parts = day_filter.split("-", 1)
+        day_start_stop = [int(parts[0]), int(parts[1])]
+    else:
+        day_start_stop = [int(day_filter), int(day_filter)]
+    
+    # Parse trial range
+    trial_start_stop: List[float] = []
+    if trial_filter == "All" or trial_filter == "all" or trial_filter == "":
+        trial_start_stop = [1, float(math.inf)]
+    elif "-" in trial_filter:
+        parts = trial_filter.split("-", 1)
+        trial_start_stop = [int(parts[0]), int(parts[1])]
+    else:
+        trial_start_stop = [int(trial_filter), int(trial_filter)]
+    
+    # Initialize data collection
+    x: List[float] = []
+    y: List[float] = []
+    x_min = float('inf')
+    y_min = float('inf')
+    x_max = float('-inf')
+    y_max = float('-inf')
+    
+    day_num = 0
+    trial_num: Dict[str, int] = {}
+    cur_date = None
+    
+    # Iterate through trials and collect position data
+    for a_trial in experiment:
+        # Track animal identifier
+        animal = ""
+        if hasattr(experiment, 'hasAnimalNames') and experiment.hasAnimalNames:
+            if hasattr(a_trial, 'animal'):
+                animal = a_trial.animal.replace("*", "")
+        
+        # Track day number
+        if hasattr(experiment, 'hasDateInfo') and experiment.hasDateInfo:
+            if hasattr(a_trial, 'date'):
+                trial_date = a_trial.date.date() if hasattr(a_trial.date, 'date') else a_trial.date
+                if trial_date != cur_date:
+                    day_num += 1
+                    cur_date = trial_date
+                    trial_num = {}
+                    trial_num[animal] = 1
+                elif animal in trial_num:
+                    trial_num[animal] += 1
+                else:
+                    trial_num[animal] = 1
+            else:
+                if animal in trial_num:
+                    trial_num[animal] += 1
+                else:
+                    trial_num[animal] = 1
+        else:
+            if animal in trial_num:
+                trial_num[animal] += 1
+            else:
+                trial_num[animal] = 1
+        
+        # Get datapoints from trial
+        if hasattr(a_trial, 'datapointList'):
+            datapoints = a_trial.datapointList
+        elif hasattr(a_trial, 'trajectory'):
+            datapoints = a_trial.trajectory
+        else:
+            try:
+                datapoints = list(a_trial)
+            except TypeError:
+                logging.warning(f"Could not iterate trial: {a_trial}")
+                continue
+        
+        # Helper functions to access datapoint coordinates
+        def get_x(dp):
+            if hasattr(dp, 'getx'):
+                return dp.getx()
+            return dp.x
+        
+        def get_y(dp):
+            if hasattr(dp, 'gety'):
+                return dp.gety()
+            return dp.y
+        
+        # Collect coordinates from datapoints that pass filters
+        for a_datapoint in datapoints:
+            # Apply day and trial filters
+            passes_filter = True
+            
+            if day_num != 0 and trial_num:
+                if not (day_num >= day_start_stop[0] and day_num <= day_start_stop[1]):
+                    passes_filter = False
+                if animal in trial_num:
+                    if not (trial_num[animal] >= trial_start_stop[0] and 
+                           trial_num[animal] <= trial_start_stop[1]):
+                        passes_filter = False
+            
+            if not passes_filter:
+                continue
+            
+            # Skip missing data points
+            x_val = get_x(a_datapoint)
+            y_val = get_y(a_datapoint)
+            
+            if x_val == "-" or y_val == "-":
+                continue
+            
+            # Convert to float and collect
+            try:
+                x_float = float(x_val)
+                y_float = float(y_val)
+            except (TypeError, ValueError):
+                logging.warning(f"Could not convert coordinates to float: x={x_val}, y={y_val}")
+                continue
+            
+            x.append(x_float)
+            y.append(y_float)
+            
+            # Track extent
+            if x_float < x_min:
+                x_min = x_float
+            if y_float < y_min:
+                y_min = y_float
+            if x_float > x_max:
+                x_max = x_float
+            if y_float > y_max:
+                y_max = y_float
+    
+    # Handle empty data case
+    if len(x) == 0 or len(y) == 0:
+        logging.warning("No data points collected after filtering")
+        return HeatmapData(
+            x_smoothed=np.array([]),
+            y_smoothed=np.array([]),
+            x_raw=[],
+            y_raw=[],
+            extent=(0.0, 0.0, 0.0, 0.0),
+            gridsize=gridsize,
+            histogram=None,
+            xedges=None,
+            yedges=None
+        )
+    
+    # Apply Gaussian smoothing to reduce noise
+    # Uses scipy.ndimage.gaussian_filter (pure analysis, no plotting)
+    x_smoothed = sp.filters.gaussian_filter(x, sigma=gaussian_sigma, order=0)
+    y_smoothed = sp.filters.gaussian_filter(y, sigma=gaussian_sigma, order=0)
+    
+    # Create 2D histogram (optional - can also be computed by visualization layer)
+    histogram, xedges, yedges = np.histogram2d(x_smoothed, y_smoothed)
+    
+    # Return aggregated data
+    return HeatmapData(
+        x_smoothed=x_smoothed,
+        y_smoothed=y_smoothed,
+        x_raw=x,
+        y_raw=y,
+        extent=(x_min, x_max, y_min, y_max),
+        gridsize=gridsize,
+        histogram=histogram,
+        xedges=xedges,
+        yedges=yedges
+    )
+
+
+def calculate_auto_parameters(
+    experiment,  # Experiment object (iterable of trials)
+    max_trial_length: float = 50.0,
+    manual_goal: Optional[Tuple[float, float]] = None,
+    manual_maze_centre: Optional[Tuple[float, float]] = None,
+    manual_maze_diameter: Optional[float] = None,
+    manual_goal_diameter: Optional[float] = None
+) -> AutoParameters:
+    """
+    Automatically calculate experimental parameters from trial data.
+    
+    Pure analysis function - NO GUI dependencies (messagebox, status updates, etc.).
+    Extracted from SearchStrategyAnalysis/Pathfinder.py getAutoLocations() method (lines 1732-1935).
+    
+    This function analyzes trial trajectories to estimate:
+    1. Maze center position (midpoint of spatial extent)
+    2. Platform/goal position (average end position within time limit)
+    3. Maze diameter (full spatial extent)
+    4. Platform diameter (estimated from position variance)
+    
+    Args:
+        experiment: Experiment object containing trials (iterable)
+        max_trial_length: Maximum time (seconds) to consider for platform estimation (default: 50.0)
+        manual_goal: Optional manual goal position (x, y) - skips auto-calculation
+        manual_maze_centre: Optional manual maze centre (x, y) - skips auto-calculation
+        manual_maze_diameter: Optional manual maze diameter - skips auto-calculation
+        manual_goal_diameter: Optional manual goal diameter - skips auto-calculation
+        
+    Returns:
+        AutoParameters object containing estimated or manual parameters
+        
+    Raises:
+        ValueError: If insufficient data to calculate parameters
+        
+    Example:
+        >>> params = calculate_auto_parameters(experiment)
+        >>> print(f"Goal: ({params.goal_x}, {params.goal_y})")
+        >>> print(f"Maze centre: ({params.maze_centre_x}, {params.maze_centre_y})")
+    """
+    # Initialize variables
+    plat_est_x = 0.0
+    plat_est_y = 0.0
+    max_x = 0.0
+    min_x = 0.0
+    max_y = 0.0
+    min_y = 0.0
+    av_max_y = 0.0
+    av_min_y = 0.0
+    av_max_x = 0.0
+    av_min_x = 0.0
+    abs_max_x = 0.0
+    abs_max_y = 0.0
+    abs_min_x = 0.0
+    abs_min_y = 0.0
+    maze_centre_est_x = 0.0
+    maze_centre_est_y = 0.0
+    maze_radius = 0.0
+    count = 0.0
+    centre_count = 0.0
+    last_x = 0.0
+    last_y = 0.0
+    plat_max_x = -100.0
+    plat_min_x = 100.0
+    plat_max_y = -100.0
+    plat_min_y = 100.0
+    plat_est_diam = 0.0
+    
+    warnings: List[str] = []
+    
+    # Determine which parameters need calculation
+    need_goal = manual_goal is None
+    need_maze_centre = manual_maze_centre is None
+    need_maze_diameter = manual_maze_diameter is None
+    need_goal_diameter = manual_goal_diameter is None
+    
+    # Set manual values if provided
+    goal_x = manual_goal[0] if manual_goal else 0.0
+    goal_y = manual_goal[1] if manual_goal else 0.0
+    maze_centre_x = manual_maze_centre[0] if manual_maze_centre else 0.0
+    maze_centre_y = manual_maze_centre[1] if manual_maze_centre else 0.0
+    maze_diameter = manual_maze_diameter if manual_maze_diameter else 0.0
+    goal_diameter = manual_goal_diameter if manual_goal_diameter else 0.0
+    
+    # If all values are manual, return immediately
+    if not (need_goal or need_maze_centre or need_maze_diameter or need_goal_diameter):
+        return AutoParameters(
+            maze_centre_x=maze_centre_x,
+            maze_centre_y=maze_centre_y,
+            goal_x=goal_x,
+            goal_y=goal_y,
+            maze_diameter=maze_diameter,
+            maze_radius=maze_diameter / 2.0,
+            goal_diameter=goal_diameter,
+            trial_count=0,
+            warnings=["All parameters set manually"]
+        )
+    
+    # Iterate through trials to collect data
+    for a_trial in experiment:
+        # Get datapoints from trial
+        if hasattr(a_trial, 'datapointList'):
+            datapoints = a_trial.datapointList
+        elif hasattr(a_trial, 'trajectory'):
+            datapoints = a_trial.trajectory
+        else:
+            try:
+                datapoints = list(a_trial)
+            except TypeError:
+                logging.warning(f"Could not iterate trial: {a_trial}")
+                continue
+        
+        # Helper functions to access datapoint attributes
+        def get_x(dp):
+            if hasattr(dp, 'getx'):
+                return dp.getx()
+            return dp.x
+        
+        def get_y(dp):
+            if hasattr(dp, 'gety'):
+                return dp.gety()
+            return dp.y
+        
+        def get_time(dp):
+            if hasattr(dp, 'gettime'):
+                return dp.gettime()
+            return dp.time
+        
+        # Reset trial-level tracking
+        max_x = 0.0
+        min_x = 0.0
+        max_y = 0.0
+        min_y = 0.0
+        
+        # Process datapoints
+        for a_datapoint in datapoints:
+            x_val = get_x(a_datapoint)
+            y_val = get_y(a_datapoint)
+            
+            # Skip missing data
+            if x_val == "-" or x_val == "":
+                continue
+            if y_val == "-" or y_val == "":
+                continue
+            
+            try:
+                x_float = float(x_val)
+                y_float = float(y_val)
+                time_val = float(get_time(a_datapoint))
+            except (TypeError, ValueError):
+                continue
+            
+            # Track last position within time limit (for platform estimation)
+            skip_flag = False
+            if time_val < max_trial_length:
+                last_x = x_float
+                last_y = y_float
+                skip_flag = False
+            else:
+                skip_flag = True
+            
+            # Track spatial extent for this trial
+            if x_float > max_x:
+                max_x = x_float
+            if x_float < min_x:
+                min_x = x_float
+            if y_float > max_y:
+                max_y = y_float
+            if y_float < min_y:
+                min_y = y_float
+            
+            # Track absolute spatial extent across all trials
+            if max_x > abs_max_x:
+                abs_max_x = max_x
+            if min_x < abs_min_x:
+                abs_min_x = min_x
+            if max_y > abs_max_y:
+                abs_max_y = max_y
+            if min_y < abs_min_y:
+                abs_min_y = min_y
+            
+            # Accumulate for averaging
+            av_max_x += max_x
+            av_max_y += max_y
+            av_min_x += min_x
+            av_min_y += min_y
+            centre_count += 1.0
+            
+            # Track platform position estimates
+            if not skip_flag:
+                count += 1.0
+                plat_est_x += last_x
+                plat_est_y += last_y
+                
+                # Track platform extent for diameter estimation
+                if last_x > plat_max_x:
+                    plat_max_x = last_x
+                if last_x < plat_min_x:
+                    plat_min_x = last_x
+                if last_y > plat_max_y:
+                    plat_max_y = last_y
+                if last_y < plat_min_y:
+                    plat_min_y = last_y
+    
+    # Validate we have enough data
+    if centre_count < 1 and (need_maze_centre or need_maze_diameter):
+        raise ValueError("Unable to determine maze parameters - no valid datapoints found")
+    
+    if count < 1 and need_goal:
+        raise ValueError("Unable to determine goal position - no valid datapoints within time limit")
+    
+    # Calculate maze centre if needed
+    if need_maze_centre:
+        av_max_x = av_max_x / centre_count
+        av_max_y = av_max_y / centre_count
+        av_min_x = av_min_x / centre_count
+        av_min_y = av_min_y / centre_count
+        maze_centre_est_x = (av_max_x + av_min_x) / 2
+        maze_centre_est_y = (av_max_y + av_min_y) / 2
+        maze_centre_x = maze_centre_est_x
+        maze_centre_y = maze_centre_est_y
+        logging.info(f"Automatic maze centre calculated as: {maze_centre_est_x}, {maze_centre_est_y}")
+    
+    # Calculate goal position if needed
+    if need_goal:
+        plat_est_x = plat_est_x / count
+        plat_est_y = plat_est_y / count
+        goal_x = plat_est_x
+        goal_y = plat_est_y
+        logging.info(f"Automatic goal position calculated as: {plat_est_x}, {plat_est_y}")
+    
+    # Calculate goal diameter if needed
+    if need_goal_diameter:
+        plat_est_diam = ((plat_max_x - plat_min_x) + (plat_max_y - plat_min_y)) / 2
+        if plat_est_diam > 50 or plat_est_diam < 1:
+            plat_est_diam = 10.0
+            warnings.append(f"Goal diameter estimation unreliable (range: {plat_est_diam}), defaulted to 10.0")
+            logging.warning(f"Automatic goal diameter calculation failed. Defaulted to: {math.ceil(plat_est_diam)}")
+        else:
+            logging.info(f"Automatic goal diameter calculated as: {math.ceil(plat_est_diam)}")
+        goal_diameter = plat_est_diam
+    
+    # Calculate maze diameter if needed
+    if need_maze_diameter:
+        maze_diam_est = ((abs(abs_max_x) + abs(abs_min_x)) + (abs(abs_max_y) + abs(abs_min_y))) / 2
+        logging.info(f"Automatic maze diameter calculated as: {maze_diam_est}")
+        maze_diameter = maze_diam_est
+        maze_radius = maze_diameter / 2.0
+    else:
+        maze_radius = maze_diameter / 2.0
+    
+    # Return results
+    return AutoParameters(
+        maze_centre_x=maze_centre_x,
+        maze_centre_y=maze_centre_y,
+        goal_x=goal_x,
+        goal_y=goal_y,
+        maze_diameter=maze_diameter,
+        maze_radius=maze_radius,
+        goal_diameter=goal_diameter,
+        trial_count=int(count if need_goal else centre_count),
+        warnings=warnings
     )
