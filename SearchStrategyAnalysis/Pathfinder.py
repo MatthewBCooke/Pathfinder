@@ -36,24 +36,12 @@ from scipy.stats import norm
 import re
 import traceback
 
-try:  # Imports MATLAB engine if available
-    import matlab.engine
-
-    canUseMatlab = True
-except:  # Notify user that MATLAB is unavailable
-    print("MATLAB Engine Unavailable")
-    canUseMatlab = False
-
-if not canUseMatlab:
-    try:  # Imports Octave engine if available
-        from oct2py import Oct2Py
-
-        canUseOctave = True
-        print("Using Octave Engine")
-    except:  # Notify user that Octave is unavailable
-        print("Octave Engine Unavailable")
-        print("Install MATLAB or Octave if you wish to run entropy calculations")
-        canUseOctave = False
+try:  # Imports pure Python entropy function
+    from entropy import entropy
+    canUseEntropy = True
+except:  # Notify user that entropy module is unavailable
+    print("Entropy Module Unavailable")
+    canUseEntropy = False
 
 def is_dark_mode():  # Detect if system is in Dark Mode for MacOS
     if platform.system() != 'Darwin':
@@ -510,13 +498,13 @@ class mainClass:
         self.manualForAllL.bind("<Leave>", self.on_leave)
         rowCount = rowCount + 1
 
-        if canUseMatlab or canUseOctave:
+        if canUseEntropy:
             self.entropyL = Label(self.paramFrame, text="Run entropy calculation: ",
                                   bg=bg_color, fg=fg_color)  # label for the tickbox
             self.entropyL.grid(row=rowCount, column=0, sticky=E)  # placed here
             self.entropyC = Checkbutton(self.paramFrame, variable=useEntropy, bg=bg_color, fg=fg_color)  # the actual tickbox
             self.entropyC.grid(row=rowCount, column=1)
-            self.entropyL.bind("<Enter>", partial(self.on_enter, "Calculates the entropy of the trial (slow)"))
+            self.entropyL.bind("<Enter>", partial(self.on_enter, "Calculates the entropy of the trial"))
             self.entropyL.bind("<Leave>", self.on_leave)
             rowCount = rowCount + 1
 
@@ -1723,25 +1711,17 @@ class mainClass:
     def calculateEntropy(self, theTrial, goalX, goalY):
         xList = []
         yList = []
-
-        if canUseOctave:
-            oc = Oct2Py()
-            current_dir = os.path.dirname(__file__)
-            oc.addpath(current_dir)
-        else:
-            try:
-                eng = matlab.engine.start_matlab()
-                logging.info("Matlab Engine Started")
-            except:
-                logging.info("Matlab Engine Running")
         
         for aDatapoint in theTrial:
             xList.append(float(aDatapoint.getx()))
             yList.append(float(aDatapoint.gety()))
-        if canUseMatlab:
-            entropyResult = eng.Entropy(xList, yList, goalX, goalY)
-        elif canUseOctave:
-            entropyResult = oc.Entropy(xList, yList, goalX, goalY)
+        
+        if canUseEntropy:
+            entropyResult = entropy(xList, yList, goalX, goalY)
+        else:
+            logging.warning("Entropy calculation skipped: entropy module unavailable")
+            entropyResult = None
+        
         return entropyResult
 
     def getAutoLocations(self, theExperiment, goalX, goalY, goalPosVar, mazeCentreX, mazeCentreY, mazeCentreVar,
