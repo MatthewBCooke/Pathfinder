@@ -123,7 +123,18 @@ class AnalysisWorker(QThread):
                     return
                 
                 # Update progress
-                percent = int((i / total_trials) * 100)
+                # Safely compute percent, avoid NaN/Inf
+                try:
+                    if total_trials and not (isinstance(i, float) and (math.isnan(i) or math.isinf(i))):
+                        percent_val = (i / total_trials) * 100
+                        if math.isnan(percent_val) or math.isinf(percent_val):
+                            percent = 0
+                        else:
+                            percent = int(percent_val)
+                    else:
+                        percent = 0
+                except Exception:
+                    percent = 0
                 self.progress.emit(
                     percent,
                     f"Analyzing trial {i+1}/{total_trials} (Day {trial.day}, Trial {trial.trial_number})"

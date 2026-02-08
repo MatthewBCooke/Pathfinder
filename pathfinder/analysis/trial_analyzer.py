@@ -94,25 +94,42 @@ class TrialAnalyzer:
         # Wall hugging (thigmotaxis) detection
         wall_time = 0
         wall_threshold = self.geometry.pool_radius * 0.2  # Within 20% of radius from wall
-        
+
+        valid_wall_points = 0
         for point in trajectory:
-            dist_to_wall = self.geometry.distance_to_wall(point.x, point.y)
+            x, y = point.x, point.y
+            if (
+                x is None or y is None or
+                (hasattr(x, '__float__') and (math.isnan(x) or math.isinf(x))) or
+                (hasattr(y, '__float__') and (math.isnan(y) or math.isinf(y)))
+            ):
+                continue  # Skip invalid points
+            dist_to_wall = self.geometry.distance_to_wall(x, y)
             if dist_to_wall < wall_threshold:
                 wall_time += 1
-        
-        metrics['percent_near_wall'] = (wall_time / len(trajectory)) * 100 if trajectory else 0
-        
+            valid_wall_points += 1
+
+        metrics['percent_near_wall'] = (wall_time / valid_wall_points) * 100 if valid_wall_points else 0
+
         # Platform region visits
-        platform_visits = 0
         platform_time = 0
         platform_zone = self.geometry.platform_radius * 2.5  # Zone around platform
-        
+
+        valid_platform_points = 0
         for point in trajectory:
-            dist_to_platform = self.geometry.distance_to_platform(point.x, point.y)
+            x, y = point.x, point.y
+            if (
+                x is None or y is None or
+                (hasattr(x, '__float__') and (math.isnan(x) or math.isinf(x))) or
+                (hasattr(y, '__float__') and (math.isnan(y) or math.isinf(y)))
+            ):
+                continue  # Skip invalid points
+            dist_to_platform = self.geometry.distance_to_platform(x, y)
             if dist_to_platform < platform_zone:
                 platform_time += 1
-        
-        metrics['percent_in_platform_zone'] = (platform_time / len(trajectory)) * 100 if trajectory else 0
+            valid_platform_points += 1
+
+        metrics['percent_in_platform_zone'] = (platform_time / valid_platform_points) * 100 if valid_platform_points else 0
         
         # Initial heading error (IPE)
         if len(trajectory) >= 2:
@@ -131,9 +148,16 @@ class TrialAnalyzer:
         # Coverage (simplified - percentage of pool quadrants visited)
         quadrants_visited = set()
         for point in trajectory:
-            q = self.geometry.get_quadrant(point.x, point.y)
+            x, y = point.x, point.y
+            if (
+                x is None or y is None or
+                (hasattr(x, '__float__') and (math.isnan(x) or math.isinf(x))) or
+                (hasattr(y, '__float__') and (math.isnan(y) or math.isinf(y)))
+            ):
+                continue  # Skip invalid points
+            q = self.geometry.get_quadrant(x, y)
             quadrants_visited.add(q)
-        
+
         metrics['quadrant_coverage'] = len(quadrants_visited)
         
         return metrics

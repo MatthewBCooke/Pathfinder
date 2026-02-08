@@ -150,68 +150,90 @@ class HeatmapWidget(QWidget):
         self.canvas.draw()
     
     def _plot_heatmap(self):
-        """Generate occupancy heatmap"""
+        """Generate occupancy heatmap with NaN/Inf checks"""
         self.ax.clear()
-        
+
         # Get filtered trials
         trials = self._get_filtered_trials()
         if not trials:
             self._plot_empty()
             return
-        
+
         # Get pool geometry from first trial
         trial = trials[0]
         pool_center = trial.pool_center
         pool_radius = trial.pool_diameter / 2
-        
+
         # Create occupancy grid
         grid_size = 100
-        x_bins = np.linspace(pool_center[0] - pool_radius, 
-                            pool_center[0] + pool_radius, grid_size)
-        y_bins = np.linspace(pool_center[1] - pool_radius, 
-                            pool_center[1] + pool_radius, grid_size)
-        
+        x_bins = np.linspace(pool_center[0] - pool_radius,
+                             pool_center[0] + pool_radius, grid_size)
+        y_bins = np.linspace(pool_center[1] - pool_radius,
+                             pool_center[1] + pool_radius, grid_size)
+
         occupancy = np.zeros((grid_size - 1, grid_size - 1))
-        
-        # Accumulate trajectory points
+
+        # Accumulate trajectory points, skipping NaN/Inf
         for trial in trials:
             for point in trial.trajectory:
-                x_idx = np.digitize(point.x, x_bins) - 1
-                y_idx = np.digitize(point.y, y_bins) - 1
-                
+                x, y = point.x, point.y
+                if (
+                    x is None or y is None or
+                    np.isnan(x) or np.isnan(y) or
+                    np.isinf(x) or np.isinf(y)
+                ):
+                    continue  # Skip invalid points
+                x_idx = np.digitize(x, x_bins) - 1
+                y_idx = np.digitize(y, y_bins) - 1
                 if 0 <= x_idx < grid_size - 1 and 0 <= y_idx < grid_size - 1:
                     occupancy[y_idx, x_idx] += 1
-        
+
         # Smooth the heatmap
         occupancy_smooth = gaussian_filter(occupancy, sigma=2.0)
-        
+
+        # Check for NaN/Inf in bins and occupancy
+        if (
+            np.any(np.isnan(x_bins)) or np.any(np.isnan(y_bins)) or
+            np.any(np.isnan(occupancy_smooth)) or
+            np.any(np.isinf(x_bins)) or np.any(np.isinf(y_bins)) or
+            np.any(np.isinf(occupancy_smooth))
+        ):
+            self.ax.clear()
+            self.ax.text(0.5, 0.5, "Invalid data for heatmap (NaN or Inf detected)",
+                         ha='center', va='center', fontsize=14, color='red')
+            self.ax.set_xlim(0, 1)
+            self.ax.set_ylim(0, 1)
+            self.ax.axis('off')
+            self.canvas.draw()
+            return
+
         # Plot heatmap
         im = self.ax.imshow(occupancy_smooth, cmap='hot', origin='lower',
-                           extent=[x_bins[0], x_bins[-1], y_bins[0], y_bins[-1]],
-                           interpolation='bilinear')
-        
+                            extent=[x_bins[0], x_bins[-1], y_bins[0], y_bins[-1]],
+                            interpolation='bilinear')
+
         # Add pool boundary
-        circle = plt.Circle(pool_center, pool_radius, color='cyan', 
-                           fill=False, linewidth=2, linestyle='--')
+        circle = plt.Circle(pool_center, pool_radius, color='cyan',
+                            fill=False, linewidth=2, linestyle='--')
         self.ax.add_patch(circle)
-        
+
         # Add platform location
         platform = plt.Circle(trial.platform_position, trial.platform_diameter / 2,
-                             color='lime', fill=True, alpha=0.5, label='Platform')
+                              color='lime', fill=True, alpha=0.5, label='Platform')
         self.ax.add_patch(platform)
-        
+
         # Formatting
         self.ax.set_aspect('equal')
         self.ax.set_title(f'Occupancy Heatmap ({len(trials)} trials)', fontsize=12, fontweight='bold')
         self.ax.set_xlabel('X Position')
         self.ax.set_ylabel('Y Position')
-        
+
         # Colorbar
         cbar = self.figure.colorbar(im, ax=self.ax)
         cbar.set_label('Occupancy', rotation=270, labelpad=15)
-        
+
         self.ax.legend(loc='upper right')
-        
+
         self.canvas.draw()
     
     def _plot_individual_paths(self):

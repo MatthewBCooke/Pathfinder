@@ -709,7 +709,14 @@ class ProgressDialog(QDialog):
         self.trial_label.setText(f"Analyzing: {trial_name}")
         
         if self.total_trials > 0:
-            progress_pct = int((completed / self.total_trials) * 100)
+            try:
+                pct = (completed / self.total_trials) * 100
+                if isinstance(pct, float) and (math.isnan(pct) or math.isinf(pct)):
+                    progress_pct = 0
+                else:
+                    progress_pct = int(pct)
+            except Exception:
+                progress_pct = 0
             self.progress_bar.setValue(progress_pct)
             
         self.status_label.setText(f"{completed} / {self.total_trials} trials completed")

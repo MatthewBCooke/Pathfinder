@@ -254,7 +254,15 @@ class SummaryWidget(QWidget):
             }}
         """)
         bar_widget.setFixedHeight(20)
-        bar_widget.setMinimumWidth(int(percentage * 2))  # Scale for visualization
+        width_val = percentage * 2
+        try:
+            if isinstance(width_val, float) and (math.isnan(width_val) or math.isinf(width_val)):
+                width = 0
+            else:
+                width = int(width_val)
+        except Exception:
+            width = 0
+        bar_widget.setMinimumWidth(width)  # Scale for visualization
         layout.addWidget(bar_widget)
         
         # Count and percentage

@@ -282,15 +282,43 @@ def _parse_trial_dataframe(
     # Extract trajectory
     trajectory = []
     
+    prev_time = prev_x = prev_y = None
     for _, row in df.iterrows():
         try:
-            time = _parse_time_value(row[time_col])
-            x = float(row[x_col])
-            y = float(row[y_col])
-            
+            # Parse values
+            time_val = row[time_col]
+            x_val = row[x_col]
+            y_val = row[y_col]
+
+            # Check for missing or NaN/Inf
+            missing = False
+            for v in (time_val, x_val, y_val):
+                if v is None:
+                    missing = True
+                try:
+                    if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+                        missing = True
+                except Exception:
+                    pass
+            if missing:
+                # Option 1: skip row entirely
+                logger.warning(f"Skipping row with missing/invalid time/x/y in trial {trial_num}")
+                continue
+                # Option 2: use previous value instead (uncomment to enable)
+                # if prev_time is not None and prev_x is not None and prev_y is not None:
+                #     time, x, y = prev_time, prev_x, prev_y
+                # else:
+                #     logger.warning(f"Skipping row with missing/invalid time/x/y in trial {trial_num}")
+                #     continue
+            else:
+                time = _parse_time_value(time_val)
+                x = float(x_val)
+                y = float(y_val)
+                prev_time, prev_x, prev_y = time, x, y
+
             point = Datapoint(x=x, y=y, time=time)
             trajectory.append(point)
-            
+
         except (ValueError, KeyError) as e:
             logger.warning(f"Skipping invalid data point: {e}")
             continue
