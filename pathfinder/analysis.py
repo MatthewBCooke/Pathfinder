@@ -14,18 +14,20 @@ from pathfinder.types import TrialMetrics, AnalysisConfig, Parameters, HeatmapDa
 
 # Import entropy - handle if module is unavailable
 try:
-    from pathfinder.entropy import entropy as calculate_entropy
+    from pathfinder.entropy import entropy as calculate_entropy  # type: ignore
     CAN_USE_ENTROPY = True
 except ImportError:
     try:
         # Fallback: try importing from original location
         import sys
         sys.path.append('/tmp/Pathfinder/SearchStrategyAnalysis')
-        from entropy import entropy as calculate_entropy
+        from entropy import entropy as calculate_entropy # type: ignore
         CAN_USE_ENTROPY = True
     except ImportError:
         CAN_USE_ENTROPY = False
         logging.warning("Entropy module unavailable - entropy calculations will be disabled")
+        def calculate_entropy(*args, **kwargs):
+            raise ImportError("Entropy module unavailable")
 
 
 def unit_vector(vector: np.ndarray) -> np.ndarray:
@@ -198,6 +200,7 @@ def calculate_trial_metrics(
     
     start_x = 0.0
     start_y = 0.0
+    start_time = 0.0
     
     old_item_x = 0.0
     old_item_y = 0.0
@@ -791,8 +794,8 @@ def aggregate_heatmap_data(
     
     # Apply Gaussian smoothing to reduce noise
     # Uses scipy.ndimage.gaussian_filter (pure analysis, no plotting)
-    x_smoothed = sp.filters.gaussian_filter(x, sigma=gaussian_sigma, order=0)
-    y_smoothed = sp.filters.gaussian_filter(y, sigma=gaussian_sigma, order=0)
+    x_smoothed = sp.gaussian_filter(x, sigma=gaussian_sigma, order=0)
+    y_smoothed = sp.gaussian_filter(y, sigma=gaussian_sigma, order=0)
     
     # Create 2D histogram (optional - can also be computed by visualization layer)
     histogram, xedges, yedges = np.histogram2d(x_smoothed, y_smoothed)
