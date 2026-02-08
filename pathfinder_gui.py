@@ -11,7 +11,7 @@ Usage:
 
 import sys
 from PyQt6.QtWidgets import QApplication
-from gui.main_window import PathfinderMainWindow
+from gui.main_window import MainWindow
 
 
 def main():
@@ -23,7 +23,7 @@ def main():
     app.setApplicationVersion("2.0.0")
     
     # Create and show main window
-    window = PathfinderMainWindow()
+    window = MainWindow()
     window.show()
     
     sys.exit(app.exec())
