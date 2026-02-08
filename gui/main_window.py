@@ -309,18 +309,18 @@ class MainWindow(QMainWindow):
         self.results_tabs = QTabWidget()
         self.results_tabs.setStyleSheet("""
             QTabWidget::pane {
-                border: 1px solid #ccc;
-                background: white;
+                border: 1px solid #555;
             }
             QTabBar::tab {
-                background: #e0e0e0;
+                background: #333;
+                color: #fff;
                 padding: 8px 20px;
                 margin-right: 2px;
                 border-top-left-radius: 4px;
                 border-top-right-radius: 4px;
             }
             QTabBar::tab:selected {
-                background: white;
+                background: #555;
                 border-bottom: none;
             }
         """)
@@ -363,16 +363,22 @@ class MainWindow(QMainWindow):
         table.setAlternatingRowColors(True)
         table.setStyleSheet("""
             QTableWidget {
-                gridline-color: #d0d0d0;
-                background-color: white;
+                gridline-color: #555;
+                background-color: #2b2b2b;
+                color: #fff;
+                alternate-background-color: #333;
+                selection-background-color: #0d47a1;
             }
             QTableWidget::item {
                 padding: 5px;
+                background-color: #2b2b2b;
+                color: #fff;
             }
             QHeaderView::section {
-                background-color: #f0f0f0;
+                background-color: #404040;
+                color: #fff;
                 padding: 8px;
-                border: 1px solid #d0d0d0;
+                border: 1px solid #555;
                 font-weight: bold;
             }
         """)
@@ -402,7 +408,7 @@ class MainWindow(QMainWindow):
         placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         placeholder.setStyleSheet("""
             QLabel {
-                color: #999;
+                color: #aaa;
                 font-size: 14px;
                 font-style: italic;
             }
@@ -433,8 +439,9 @@ class MainWindow(QMainWindow):
         self.summary_text.setReadOnly(True)
         self.summary_text.setStyleSheet("""
             QTextEdit {
-                background-color: #fafafa;
-                border: 1px solid #ddd;
+                background-color: #2b2b2b;
+                color: #fff;
+                border: 1px solid #555;
                 font-family: 'Courier New', monospace;
                 font-size: 12px;
                 padding: 10px;
