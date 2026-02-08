@@ -1,26 +1,25 @@
-# Pathfinder GUI Requirements
+# Pathfinder - Morris Water Maze Search Strategy Analysis
 # Python 3.10+ required
 
 # GUI Framework
 PyQt5>=5.15.0
 
 # Data Processing
-pandas>=1.5.0
-numpy>=1.23.0
-scipy>=1.9.0
+pandas>=2.0.0
+numpy>=1.24.0
+scipy>=1.10.0
 
 # Visualization
-matplotlib>=3.5.0
+matplotlib>=3.7.0
 
 # Data Validation
 pydantic>=2.0.0
 
 # File I/O
-openpyxl>=3.0.0      # Modern Excel support (replaces xlrd)
-xlrd>=2.0.0          # Legacy Excel support (if needed)
+openpyxl>=3.1.0
 
-# Optional: Development Tools
-# pytest>=7.0.0       # Testing
-# mypy>=1.0.0         # Type checking
-# black>=23.0.0       # Code formatting
-# pylint>=2.17.0      # Linting
+# Development (optional - uncomment as needed)
+# pytest>=7.4.0
+# pytest-qt>=4.2.0
+# mypy>=1.5.0
+# black>=23.0.0

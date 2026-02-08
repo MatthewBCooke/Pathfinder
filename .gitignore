@@ -13,6 +13,7 @@ build/
 venv/
 env/
 ENV/
+.venv
 
 # IDE
 .vscode/
@@ -29,5 +30,13 @@ Thumbs.db
 *.log
 pathfinder.log
 
-# Test data (optional - uncomment if you don't want to commit test files)
-# test_data.csv
+# PyInstaller
+*.spec
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# mypy
+.mypy_cache/
