@@ -44,8 +44,8 @@ class PathfinderMinimal(QMainWindow):
         
         # Bottom: Results table
         self.table = QTableWidget()
-        self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(["Row #", "Time", "X", "Y", "Notes"])
+        self.table.setColumnCount(20)  # Will be resized based on CSV
+        self.table.setHorizontalHeaderLabels(["Row #"] + [f"Col {i}" for i in range(19)])
         layout.addWidget(self.table)
         
         self.setStyleSheet("""
@@ -90,16 +90,21 @@ class PathfinderMinimal(QMainWindow):
                 QMessageBox.warning(self, "Error", "No data rows in CSV")
                 return
             
+            # Determine number of columns
+            max_cols = max(len(row) for row in data_rows) if data_rows else 0
+            total_cols = max_cols + 1  # +1 for row number column
+            
+            # Set table size
+            self.table.setColumnCount(total_cols)
+            self.table.setRowCount(len(data_rows))
+            
             # Set table headers from first row if it has header
             if has_header and rows[0]:
-                headers = rows[0][:5]  # First 5 columns
-                # Pad with generic names if needed
-                while len(headers) < 5:
-                    headers.append(f"Col {len(headers)}")
-                self.table.setHorizontalHeaderLabels(headers)
-            
-            # Display in table
-            self.table.setRowCount(len(data_rows))
+                headers = ["Row #"] + rows[0]
+                self.table.setHorizontalHeaderLabels(headers[:total_cols])
+            else:
+                headers = ["Row #"] + [f"Col {i}" for i in range(max_cols)]
+                self.table.setHorizontalHeaderLabels(headers[:total_cols])
             
             for row_idx, row in enumerate(data_rows):
                 # Row number (sequential from 1)
@@ -107,10 +112,10 @@ class PathfinderMinimal(QMainWindow):
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Read-only
                 self.table.setItem(row_idx, 0, item)
                 
-                # First 4 columns (time, x, y, other)
-                for col_idx in range(1, min(5, len(row) + 1)):
+                # All columns from CSV
+                for col_idx in range(len(row)):
                     try:
-                        val = row[col_idx - 1] if col_idx - 1 < len(row) else ""
+                        val = row[col_idx]
                         # Try to convert to float for display
                         if val:
                             try:
@@ -120,13 +125,15 @@ class PathfinderMinimal(QMainWindow):
                                 pass
                         item = QTableWidgetItem(str(val))
                         item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Read-only
-                        self.table.setItem(row_idx, col_idx, item)
+                        self.table.setItem(row_idx, col_idx + 1, item)  # +1 for row number column
                     except:
                         pass
             
-            # Update label
+            # Update label with column info
             file_name = Path(file_path).name
-            self.file_label.setText(f"✓ Loaded: {file_name} ({len(data_rows)} rows)")
+            cols = total_cols - 1  # Exclude row number column
+            col_names = ", ".join(rows[0][:3]) + ("..." if len(rows[0]) > 3 else "") if has_header else f"{cols} columns"
+            self.file_label.setText(f"✓ Loaded: {file_name} ({len(data_rows)} rows, {cols} cols: {col_names})")
             
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load file:\n{str(e)}")
