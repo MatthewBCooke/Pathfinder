@@ -23,8 +23,8 @@ class SearchStrategy(str, Enum):
 
 class Datapoint(BaseModel):
     """Single X-Y coordinate from tracking data"""
-    x: float = Field(..., description="X coordinate in pixels or cm")
-    y: float = Field(..., description="Y coordinate in pixels or cm")
+    x: float = Field(..., description="X coordinate in tracking software units")
+    y: float = Field(..., description="Y coordinate in tracking software units")
     time: float = Field(..., description="Time in seconds")
     
     @validator('x', 'y', 'time')
@@ -96,9 +96,9 @@ class Trial(BaseModel):
         ..., 
         description="Platform location (x, y)"
     )
-    platform_diameter: float = Field(..., description="Platform diameter in pixels/cm")
+    platform_diameter: float = Field(..., description="Platform diameter in tracking software units")
     pool_center: Tuple[float, float] = Field(..., description="Pool center (x, y)")
-    pool_diameter: float = Field(..., description="Pool diameter in pixels/cm")
+    pool_diameter: float = Field(..., description="Pool diameter in tracking software units")
     
     # Analysis results
     search_strategy: Optional[SearchStrategy] = Field(

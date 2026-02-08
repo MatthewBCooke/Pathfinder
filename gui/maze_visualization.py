@@ -46,7 +46,7 @@ class MazeVisualizationWidget(QWidget):
         legend = QLabel(
             "🔵 Pool  |  🔴 Platform  |  "
             "⚫ Thigmotaxis  |  🟡 Chaining  |  "
-            "🟣 Focal Search  |  🔵 Directed Search  |  🟢 Direct Corridor"
+            "🟣 Focal Search  |  🟢 Direct Corridor"
         )
         legend.setAlignment(Qt.AlignCenter)
         legend.setStyleSheet("font-size: 10pt; padding: 5px;")
@@ -254,18 +254,6 @@ class MazeVisualizationWidget(QWidget):
             focal_search_radius_widget
         )
 
-        # 3c. Draw directed search zone (broader search in platform area)
-        directed_search_radius = self.platform_diameter * zone_params['directed_multiplier']
-        directed_search_radius_widget = directed_search_radius * scale
-
-        painter.setPen(QPen(QColor(0, 150, 255), 2, Qt.DashLine))  # Cyan dashed
-        painter.setBrush(Qt.NoBrush)  # No fill, just outline
-        painter.drawEllipse(
-            QPointF(platform_center_widget_x, platform_center_widget_y),
-            directed_search_radius_widget,
-            directed_search_radius_widget
-        )
-
         # 4. Draw pool boundary
         painter.setPen(QPen(QColor(0, 100, 200), 3))  # Blue
         painter.setBrush(QBrush(QColor(200, 230, 255, 50)))  # Light blue, transparent
@@ -301,21 +289,21 @@ class MazeVisualizationWidget(QWidget):
         painter.drawText(
             int(pool_center_widget_x - 30),
             int(pool_center_widget_y - pool_radius_widget - 10),
-            f"Pool: {self.pool_diameter:.0f} px"
+            f"Pool: {self.pool_diameter:.0f}"
         )
 
         # Platform label
         painter.drawText(
             int(platform_center_widget_x + platform_radius_widget + 5),
             int(platform_center_widget_y),
-            f"Platform: {self.platform_diameter:.0f} px"
+            f"Platform: {self.platform_diameter:.0f}"
         )
 
         # Thigmotaxis zone label
         painter.drawText(
             int(pool_center_widget_x + thigmo_inner_radius + 5),
             int(pool_center_widget_y),
-            f"Thigmo Zone ({self.thigmotaxis_zone_percent}%)"
+            f"Thigmo Zone ({zone_params['thigmotaxis_percent']:.0f}%)"
         )
 
         # Chaining zone label
@@ -341,13 +329,6 @@ class MazeVisualizationWidget(QWidget):
             int(platform_center_widget_x + focal_search_radius_widget + 5),
             int(platform_center_widget_y + 15),
             "Focal Search"
-        )
-
-        # Directed search label
-        painter.drawText(
-            int(platform_center_widget_x + directed_search_radius_widget + 5),
-            int(platform_center_widget_y - 10),
-            "Directed Search"
         )
 
         # 8. Draw coordinate info at bottom
