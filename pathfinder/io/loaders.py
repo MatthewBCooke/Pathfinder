@@ -224,6 +224,41 @@ def _load_generic_csv(file_path: Path, parameters: Parameters = None) -> Experim
     return experiment
 
 
+def _parse_time_value(time_val) -> float:
+    """
+    Parse time value from various formats to seconds.
+    
+    Handles:
+    - Numeric seconds (float/int)
+    - HH:MM:SS.ss format
+    - H:MM:SS.ss format
+    
+    Args:
+        time_val: Time value (string or numeric)
+        
+    Returns:
+        Time in seconds as float
+    """
+    # Handle numeric values directly
+    if isinstance(time_val, (int, float)):
+        return float(time_val)
+    
+    # Handle string time formats
+    time_str = str(time_val).strip()
+    
+    # Try HH:MM:SS.ss or H:MM:SS.ss format
+    if ':' in time_str:
+        parts = time_str.split(':')
+        if len(parts) == 3:
+            hours = float(parts[0])
+            minutes = float(parts[1])
+            seconds = float(parts[2])
+            return hours * 3600 + minutes * 60 + seconds
+    
+    # Fall back to direct float conversion
+    return float(time_str)
+
+
 def _parse_trial_dataframe(
     df: pd.DataFrame,
     trial_num: int,
@@ -249,7 +284,7 @@ def _parse_trial_dataframe(
     
     for _, row in df.iterrows():
         try:
-            time = float(row[time_col])
+            time = _parse_time_value(row[time_col])
             x = float(row[x_col])
             y = float(row[y_col])
             
