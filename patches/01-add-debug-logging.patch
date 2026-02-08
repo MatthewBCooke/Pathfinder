@@ -1,0 +1,21 @@
+--- a/pathfinder/analysis/trial_analyzer.py
++++ b/pathfinder/analysis/trial_analyzer.py
+@@ -195,6 +195,18 @@ class TrialAnalyzer:
+         Returns:
+             Tuple of (strategy, confidence)
+         """
++        # === BEGIN DEBUG OUTPUT ===
++        import sys
++        print(f"\n🔍 Trial Metrics Debug:", file=sys.stderr)
++        print(f"   IPE (initial path error):     {metrics.get('initial_path_error', 999):.1f}°", file=sys.stderr)
++        print(f"   Path efficiency:              {metrics.get('path_efficiency', 0):.1f}%", file=sys.stderr)
++        print(f"   Initial distance to platform: {metrics.get('initial_distance_to_platform', 0):.1f}", file=sys.stderr)
++        print(f"   % in platform zone:           {metrics.get('percent_in_platform_zone', 0):.1f}%", file=sys.stderr)
++        print(f"   % near wall (thigmotaxis):    {metrics.get('percent_near_wall', 0):.1f}%", file=sys.stderr)
++        print(f"   Quadrant coverage:            {metrics.get('quadrant_coverage', 0)}", file=sys.stderr)
++        print(f"   Path length:                  {metrics.get('path_length', 0):.1f}", file=sys.stderr)
++        # === END DEBUG OUTPUT ===
++        
+         # Direct Swim: low IPE, high efficiency, straight to platform
+         if (metrics.get('initial_path_error', 999) < self.params.ipe_max_val and
+             metrics.get('path_efficiency', 0) > 50 and

@@ -1,0 +1,43 @@
+--- a/pathfinder/analysis/trial_analyzer.py
++++ b/pathfinder/analysis/trial_analyzer.py
+@@ -197,18 +197,20 @@ class TrialAnalyzer:
+         """
+         # Direct Swim: low IPE, high efficiency, straight to platform
+-        if (metrics.get('initial_path_error', 999) < self.params.ipe_max_val and
+-            metrics.get('path_efficiency', 0) > 50 and
+-            metrics.get('initial_distance_to_platform', 0) < self.params.distance_to_swim_max_val):
++        # RELAXED: Removed strict distance constraint - rely on efficiency and IPE instead
++        if (metrics.get('initial_path_error', 999) < self.params.ipe_max_val and
++            metrics.get('path_efficiency', 0) > 45):  # Lowered from 50%
+             return SearchStrategy.DIRECT_SWIM, 0.9
+         
+-        # Directed Search: reasonable heading, focused on platform area
+-        if (metrics.get('percent_in_platform_zone', 0) > 30 and
+-            metrics.get('path_efficiency', 0) > 30):
++        # Directed Search: reasonable heading, focused on platform area  
++        # RELAXED: Lowered platform zone and efficiency thresholds
++        if (metrics.get('percent_in_platform_zone', 0) > 20 and  # Was 30%
++            metrics.get('path_efficiency', 0) > 25):  # Was 30%
+             return SearchStrategy.DIRECTED_SEARCH, 0.8
+         
+-        # Focal Search: concentrated search in platform region
+-        if (metrics.get('percent_in_platform_zone', 0) > 40 and
++        # Focal Search: concentrated search in platform region
++        # RELAXED: Lowered platform zone threshold
++        if (metrics.get('percent_in_platform_zone', 0) > 30 and  # Was 40%
+             metrics.get('quadrant_coverage', 0) <= 2):
+             return SearchStrategy.FOCAL_SEARCH, 0.85
+         
+--- a/gui/defaults.py
++++ b/gui/defaults.py
+@@ -17,8 +17,8 @@ DEFAULT_PARAMETERS = Parameters(
+     heading_max_val=40.0,
+     
+     # Distance thresholds (first pass)
+-    distance_to_swim_max_val=30.0,
+-    distance_to_plat_max_val=30.0,
++    distance_to_swim_max_val=60.0,  # RELAXED: Was 30.0 - too strict for most data
++    distance_to_plat_max_val=60.0,  # RELAXED: Was 30.0
+     
+     # Distance thresholds (second pass)
+     distance_to_swim_max_val2=50.0,
