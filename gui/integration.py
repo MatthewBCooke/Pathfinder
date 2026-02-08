@@ -1,0 +1,614 @@
+"""
+Integration layer for Pathfinder GUI.
+Connects UI widgets to analysis backend via signal/slot pattern.
+Manages worker threads for long-running operations.
+"""
+
+from PyQt5.QtCore import QObject, QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QDialogButtonBox, QComboBox, QLabel
+from pathlib import Path
+from typing import Optional
+import logging
+
+from pathfinder.core.models import (
+    Experiment, Trial, SearchStrategy, Parameters
+)
+from pathfinder.io.loaders import load_experiment, detect_software_format
+from pathfinder.io.writers import export_to_csv, export_to_excel, export_trajectory_data
+from pathfinder.analysis.trial_analyzer import TrialAnalyzer
+from pathfinder.core.geometry import MazeGeometry
+
+from .main_window import PathfinderMainWindow
+from .defaults import DEFAULT_PARAMETERS, get_default_parameters
+from .settings_dialog import SettingsDialog
+
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class FileLoadWorker(QThread):
+    """
+    Worker thread for loading experiment files.
+    Emits progress updates and results.
+    """
+    progress = pyqtSignal(int, str)  # (percentage, message)
+    finished = pyqtSignal(object)    # Experiment object
+    error = pyqtSignal(str)          # Error message
+    
+    def __init__(self, file_path: Path, parent=None):
+        super().__init__(parent)
+        self.file_path = file_path
+        self._is_cancelled = False
+    
+    def run(self):
+        """Load experiment file in background thread"""
+        try:
+            self.progress.emit(10, "Detecting file format...")
+            
+            # Detect software type
+            software = detect_software_format(self.file_path)
+            
+            if self._is_cancelled:
+                return
+            
+            self.progress.emit(30, f"Loading {software.value} data...")
+            
+            # Load experiment
+            experiment = load_experiment(self.file_path, software)
+            
+            if self._is_cancelled:
+                return
+            
+            self.progress.emit(90, "Processing trials...")
+            
+            # Validate
+            if not experiment or not experiment.trials:
+                self.error.emit("No trials found in file")
+                return
+            
+            self.progress.emit(100, f"Loaded {len(experiment.trials)} trials")
+            self.finished.emit(experiment)
+            
+        except Exception as e:
+            logger.exception("Error loading file")
+            self.error.emit(f"Failed to load file: {str(e)}")
+    
+    def cancel(self):
+        """Cancel the operation"""
+        self._is_cancelled = True
+
+
+class AnalysisWorker(QThread):
+    """
+    Worker thread for running analysis on experiment.
+    Processes trials and emits progress updates.
+    """
+    progress = pyqtSignal(int, str)         # (percentage, message)
+    trial_completed = pyqtSignal(str, object)  # (trial_id, AnalysisResult)
+    finished = pyqtSignal(object)           # Updated Experiment
+    error = pyqtSignal(str)                 # Error message
+    
+    def __init__(self, experiment: Experiment, parameters: Parameters, parent=None):
+        super().__init__(parent)
+        self.experiment = experiment
+        self.parameters = parameters
+        self._is_cancelled = False
+    
+    def run(self):
+        """Run analysis in background thread"""
+        try:
+            total_trials = len(self.experiment.trials)
+            
+            self.progress.emit(0, "Initializing analyzer...")
+            
+            # Create analyzer
+            # Note: MazeGeometry would come from first trial or parameters
+            first_trial = self.experiment.trials[0]
+            geometry = MazeGeometry(
+                center_x=first_trial.pool_center[0],
+                center_y=first_trial.pool_center[1],
+                pool_diameter=first_trial.pool_diameter,
+                platform_x=first_trial.platform_position[0],
+                platform_y=first_trial.platform_position[1],
+                platform_diameter=first_trial.platform_diameter
+            )
+            
+            analyzer = TrialAnalyzer(geometry, self.parameters)
+            
+            # Process each trial
+            for i, trial in enumerate(self.experiment.trials):
+                if self._is_cancelled:
+                    return
+                
+                # Update progress
+                percent = int((i / total_trials) * 100)
+                self.progress.emit(
+                    percent,
+                    f"Analyzing trial {i+1}/{total_trials} (Day {trial.day}, Trial {trial.trial_number})"
+                )
+                
+                # Run analysis
+                try:
+                    result = analyzer.analyze(trial)
+                    
+                    # Update trial with results
+                    trial.search_strategy = result.detected_strategy
+                    
+                    # Emit completion
+                    self.trial_completed.emit(trial.trial_id, result)
+                    
+                except Exception as e:
+                    logger.error(f"Error analyzing trial {trial.trial_id}: {e}")
+                    # Continue with other trials
+            
+            self.progress.emit(100, "Analysis complete!")
+            self.finished.emit(self.experiment)
+            
+        except Exception as e:
+            logger.exception("Error during analysis")
+            self.error.emit(f"Analysis failed: {str(e)}")
+    
+    def cancel(self):
+        """Cancel the operation"""
+        self._is_cancelled = True
+
+
+class ManualClassificationDialog(QDialog):
+    """
+    Dialog for manually classifying a trial's search strategy.
+    """
+    
+    def __init__(self, trial: Trial, parent=None):
+        super().__init__(parent)
+        self.trial = trial
+        self.selected_strategy = trial.search_strategy
+        self._init_ui()
+    
+    def _init_ui(self):
+        """Initialize dialog UI"""
+        self.setWindowTitle(f"Manual Classification - Trial {self.trial.trial_number}")
+        self.setMinimumWidth(400)
+        
+        layout = QVBoxLayout(self)
+        
+        # Info label
+        info = QLabel(
+            f"<b>Day {self.trial.day}, Trial {self.trial.trial_number}</b><br>"
+            f"Escape Latency: {self.trial.escape_latency:.2f}s<br>"
+            f"Current: {self.trial.search_strategy.value if self.trial.search_strategy else 'None'}"
+        )
+        layout.addWidget(info)
+        
+        # Strategy selector
+        layout.addWidget(QLabel("\nSelect Strategy:"))
+        self.strategy_combo = QComboBox()
+        for strategy in SearchStrategy:
+            self.strategy_combo.addItem(strategy.value, strategy)
+        
+        # Set current selection
+        if self.trial.search_strategy:
+            index = self.strategy_combo.findData(self.trial.search_strategy)
+            if index >= 0:
+                self.strategy_combo.setCurrentIndex(index)
+        
+        layout.addWidget(self.strategy_combo)
+        
+        # Buttons
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+    
+    def get_selected_strategy(self) -> SearchStrategy:
+        """Get the selected strategy"""
+        return self.strategy_combo.currentData()
+
+
+class PathfinderIntegration(QObject):
+    """
+    Integration controller that wires together the GUI and analysis backend.
+    Manages state, worker threads, and signal/slot connections.
+    """
+    
+    def __init__(self, main_window: PathfinderMainWindow):
+        super().__init__()
+        self.window = main_window
+        
+        # State
+        self.current_file: Optional[Path] = None
+        self.current_experiment: Optional[Experiment] = None
+        self.current_parameters: Parameters = get_default_parameters()
+        
+        # Workers
+        self.file_worker: Optional[FileLoadWorker] = None
+        self.analysis_worker: Optional[AnalysisWorker] = None
+        
+        # Connect all signals
+        self._connect_signals()
+        
+        # Initialize UI with defaults
+        self._initialize_defaults()
+        
+        logger.info("Pathfinder integration initialized")
+    
+    def _connect_signals(self):
+        """Connect all UI signals to handlers"""
+        # Control panel signals
+        cp = self.window.get_control_panel()
+        cp.load_clicked.connect(self.on_load_file)
+        cp.analyze_clicked.connect(self.run_analysis)
+        cp.settings_clicked.connect(self.on_settings)
+        cp.export_clicked.connect(self.on_export)
+        cp.stop_btn.clicked.connect(self.on_stop_analysis)
+        
+        # Results table signals
+        rt = self.window.get_results_table()
+        rt.manual_classification_requested.connect(self.on_manual_classification)
+        rt.trial_selected.connect(self.on_trial_selected)
+        rt.export_requested.connect(self.on_export)
+        
+        # Heatmap signals
+        hm = self.window.get_heatmap_widget()
+        hm.export_requested.connect(self.on_export_heatmap)
+        
+        # Window signals
+        self.window.exit_requested.connect(self.on_exit)
+        
+        logger.info("All signals connected")
+    
+    def _initialize_defaults(self):
+        """Initialize UI with default parameter values"""
+        cp = self.window.get_control_panel()
+        cp.set_parameters_summary(f"Using: {self.current_parameters.name}")
+        self.window.set_status_message("Ready - Load an experiment file to begin")
+    
+    # File operations
+    
+    @pyqtSlot()
+    def on_load_file(self):
+        """Handle load file request"""
+        # Show file dialog
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.window,
+            "Open Experiment File",
+            str(Path.home()),
+            "All Supported (*.xlsx *.xls *.csv);;Excel Files (*.xlsx *.xls);;CSV Files (*.csv)"
+        )
+        
+        if not file_path:
+            return
+        
+        file_path = Path(file_path)
+        logger.info(f"Loading file: {file_path}")
+        
+        # Create and start worker thread
+        self.file_worker = FileLoadWorker(file_path)
+        self.file_worker.progress.connect(self._on_file_load_progress)
+        self.file_worker.finished.connect(self._on_file_load_finished)
+        self.file_worker.error.connect(self._on_file_load_error)
+        
+        # Update UI
+        cp = self.window.get_control_panel()
+        cp.set_progress(0, "Starting...")
+        self.window.set_status_message("Loading file...")
+        
+        # Start loading
+        self.file_worker.start()
+    
+    @pyqtSlot(int, str)
+    def _on_file_load_progress(self, percent: int, message: str):
+        """Handle file load progress update"""
+        cp = self.window.get_control_panel()
+        cp.set_progress(percent, message)
+    
+    @pyqtSlot(object)
+    def _on_file_load_finished(self, experiment: Experiment):
+        """Handle successful file load"""
+        self.current_experiment = experiment
+        self.current_file = self.file_worker.file_path
+        
+        logger.info(f"File loaded: {len(experiment.trials)} trials")
+        
+        # Update UI
+        cp = self.window.get_control_panel()
+        cp.set_file_loaded(self.current_file)
+        cp.set_progress(100, "File loaded successfully")
+        
+        # Clear previous results
+        self.window.get_results_table().clear()
+        self.window.get_summary_widget()._clear()
+        
+        self.window.set_status_message(
+            f"Loaded: {experiment.experiment_name} ({len(experiment.trials)} trials)"
+        )
+        
+        # Clean up worker
+        self.file_worker = None
+    
+    @pyqtSlot(str)
+    def _on_file_load_error(self, error_message: str):
+        """Handle file load error"""
+        logger.error(f"File load error: {error_message}")
+        
+        self.window.show_error("Load Error", error_message)
+        self.window.set_status_message("Error loading file")
+        
+        cp = self.window.get_control_panel()
+        cp.set_progress(0, "Error")
+        
+        # Clean up worker
+        self.file_worker = None
+    
+    # Analysis operations
+    
+    @pyqtSlot()
+    def run_analysis(self):
+        """Start analysis on current experiment"""
+        if not self.current_experiment:
+            self.window.show_warning("No Data", "Please load an experiment file first")
+            return
+        
+        logger.info("Starting analysis...")
+        
+        # Create and start worker
+        self.analysis_worker = AnalysisWorker(
+            self.current_experiment,
+            self.current_parameters
+        )
+        self.analysis_worker.progress.connect(self._on_analysis_progress)
+        self.analysis_worker.trial_completed.connect(self._on_trial_completed)
+        self.analysis_worker.finished.connect(self._on_analysis_finished)
+        self.analysis_worker.error.connect(self._on_analysis_error)
+        
+        # Update UI
+        cp = self.window.get_control_panel()
+        cp.set_analyzing(True)
+        cp.set_progress(0, "Starting analysis...")
+        self.window.set_status_message("Analysis running...")
+        
+        # Start analysis
+        self.analysis_worker.start()
+    
+    @pyqtSlot()
+    def on_stop_analysis(self):
+        """Stop running analysis"""
+        if self.analysis_worker and self.analysis_worker.isRunning():
+            logger.info("Stopping analysis...")
+            self.analysis_worker.cancel()
+            self.analysis_worker.wait()
+            
+            cp = self.window.get_control_panel()
+            cp.set_analyzing(False)
+            cp.set_progress(0, "Analysis stopped")
+            self.window.set_status_message("Analysis stopped by user")
+    
+    @pyqtSlot(int, str)
+    def _on_analysis_progress(self, percent: int, message: str):
+        """Handle analysis progress update"""
+        cp = self.window.get_control_panel()
+        cp.set_progress(percent, message)
+    
+    @pyqtSlot(str, object)
+    def _on_trial_completed(self, trial_id: str, result: object):
+        """Handle individual trial completion"""
+        # Could update UI incrementally here if desired
+        pass
+    
+    @pyqtSlot(object)
+    def _on_analysis_finished(self, experiment: Experiment):
+        """Handle analysis completion"""
+        logger.info("Analysis complete")
+        
+        # Update state
+        self.current_experiment = experiment
+        
+        # Update UI
+        cp = self.window.get_control_panel()
+        cp.set_analyzing(False)
+        cp.set_progress(100, "Analysis complete!")
+        
+        # Display results
+        rt = self.window.get_results_table()
+        rt.load_results(experiment)
+        
+        sw = self.window.get_summary_widget()
+        sw.set_results(experiment)
+        
+        hm = self.window.get_heatmap_widget()
+        hm.set_experiment(experiment)
+        
+        self.window.set_status_message(
+            f"Analysis complete: {len(experiment.trials)} trials classified"
+        )
+        
+        # Switch to results tab
+        self.window.results_tabs.setCurrentIndex(0)
+        
+        # Clean up worker
+        self.analysis_worker = None
+    
+    @pyqtSlot(str)
+    def _on_analysis_error(self, error_message: str):
+        """Handle analysis error"""
+        logger.error(f"Analysis error: {error_message}")
+        
+        self.window.show_error("Analysis Error", error_message)
+        
+        cp = self.window.get_control_panel()
+        cp.set_analyzing(False)
+        cp.set_progress(0, "Error")
+        self.window.set_status_message("Analysis failed")
+        
+        # Clean up worker
+        self.analysis_worker = None
+    
+    # Manual classification
+    
+    @pyqtSlot(str)
+    def on_manual_classification(self, trial_id: str):
+        """Handle manual classification request"""
+        if not self.current_experiment:
+            return
+        
+        # Find trial
+        trial = next((t for t in self.current_experiment.trials if t.trial_id == trial_id), None)
+        if not trial:
+            logger.error(f"Trial not found: {trial_id}")
+            return
+        
+        # Show dialog
+        dialog = ManualClassificationDialog(trial, self.window)
+        if dialog.exec_() == QDialog.Accepted:
+            # Update trial
+            new_strategy = dialog.get_selected_strategy()
+            trial.search_strategy = new_strategy
+            trial.manual_categorization = True
+            
+            logger.info(f"Trial {trial_id} manually classified as {new_strategy.value}")
+            
+            # Update results table
+            rt = self.window.get_results_table()
+            rt.update_trial(trial_id, new_strategy, manual=True)
+            
+            # Refresh summary
+            sw = self.window.get_summary_widget()
+            sw.set_results(self.current_experiment)
+            
+            self.window.set_status_message(f"Trial {trial.trial_number} classified as {new_strategy.value}")
+    
+    @pyqtSlot(str)
+    def on_trial_selected(self, trial_id: str):
+        """Handle trial selection in results table"""
+        # Could show trial details, update heatmap, etc.
+        pass
+    
+    # Settings
+    
+    @pyqtSlot()
+    def on_settings(self):
+        """Show settings dialog"""
+        dialog = SettingsDialog(self.current_parameters, self.window)
+        
+        if dialog.exec_() == QDialog.Accepted:
+            # Update parameters
+            new_params = dialog.get_parameters()
+            self.current_parameters = new_params
+            
+            logger.info(f"Parameters updated: {new_params.name}")
+            
+            # Update UI
+            cp = self.window.get_control_panel()
+            cp.set_parameters_summary(f"Using: {new_params.name}")
+            
+            self.window.set_status_message(f"Parameters updated: {new_params.name}")
+            
+            # If experiment is loaded, suggest re-analysis
+            if self.current_experiment:
+                if self.window.ask_yes_no(
+                    "Re-run Analysis?",
+                    "Parameters have been changed. Would you like to re-run the analysis with the new parameters?"
+                ):
+                    self.run_analysis()
+    
+    # Export
+    
+    @pyqtSlot()
+    def on_export(self):
+        """Export results to file"""
+        if not self.current_experiment:
+            self.window.show_warning("No Data", "No results to export")
+            return
+        
+        # Show save dialog
+        file_path, file_filter = QFileDialog.getSaveFileName(
+            self.window,
+            "Export Results",
+            str(Path.home() / "pathfinder_results.csv"),
+            "CSV Files (*.csv);;Excel Files (*.xlsx);;Trajectory Data (*.csv)"
+        )
+        
+        if file_path:
+            try:
+                file_path = Path(file_path)
+                logger.info(f"Exporting to: {file_path}")
+                
+                # Determine export format from filter or extension
+                if 'Trajectory' in file_filter or '_trajectory' in file_path.stem:
+                    export_trajectory_data(self.current_experiment, file_path)
+                    export_type = "trajectory data"
+                elif file_path.suffix.lower() in ['.xlsx', '.xls'] or 'Excel' in file_filter:
+                    # Ensure .xlsx extension
+                    if file_path.suffix.lower() != '.xlsx':
+                        file_path = file_path.with_suffix('.xlsx')
+                    export_to_excel(self.current_experiment, file_path)
+                    export_type = "Excel file"
+                else:
+                    # Default to CSV
+                    if not file_path.suffix:
+                        file_path = file_path.with_suffix('.csv')
+                    export_to_csv(self.current_experiment, file_path)
+                    export_type = "CSV file"
+                
+                self.window.show_info(
+                    "Export Successful", 
+                    f"Results exported as {export_type}:\n{file_path}"
+                )
+                self.window.set_status_message(f"Exported to {file_path.name}")
+                
+            except Exception as e:
+                logger.exception("Export error")
+                self.window.show_error("Export Error", f"Failed to export: {str(e)}")
+    
+    @pyqtSlot()
+    def on_export_heatmap(self):
+        """Export heatmap image"""
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.window,
+            "Export Heatmap",
+            str(Path.home() / "heatmap.png"),
+            "PNG Files (*.png);;JPEG Files (*.jpg)"
+        )
+        
+        if file_path:
+            try:
+                hm = self.window.get_heatmap_widget()
+                hm.export_image(file_path)
+                self.window.show_info("Export", f"Heatmap saved to:\n{file_path}")
+            except Exception as e:
+                logger.exception("Heatmap export error")
+                self.window.show_error("Export Error", f"Failed to export: {str(e)}")
+    
+    # Application lifecycle
+    
+    @pyqtSlot()
+    def on_exit(self):
+        """Handle application exit"""
+        # Check if analysis is running
+        if self.analysis_worker and self.analysis_worker.isRunning():
+            if self.window.ask_yes_no(
+                "Analysis Running",
+                "Analysis is still running. Are you sure you want to exit?"
+            ):
+                self.analysis_worker.cancel()
+                self.analysis_worker.wait()
+            else:
+                return
+        
+        logger.info("Application exiting")
+    
+    def cleanup(self):
+        """Clean up resources"""
+        # Cancel any running workers
+        if self.file_worker and self.file_worker.isRunning():
+            self.file_worker.cancel()
+            self.file_worker.wait()
+        
+        if self.analysis_worker and self.analysis_worker.isRunning():
+            self.analysis_worker.cancel()
+            self.analysis_worker.wait()
+        
+        logger.info("Integration cleanup complete")
