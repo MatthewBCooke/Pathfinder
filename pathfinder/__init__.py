@@ -28,7 +28,12 @@ from pathfinder.analysis import (
     angle_between,
 )
 from pathfinder.io import load_experiment, find_files
-from pathfinder.entropy import entropy
+
+# Optional entropy import (may not be available in all installations)
+try:
+    from pathfinder.entropy import entropy
+except ImportError:
+    entropy = None
 
 __version__ = "2.0.0"  # Phase 1 complete
 
@@ -54,6 +59,8 @@ __all__ = [
     # I/O functions
     "load_experiment",
     "find_files",
-    # Entropy
-    "entropy",
 ]
+
+# Entropy is optional
+if entropy is not None:
+    __all__.append("entropy")
