@@ -34,10 +34,16 @@ def main():
     
     # Enable high DPI scaling (must be set before creating QApplication)
     from PyQt5.QtCore import Qt
-    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
-        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
-        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    aa_enable_high_dpi = getattr(Qt, 'AA_EnableHighDpiScaling', None)
+    if aa_enable_high_dpi is not None:
+        QApplication.setAttribute(aa_enable_high_dpi, True)
+    else:
+        logger.warning("Qt.AA_EnableHighDpiScaling not available in this PyQt5 version.")
+    aa_use_high_dpi_pixmaps = getattr(Qt, 'AA_UseHighDpiPixmaps', None)
+    if aa_use_high_dpi_pixmaps is not None:
+        QApplication.setAttribute(aa_use_high_dpi_pixmaps, True)
+    else:
+        logger.warning("Qt.AA_UseHighDpiPixmaps not available in this PyQt5 version.")
 
     # Create application
     app = QApplication(sys.argv)
