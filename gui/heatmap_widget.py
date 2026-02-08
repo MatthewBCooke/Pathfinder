@@ -152,6 +152,9 @@ class HeatmapWidget(QWidget):
     def _plot_heatmap(self):
         """Generate occupancy heatmap with NaN/Inf checks"""
         self.ax.clear()
+        # Clear all colorbars to prevent multiple legend bars
+        self.figure.clear()
+        self.ax = self.figure.add_subplot(111)
 
         # Get filtered trials
         trials = self._get_filtered_trials()

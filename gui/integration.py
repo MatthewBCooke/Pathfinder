@@ -7,7 +7,7 @@ Manages worker threads for long-running operations.
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QDialogButtonBox, QComboBox, QLabel
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 import logging
 import math
 
@@ -220,6 +220,119 @@ class ManualClassificationDialog(QDialog):
         return self.strategy_combo.currentData()
 
 
+def auto_calculate_geometry(trials: List[Trial]) -> dict:
+    """
+    Auto-calculate pool and platform geometry from trajectory data.
+
+    Returns dict with:
+        - pool_center_x, pool_center_y: Center of bounding circle
+        - pool_diameter: Diameter that encompasses all trajectories
+        - platform_x, platform_y: Estimated platform location from trial endpoints
+    """
+    import numpy as np
+    import math
+
+    # Collect all trajectory points
+    all_x = []
+    all_y = []
+
+    for trial in trials:
+        for point in trial.trajectory:
+            if (point.x is not None and point.y is not None and
+                not np.isnan(point.x) and not np.isnan(point.y) and
+                not np.isinf(point.x) and not np.isinf(point.y)):
+                all_x.append(point.x)
+                all_y.append(point.y)
+
+    if not all_x:
+        logger.warning("No valid trajectory points found for auto-calculation")
+        return {
+            'pool_center_x': 250.0,
+            'pool_center_y': 250.0,
+            'pool_diameter': 500.0,
+            'platform_x': 350.0,
+            'platform_y': 150.0
+        }
+
+    # Use percentiles instead of min/max to exclude outliers
+    # This handles tracking errors (e.g., one trial with points outside the pool)
+    percentile_low = 1   # Exclude bottom 1%
+    percentile_high = 99  # Exclude top 1%
+
+    min_x = np.percentile(all_x, percentile_low)
+    max_x = np.percentile(all_x, percentile_high)
+    min_y = np.percentile(all_y, percentile_low)
+    max_y = np.percentile(all_y, percentile_high)
+
+    logger.info(f"Using {percentile_low}th-{percentile_high}th percentile for outlier-resistant bounds")
+
+    # Pool center is center of bounding box
+    pool_center_x = (min_x + max_x) / 2
+    pool_center_y = (min_y + max_y) / 2
+
+    # Pool diameter: use 99th percentile of distances to exclude outliers
+    # Calculate distances from center for all points
+    distances = []
+    for x, y in zip(all_x, all_y):
+        dist = math.sqrt((x - pool_center_x)**2 + (y - pool_center_y)**2)
+        distances.append(dist)
+
+    # Use 99th percentile instead of max to exclude outliers
+    max_dist = np.percentile(distances, 99)
+
+    pool_diameter = max_dist * 2 * 1.1  # Add 10% margin
+
+    logger.info(f"Pool diameter calculated from 99th percentile distance: {pool_diameter:.1f}")
+
+    # Estimate platform location from endpoints of successful trials
+    # (trials that didn't take maximum time)
+    endpoint_x = []
+    endpoint_y = []
+
+    # Find maximum trial duration
+    durations = []
+    for trial in trials:
+        if trial.trajectory:
+            duration = trial.trajectory[-1].time - trial.trajectory[0].time
+            durations.append(duration)
+
+    if durations:
+        max_duration = max(durations)
+        # Consider trials that finished in less than 95% of max time as "successful"
+        threshold = max_duration * 0.95
+
+        for trial in trials:
+            if trial.trajectory and len(trial.trajectory) > 1:
+                duration = trial.trajectory[-1].time - trial.trajectory[0].time
+                if duration < threshold:  # Successful trial
+                    last_point = trial.trajectory[-1]
+                    if (last_point.x is not None and last_point.y is not None and
+                        not np.isnan(last_point.x) and not np.isnan(last_point.y)):
+                        endpoint_x.append(last_point.x)
+                        endpoint_y.append(last_point.y)
+
+    # Platform location is mean of successful trial endpoints
+    if endpoint_x and endpoint_y:
+        platform_x = np.mean(endpoint_x)
+        platform_y = np.mean(endpoint_y)
+    else:
+        # Fallback: use center of pool
+        platform_x = pool_center_x
+        platform_y = pool_center_y
+        logger.warning("Could not estimate platform location, using pool center")
+
+    logger.info(f"Auto-calculated geometry: Pool center ({pool_center_x:.1f}, {pool_center_y:.1f}), "
+                f"diameter {pool_diameter:.1f}, platform ({platform_x:.1f}, {platform_y:.1f})")
+
+    return {
+        'pool_center_x': pool_center_x,
+        'pool_center_y': pool_center_y,
+        'pool_diameter': pool_diameter,
+        'platform_x': platform_x,
+        'platform_y': platform_y
+    }
+
+
 class PathfinderIntegration(QObject):
     @pyqtSlot()
     def on_load_folder(self):
@@ -254,6 +367,43 @@ class PathfinderIntegration(QObject):
         if not all_trials:
             logger.error("No valid trials loaded from folder.")
             return
+
+        # Auto-calculate pool and platform geometry
+        auto_geom = auto_calculate_geometry(all_trials)
+
+        # Apply auto-calculated geometry to all trials
+        for trial in all_trials:
+            trial.pool_center = (auto_geom['pool_center_x'], auto_geom['pool_center_y'])
+            trial.pool_diameter = auto_geom['pool_diameter']
+            trial.platform_position = (auto_geom['platform_x'], auto_geom['platform_y'])
+            # Note: platform_diameter is NOT auto-calculated, requires manual input
+
+        # Update spatial parameters in integration
+        self.spatial_params['pool_center_x'] = auto_geom['pool_center_x']
+        self.spatial_params['pool_center_y'] = auto_geom['pool_center_y']
+        self.spatial_params['pool_diameter'] = auto_geom['pool_diameter']
+        self.spatial_params['platform_x'] = auto_geom['platform_x']
+        self.spatial_params['platform_y'] = auto_geom['platform_y']
+        # platform_diameter remains at default, user must set manually
+
+        # Update GUI spinboxes
+        cp = self.window.get_control_panel()
+        cp.pool_center_x_spin.setValue(auto_geom['pool_center_x'])
+        cp.pool_center_y_spin.setValue(auto_geom['pool_center_y'])
+        cp.pool_diameter_spin.setValue(auto_geom['pool_diameter'])
+        cp.platform_x_spin.setValue(auto_geom['platform_x'])
+        cp.platform_y_spin.setValue(auto_geom['platform_y'])
+
+        # Notify user
+        self.window.show_info(
+            "Auto-Calculated Geometry",
+            f"Pool geometry and platform location have been estimated from trajectory data.\n\n"
+            f"Pool Center: ({auto_geom['pool_center_x']:.1f}, {auto_geom['pool_center_y']:.1f})\n"
+            f"Pool Diameter: {auto_geom['pool_diameter']:.1f}\n"
+            f"Platform Position: ({auto_geom['platform_x']:.1f}, {auto_geom['platform_y']:.1f})\n\n"
+            f"⚠️ Platform diameter NOT estimated - please set manually!\n\n"
+            f"Review the Maze Setup tab and adjust if needed."
+        )
 
         # Create a combined Experiment object
         from pathfinder.core.models import Experiment
