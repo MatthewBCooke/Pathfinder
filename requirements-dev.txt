@@ -1,0 +1,23 @@
+# Development & GUI dependencies (Phase 2+)
+# Install with: pip install -r requirements-dev.txt
+
+# Base analysis dependencies
+-r requirements.txt
+
+# PyQt6 GUI framework
+PyQt6>=6.6.0
+PyQt6-sip>=13.5.0
+
+# Visualization in GUI
+matplotlib>=3.8.0
+
+# Distribution/Packaging
+PyInstaller>=6.0.0
+
+# Development tools
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-qt>=4.2.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
