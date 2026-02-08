@@ -156,8 +156,8 @@ class SimpleIntegration:
         self.main_window.settings_button.clicked.connect(self.on_settings)
         self.main_window.analyze_button.clicked.connect(self.on_analyze)
     
-    @pyqtSlot()
-    def on_load_file(self) -> None:
+    @pyqtSlot(bool)
+    def on_load_file(self, checked: bool = False) -> None:
         """Handle Load Experiment button."""
         file_path, _ = QFileDialog.getOpenFileName(
             self.main_window,
