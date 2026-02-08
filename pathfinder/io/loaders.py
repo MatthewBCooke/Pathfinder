@@ -184,10 +184,10 @@ def _load_generic_csv(file_path: Path, parameters: Parameters = None) -> Experim
     
     df = pd.read_csv(file_path)
     
-    # Try to auto-detect column names
-    time_col = _find_column(df, ['time', 't', 'timestamp', 'trial time'])
-    x_col = _find_column(df, ['x', 'x center', 'x position', 'x_pos'])
-    y_col = _find_column(df, ['y', 'y center', 'y position', 'y_pos'])
+    # Try to auto-detect column names (order matters - specific to general)
+    time_col = _find_column(df, ['time', 't', 'timestamp', 'trial time', 'recording time'])
+    x_col = _find_column(df, ['x center', 'x centre', 'centre posn x', 'center posn x', 'x position', 'x_pos', 'x'])
+    y_col = _find_column(df, ['y center', 'y centre', 'centre posn y', 'center posn y', 'y position', 'y_pos', 'y'])
     
     if not all([time_col, x_col, y_col]):
         raise ValueError(
@@ -309,19 +309,26 @@ def _parse_trial_dataframe(
 
 def _find_column(df: pd.DataFrame, candidates: list) -> str:
     """
-    Find column name from list of candidates (case-insensitive).
+    Find column name from list of candidates (case-insensitive, partial match).
     
     Args:
         df: DataFrame to search
-        candidates: List of possible column names
+        candidates: List of possible column names or keywords
         
     Returns:
         Matching column name or None
     """
     df_cols_lower = {col.lower(): col for col in df.columns}
     
+    # First try exact matches
     for candidate in candidates:
         if candidate.lower() in df_cols_lower:
             return df_cols_lower[candidate.lower()]
+    
+    # Then try partial matches (candidate keyword in column name)
+    for candidate in candidates:
+        for col_lower, col_original in df_cols_lower.items():
+            if candidate.lower() in col_lower:
+                return col_original
     
     return None
