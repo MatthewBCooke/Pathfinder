@@ -25,6 +25,7 @@ class ControlPanelWidget(QWidget):
     analyze_clicked = pyqtSignal()
     settings_clicked = pyqtSignal()
     export_clicked = pyqtSignal()
+    load_folder_requested = pyqtSignal()
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -56,15 +57,14 @@ class ControlPanelWidget(QWidget):
         
         # Stretch to push everything to the top
         layout.addStretch()
-        
-        # Initial state
+
+        # Initial state (call after all widgets are created)
         self._update_button_states()
     
     def _create_file_group(self):
         """Create file operations group"""
         group = QGroupBox("File Operations")
         layout = QVBoxLayout()
-        
 
         # Load File button
         self.load_btn = QPushButton("📁 Load Experiment File")
@@ -77,26 +77,24 @@ class ControlPanelWidget(QWidget):
         self.load_folder_btn.setMinimumHeight(40)
         self.load_folder_btn.clicked.connect(self._on_load_folder_clicked)
         layout.addWidget(self.load_folder_btn)
-            def _on_load_folder_clicked(self):
-                self.parent().load_folder_requested.emit()
 
-            # Add a new signal for folder loading
-            load_folder_requested = pyqtSignal()
-        
         # Current file label
         self.file_label = QLabel("No file loaded")
         self.file_label.setWordWrap(True)
         self.file_label.setStyleSheet("color: gray; font-size: 10px;")
         layout.addWidget(self.file_label)
-        
+
         # Export button
         self.export_btn = QPushButton("💾 Export Results")
         self.export_btn.clicked.connect(self.export_clicked.emit)
         self.export_btn.setEnabled(False)
         layout.addWidget(self.export_btn)
-        
+
         group.setLayout(layout)
         return group
+
+    def _on_load_folder_clicked(self):
+        self.load_folder_requested.emit()
     
     def _create_analysis_group(self):
         """Create analysis controls group"""
@@ -144,7 +142,7 @@ class ControlPanelWidget(QWidget):
         
         # Status label
         self.status_label = QLabel("Ready")
-        self.status_label.setAlignment(Qt.AlignCenter)
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.status_label.setStyleSheet("font-size: 11px; color: #555;")
         layout.addWidget(self.status_label)
         

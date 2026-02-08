@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QDialogButtonBox,
 from pathlib import Path
 from typing import Optional
 import logging
+import math
 
 from pathfinder.core.models import (
     Experiment, Trial, SearchStrategy, Parameters
@@ -220,24 +221,69 @@ class ManualClassificationDialog(QDialog):
 
 
 class PathfinderIntegration(QObject):
-    """
-    Integration controller that wires together the GUI and analysis backend.
-    Manages state, worker threads, and signal/slot connections.
-    """
+    @pyqtSlot()
+    def on_load_folder(self):
+        """Handle load folder request"""
+        dir_path = QFileDialog.getExistingDirectory(
+            self.window,
+            "Select Folder Containing Trials",
+            str(Path.home())
+        )
+        if not dir_path:
+            return
+        dir_path = Path(dir_path)
+        logger.info(f"Loading all supported files from folder: {dir_path}")
+
+        # Find all supported files recursively
+        exts = (".csv", ".xlsx", ".xls")
+        files = [f for f in dir_path.rglob("*") if f.suffix.lower() in exts]
+        if not files:
+            logger.error("No supported files found in folder.")
+            return
+
+        # Load and combine all trials
+        all_trials = []
+        experiment_name = f"Batch import: {dir_path.name}"
+        for file in files:
+            try:
+                software = detect_software_format(file)
+                exp = load_experiment(file, software)
+                all_trials.extend(exp.trials)
+            except Exception as e:
+                logger.warning(f"Failed to load {file}: {e}")
+        if not all_trials:
+            logger.error("No valid trials loaded from folder.")
+            return
+
+        # Create a combined Experiment object
+        from pathfinder.core.models import Experiment
+        experiment = Experiment(
+            experiment_id="batch_import",
+            experiment_name=experiment_name,
+            researcher="",
+            notes="",
+            parameters=get_default_parameters(),
+            tracking_software="Unknown",
+            trials=all_trials
+        )
+        # Set current_file to the folder path for batch import
+        self.current_file = dir_path
+        self._on_file_load_finished(experiment)
+
     
     def __init__(self, main_window: PathfinderMainWindow):
         super().__init__()
         self.window = main_window
-        
+
         # State
         self.current_file: Optional[Path] = None
         self.current_experiment: Optional[Experiment] = None
         self.current_parameters: Parameters = get_default_parameters()
-        
+
         # Workers
         self.file_worker: Optional[FileLoadWorker] = None
         self.analysis_worker: Optional[AnalysisWorker] = None
-        
+
         # Connect all signals
         self._connect_signals()
         
@@ -320,23 +366,27 @@ class PathfinderIntegration(QObject):
     def _on_file_load_finished(self, experiment: Experiment):
         """Handle successful file load"""
         self.current_experiment = experiment
-        self.current_file = self.file_worker.file_path
-        
+        # Only set current_file from file_worker if it exists (single file load)
+        if self.file_worker is not None:
+            self.current_file = self.file_worker.file_path
+        # Otherwise, current_file is already set (e.g., by folder load)
+
         logger.info(f"File loaded: {len(experiment.trials)} trials")
-        
+
         # Update UI
         cp = self.window.get_control_panel()
-        cp.set_file_loaded(self.current_file)
-        cp.set_progress(100, "File loaded successfully")
-        
+        if self.current_file is not None:
+            cp.set_file_loaded(self.current_file)
+        cp.set_progress(min(100, 100), "File loaded successfully")
+
         # Clear previous results
         self.window.get_results_table().clear()
         self.window.get_summary_widget()._clear()
-        
+
         self.window.set_status_message(
             f"Loaded: {experiment.experiment_name} ({len(experiment.trials)} trials)"
         )
-        
+
         # Clean up worker
         self.file_worker = None
     
