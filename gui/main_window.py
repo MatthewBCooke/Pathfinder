@@ -16,6 +16,7 @@ from .control_panel import ControlPanelWidget
 from .results_table import ResultsTableWidget
 from .summary_widget import SummaryWidget
 from .heatmap_widget import HeatmapWidget
+from .maze_visualization import MazeVisualizationWidget
 
 
 class PathfinderMainWindow(QMainWindow):
@@ -63,11 +64,13 @@ class PathfinderMainWindow(QMainWindow):
         self.results_tabs.setTabPosition(QTabWidget.North)
         
         # Create tab widgets
+        self.maze_viz = MazeVisualizationWidget()
         self.results_table = ResultsTableWidget()
         self.summary_widget = SummaryWidget()
         self.heatmap_widget = HeatmapWidget()
-        
+
         # Add tabs
+        self.results_tabs.addTab(self.maze_viz, "🔵 Maze Setup")
         self.results_tabs.addTab(self.results_table, "📊 Results Table")
         self.results_tabs.addTab(self.summary_widget, "📈 Summary")
         self.results_tabs.addTab(self.heatmap_widget, "🗺️ Heatmap")
@@ -122,17 +125,21 @@ class PathfinderMainWindow(QMainWindow):
         
         # View menu
         view_menu = menubar.addMenu("&View")
-        
+
+        maze_action = QAction("&Maze Setup", self)
+        maze_action.triggered.connect(lambda: self.results_tabs.setCurrentIndex(0))
+        view_menu.addAction(maze_action)
+
         table_action = QAction("Results &Table", self)
-        table_action.triggered.connect(lambda: self.results_tabs.setCurrentIndex(0))
+        table_action.triggered.connect(lambda: self.results_tabs.setCurrentIndex(1))
         view_menu.addAction(table_action)
-        
+
         summary_action = QAction("&Summary", self)
-        summary_action.triggered.connect(lambda: self.results_tabs.setCurrentIndex(1))
+        summary_action.triggered.connect(lambda: self.results_tabs.setCurrentIndex(2))
         view_menu.addAction(summary_action)
-        
+
         heatmap_action = QAction("&Heatmap", self)
-        heatmap_action.triggered.connect(lambda: self.results_tabs.setCurrentIndex(2))
+        heatmap_action.triggered.connect(lambda: self.results_tabs.setCurrentIndex(3))
         view_menu.addAction(heatmap_action)
         
         # Help menu
@@ -180,7 +187,11 @@ class PathfinderMainWindow(QMainWindow):
     def get_heatmap_widget(self) -> HeatmapWidget:
         """Get heatmap widget"""
         return self.heatmap_widget
-    
+
+    def get_maze_viz(self) -> MazeVisualizationWidget:
+        """Get maze visualization widget"""
+        return self.maze_viz
+
     def set_status_message(self, message: str):
         """Update status bar message"""
         self.status_bar.showMessage(message)

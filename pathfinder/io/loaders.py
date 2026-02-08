@@ -8,6 +8,7 @@ from typing import Union
 from enum import Enum
 import pandas as pd
 import logging
+import math
 
 from pathfinder.core.models import Experiment, Trial, Datapoint, Parameters
 

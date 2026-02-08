@@ -70,7 +70,14 @@ class Parameters(BaseModel):
     # Advanced parameters
     scale_values: bool = Field(True, description="Auto-scale values based on pool size")
     pixels_per_cm: float = Field(1.0, description="Conversion factor: pixels per cm")
-    
+
+    # Visualization zone parameters
+    chaining_radius: float = Field(30, description="Chaining zone radius in cm")
+    thigmotaxis_zone_percent: float = Field(20, description="Thigmotaxis zone width as % of pool radius")
+    focal_search_radius_multiplier: float = Field(1.5, description="Focal search radius as multiple of platform diameter")
+    directed_search_radius_multiplier: float = Field(3.5, description="Directed search radius as multiple of platform diameter")
+    corridor_width_degrees: float = Field(15, description="Direct swim corridor width in degrees (each side)")
+
     class Config:
         use_enum_values = True
 

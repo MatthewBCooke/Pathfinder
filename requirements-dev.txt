@@ -5,6 +5,7 @@
 -r requirements.txt
 
 # PyQt6 GUI framework
+PyQt5>=5.15.0
 PyQt6>=6.6.0
 PyQt6-sip>=13.5.0
 

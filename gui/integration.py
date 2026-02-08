@@ -21,7 +21,7 @@ from pathfinder.core.geometry import MazeGeometry
 
 from .main_window import PathfinderMainWindow
 from .defaults import DEFAULT_PARAMETERS, get_default_parameters
-from .settings_dialog import SettingsDialog
+from .settings_dialog_v2 import SettingsDialogV2
 
 
 # Configure logging
@@ -280,6 +280,16 @@ class PathfinderIntegration(QObject):
         self.current_experiment: Optional[Experiment] = None
         self.current_parameters: Parameters = get_default_parameters()
 
+        # Spatial parameters for maze geometry
+        self.spatial_params = {
+            'pool_center_x': 250.0,
+            'pool_center_y': 250.0,
+            'pool_diameter': 500.0,
+            'platform_x': 350.0,
+            'platform_y': 150.0,
+            'platform_diameter': 50.0
+        }
+
         # Workers
         self.file_worker: Optional[FileLoadWorker] = None
         self.analysis_worker: Optional[AnalysisWorker] = None
@@ -301,7 +311,26 @@ class PathfinderIntegration(QObject):
         cp.settings_clicked.connect(self.on_settings)
         cp.export_clicked.connect(self.on_export)
         cp.stop_btn.clicked.connect(self.on_stop_analysis)
-        
+        cp.spatial_params_changed.connect(self.on_spatial_params_changed)
+
+        # Maze visualization signals
+        maze_viz = self.window.get_maze_viz()
+        cp.spatial_params_changed.connect(maze_viz.update_parameters)
+
+        # Initialize maze visualization with default parameters
+        initial_params = {
+            'pool_center_x': self.spatial_params['pool_center_x'],
+            'pool_center_y': self.spatial_params['pool_center_y'],
+            'pool_diameter': self.spatial_params['pool_diameter'],
+            'platform_x': self.spatial_params['platform_x'],
+            'platform_y': self.spatial_params['platform_y'],
+            'platform_diameter': self.spatial_params['platform_diameter']
+        }
+        maze_viz.update_parameters(initial_params)
+
+        # Pass parameters object to visualization for zone sizing
+        maze_viz.set_parameters(self.current_parameters)
+
         # Results table signals
         rt = self.window.get_results_table()
         rt.manual_classification_requested.connect(self.on_manual_classification)
@@ -322,7 +351,49 @@ class PathfinderIntegration(QObject):
         cp = self.window.get_control_panel()
         cp.set_parameters_summary(f"Using: {self.current_parameters.name}")
         self.window.set_status_message("Ready - Load an experiment file to begin")
-    
+
+    def apply_spatial_parameters_to_trials(self):
+        """Apply current spatial parameters to all trials in the experiment"""
+        if not self.current_experiment:
+            logger.warning("No experiment loaded - cannot apply spatial parameters")
+            return
+
+        # Validate parameters
+        if self.spatial_params['pool_diameter'] <= self.spatial_params['platform_diameter']:
+            logger.error("Pool diameter must be greater than platform diameter")
+            self.window.set_status_message("ERROR: Invalid spatial parameters - pool must be larger than platform")
+            return
+
+        # Apply to all trials
+        count = 0
+        for trial in self.current_experiment.trials:
+            trial.pool_center = (
+                self.spatial_params['pool_center_x'],
+                self.spatial_params['pool_center_y']
+            )
+            trial.pool_diameter = self.spatial_params['pool_diameter']
+            trial.platform_position = (
+                self.spatial_params['platform_x'],
+                self.spatial_params['platform_y']
+            )
+            trial.platform_diameter = self.spatial_params['platform_diameter']
+            count += 1
+
+        logger.info(f"Applied spatial parameters to {count} trials")
+        self.window.set_status_message(f"Applied maze geometry to {count} trials")
+
+    @pyqtSlot(dict)
+    def on_spatial_params_changed(self, params: dict):
+        """Handle spatial parameter changes from GUI"""
+        self.spatial_params.update(params)
+        logger.info(f"Spatial parameters updated: {params}")
+
+        # Apply to current experiment if loaded
+        if self.current_experiment:
+            self.apply_spatial_parameters_to_trials()
+        else:
+            self.window.set_status_message("Spatial parameters updated - will apply when file is loaded")
+
     # File operations
     
     @pyqtSlot()
@@ -372,6 +443,9 @@ class PathfinderIntegration(QObject):
         # Otherwise, current_file is already set (e.g., by folder load)
 
         logger.info(f"File loaded: {len(experiment.trials)} trials")
+
+        # Apply spatial parameters to all trials
+        self.apply_spatial_parameters_to_trials()
 
         # Update UI
         cp = self.window.get_control_panel()
@@ -552,7 +626,7 @@ class PathfinderIntegration(QObject):
     @pyqtSlot()
     def on_settings(self):
         """Show settings dialog"""
-        dialog = SettingsDialog(self.current_parameters, self.window)
+        dialog = SettingsDialogV2(self.current_parameters, self.window)
         
         if dialog.exec_() == QDialog.Accepted:
             # Update parameters
@@ -564,9 +638,13 @@ class PathfinderIntegration(QObject):
             # Update UI
             cp = self.window.get_control_panel()
             cp.set_parameters_summary(f"Using: {new_params.name}")
-            
+
+            # Update maze visualization with new parameters
+            maze_viz = self.window.get_maze_viz()
+            maze_viz.set_parameters(new_params)
+
             self.window.set_status_message(f"Parameters updated: {new_params.name}")
-            
+
             # If experiment is loaded, suggest re-analysis
             if self.current_experiment:
                 if self.window.ask_yes_no(

@@ -4,8 +4,9 @@ Provides file loading, analysis controls, and settings access.
 """
 
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-    QLabel, QProgressBar, QGroupBox, QFileDialog
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
+    QLabel, QProgressBar, QGroupBox, QFileDialog,
+    QDoubleSpinBox, QFormLayout
 )
 from PyQt5.QtCore import pyqtSignal, Qt
 from pathlib import Path
@@ -26,6 +27,7 @@ class ControlPanelWidget(QWidget):
     settings_clicked = pyqtSignal()
     export_clicked = pyqtSignal()
     load_folder_requested = pyqtSignal()
+    spatial_params_changed = pyqtSignal(dict)
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -42,7 +44,11 @@ class ControlPanelWidget(QWidget):
         # File Operations Group
         file_group = self._create_file_group()
         layout.addWidget(file_group)
-        
+
+        # Spatial Parameters Group
+        spatial_group = self._create_spatial_params_group()
+        layout.addWidget(spatial_group)
+
         # Analysis Controls Group
         analysis_group = self._create_analysis_group()
         layout.addWidget(analysis_group)
@@ -95,7 +101,110 @@ class ControlPanelWidget(QWidget):
 
     def _on_load_folder_clicked(self):
         self.load_folder_requested.emit()
-    
+
+    def _create_spatial_params_group(self):
+        """Create spatial parameters group"""
+        group = QGroupBox("Maze Geometry")
+        layout = QFormLayout()
+
+        # Pool center X
+        self.pool_center_x_spin = QDoubleSpinBox()
+        self.pool_center_x_spin.setRange(0, 10000)
+        self.pool_center_x_spin.setValue(250.0)
+        self.pool_center_x_spin.setSuffix(" px")
+        self.pool_center_x_spin.setDecimals(1)
+        self.pool_center_x_spin.valueChanged.connect(self._on_spatial_param_changed)
+        layout.addRow("Pool Center X:", self.pool_center_x_spin)
+
+        # Pool center Y
+        self.pool_center_y_spin = QDoubleSpinBox()
+        self.pool_center_y_spin.setRange(0, 10000)
+        self.pool_center_y_spin.setValue(250.0)
+        self.pool_center_y_spin.setSuffix(" px")
+        self.pool_center_y_spin.setDecimals(1)
+        self.pool_center_y_spin.valueChanged.connect(self._on_spatial_param_changed)
+        layout.addRow("Pool Center Y:", self.pool_center_y_spin)
+
+        # Pool diameter
+        self.pool_diameter_spin = QDoubleSpinBox()
+        self.pool_diameter_spin.setRange(10, 10000)
+        self.pool_diameter_spin.setValue(500.0)
+        self.pool_diameter_spin.setSuffix(" px")
+        self.pool_diameter_spin.setDecimals(1)
+        self.pool_diameter_spin.valueChanged.connect(self._on_spatial_param_changed)
+        layout.addRow("Pool Diameter:", self.pool_diameter_spin)
+
+        # Platform X
+        self.platform_x_spin = QDoubleSpinBox()
+        self.platform_x_spin.setRange(0, 10000)
+        self.platform_x_spin.setValue(350.0)
+        self.platform_x_spin.setSuffix(" px")
+        self.platform_x_spin.setDecimals(1)
+        self.platform_x_spin.valueChanged.connect(self._on_spatial_param_changed)
+        layout.addRow("Platform X:", self.platform_x_spin)
+
+        # Platform Y
+        self.platform_y_spin = QDoubleSpinBox()
+        self.platform_y_spin.setRange(0, 10000)
+        self.platform_y_spin.setValue(150.0)
+        self.platform_y_spin.setSuffix(" px")
+        self.platform_y_spin.setDecimals(1)
+        self.platform_y_spin.valueChanged.connect(self._on_spatial_param_changed)
+        layout.addRow("Platform Y:", self.platform_y_spin)
+
+        # Platform diameter
+        self.platform_diameter_spin = QDoubleSpinBox()
+        self.platform_diameter_spin.setRange(1, 1000)
+        self.platform_diameter_spin.setValue(50.0)
+        self.platform_diameter_spin.setSuffix(" px")
+        self.platform_diameter_spin.setDecimals(1)
+        self.platform_diameter_spin.valueChanged.connect(self._on_spatial_param_changed)
+        layout.addRow("Platform Diameter:", self.platform_diameter_spin)
+
+        # Apply button
+        apply_btn = QPushButton("Apply Geometry")
+        apply_btn.setMinimumHeight(30)
+        apply_btn.clicked.connect(self._on_spatial_params_apply)
+        layout.addRow(apply_btn)
+
+        # Info labels
+        info_label = QLabel("💡 Visualization updates automatically as you adjust values")
+        info_label.setStyleSheet("color: #0066cc; font-size: 9pt; font-style: italic;")
+        info_label.setWordWrap(True)
+        layout.addRow(info_label)
+
+        info_label2 = QLabel("Click 'Apply Geometry' to update loaded trials")
+        info_label2.setStyleSheet("color: #666; font-size: 9pt; font-style: italic;")
+        info_label2.setWordWrap(True)
+        layout.addRow(info_label2)
+
+        group.setLayout(layout)
+        return group
+
+    def _get_current_spatial_params(self):
+        """Get current spatial parameter values as dict"""
+        return {
+            'pool_center_x': self.pool_center_x_spin.value(),
+            'pool_center_y': self.pool_center_y_spin.value(),
+            'pool_diameter': self.pool_diameter_spin.value(),
+            'platform_x': self.platform_x_spin.value(),
+            'platform_y': self.platform_y_spin.value(),
+            'platform_diameter': self.platform_diameter_spin.value()
+        }
+
+    def _on_spatial_param_changed(self):
+        """Handle individual spinbox value change - update visualization only"""
+        # Emit signal for live visualization update
+        # Note: This does NOT apply to trials, only updates the display
+        params = self._get_current_spatial_params()
+        self.spatial_params_changed.emit(params)
+
+    def _on_spatial_params_apply(self):
+        """Emit signal to apply spatial parameters to loaded trials"""
+        # This applies parameters to all trials in the experiment
+        params = self._get_current_spatial_params()
+        self.spatial_params_changed.emit(params)
+
     def _create_analysis_group(self):
         """Create analysis controls group"""
         group = QGroupBox("Analysis")
