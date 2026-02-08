@@ -90,12 +90,21 @@ class PathfinderMinimal(QMainWindow):
                 QMessageBox.warning(self, "Error", "No data rows in CSV")
                 return
             
+            # Set table headers from first row if it has header
+            if has_header and rows[0]:
+                headers = rows[0][:5]  # First 5 columns
+                # Pad with generic names if needed
+                while len(headers) < 5:
+                    headers.append(f"Col {len(headers)}")
+                self.table.setHorizontalHeaderLabels(headers)
+            
             # Display in table
             self.table.setRowCount(len(data_rows))
             
             for row_idx, row in enumerate(data_rows):
-                # Row number
+                # Row number (sequential from 1)
                 item = QTableWidgetItem(str(row_idx + 1))
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Read-only
                 self.table.setItem(row_idx, 0, item)
                 
                 # First 4 columns (time, x, y, other)
@@ -110,6 +119,7 @@ class PathfinderMinimal(QMainWindow):
                             except:
                                 pass
                         item = QTableWidgetItem(str(val))
+                        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Read-only
                         self.table.setItem(row_idx, col_idx, item)
                     except:
                         pass
@@ -123,20 +133,26 @@ class PathfinderMinimal(QMainWindow):
     
     def _looks_like_header(self, row):
         """Check if first row looks like a header (contains non-numeric values)."""
-        if not row or len(row) < 3:
+        if not row or len(row) < 1:
             return False
         
-        # Count numeric values
-        numeric_count = 0
-        for val in row[:3]:
-            try:
-                float(val)
-                numeric_count += 1
-            except:
-                pass
+        # Check first column - if it's not numeric, likely a header
+        first_val = str(row[0]).strip().lower()
         
-        # If all first 3 are numeric, probably data not header
-        return numeric_count < 3
+        # Common header names
+        header_keywords = ['time', 'x', 'y', 't', 'col', 'column', 'frame', 'id', 'name', 'label']
+        
+        # If first value is a known header keyword or non-numeric, treat as header
+        is_keyword = any(kw in first_val for kw in header_keywords)
+        
+        try:
+            float(row[0])
+            is_numeric = True
+        except:
+            is_numeric = False
+        
+        # It's a header if it's NOT numeric OR contains header keywords
+        return (not is_numeric) or is_keyword
 
 
 def main():
