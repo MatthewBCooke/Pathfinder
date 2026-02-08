@@ -191,21 +191,13 @@ class HeatmapWidget(QWidget):
         # Smooth the heatmap
         occupancy_smooth = gaussian_filter(occupancy, sigma=2.0)
 
-        # Check for NaN/Inf in bins and occupancy
-        if (
-            np.any(np.isnan(x_bins)) or np.any(np.isnan(y_bins)) or
-            np.any(np.isnan(occupancy_smooth)) or
-            np.any(np.isinf(x_bins)) or np.any(np.isinf(y_bins)) or
-            np.any(np.isinf(occupancy_smooth))
-        ):
-            self.ax.clear()
-            self.ax.text(0.5, 0.5, "Invalid data for heatmap (NaN or Inf detected)",
-                         ha='center', va='center', fontsize=14, color='red')
-            self.ax.set_xlim(0, 1)
-            self.ax.set_ylim(0, 1)
-            self.ax.axis('off')
-            self.canvas.draw()
-            return
+        # Replace any NaN/Inf in bins and occupancy with 0
+        if np.any(np.isnan(x_bins)) or np.any(np.isinf(x_bins)):
+            x_bins = np.nan_to_num(x_bins, nan=0.0, posinf=0.0, neginf=0.0)
+        if np.any(np.isnan(y_bins)) or np.any(np.isinf(y_bins)):
+            y_bins = np.nan_to_num(y_bins, nan=0.0, posinf=0.0, neginf=0.0)
+        if np.any(np.isnan(occupancy_smooth)) or np.any(np.isinf(occupancy_smooth)):
+            occupancy_smooth = np.nan_to_num(occupancy_smooth, nan=0.0, posinf=0.0, neginf=0.0)
 
         # Plot heatmap
         im = self.ax.imshow(occupancy_smooth, cmap='hot', origin='lower',

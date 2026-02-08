@@ -87,8 +87,15 @@ class MazeGeometry(BaseModel):
         relative_angle = (point_angle - platform_angle) % (2 * math.pi)
         
         # Determine quadrant (0-90° = Q1, 90-180° = Q2, etc.)
-        quadrant = int(relative_angle / (math.pi / 2)) + 1
-        
+        # Protect against NaN/Inf
+        try:
+            val = relative_angle / (math.pi / 2)
+            if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+                quadrant = 1
+            else:
+                quadrant = int(val) + 1
+        except Exception:
+            quadrant = 1
         return min(quadrant, 4)  # Ensure 1-4 range
     
     def calculate_annulus_40(self, x: float, y: float) -> int:

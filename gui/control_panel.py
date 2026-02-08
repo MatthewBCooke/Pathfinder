@@ -65,11 +65,23 @@ class ControlPanelWidget(QWidget):
         group = QGroupBox("File Operations")
         layout = QVBoxLayout()
         
+
         # Load File button
         self.load_btn = QPushButton("📁 Load Experiment File")
         self.load_btn.setMinimumHeight(40)
         self.load_btn.clicked.connect(self._on_load_clicked)
         layout.addWidget(self.load_btn)
+
+        # Load Folder button
+        self.load_folder_btn = QPushButton("📂 Load Folder of Trials")
+        self.load_folder_btn.setMinimumHeight(40)
+        self.load_folder_btn.clicked.connect(self._on_load_folder_clicked)
+        layout.addWidget(self.load_folder_btn)
+            def _on_load_folder_clicked(self):
+                self.parent().load_folder_requested.emit()
+
+            # Add a new signal for folder loading
+            load_folder_requested = pyqtSignal()
         
         # Current file label
         self.file_label = QLabel("No file loaded")

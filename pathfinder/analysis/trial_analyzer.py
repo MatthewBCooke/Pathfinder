@@ -160,6 +160,13 @@ class TrialAnalyzer:
 
         metrics['quadrant_coverage'] = len(quadrants_visited)
         
+        # Sanitize all metrics: replace NaN/Inf with 0
+        for k, v in metrics.items():
+            try:
+                if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+                    metrics[k] = 0
+            except Exception:
+                metrics[k] = 0
         return metrics
     
     def _calculate_ipe(self, start_point, second_point) -> float:
