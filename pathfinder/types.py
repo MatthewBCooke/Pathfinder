@@ -264,6 +264,47 @@ class AutoParameters:
 
 
 @dataclass
+class StrategyResult:
+    """
+    Result of strategy classification for a single trial.
+    
+    Combines trial identification, metrics, and classification output
+    for display in GUI results table.
+    """
+    trial_name: str
+    """Name/identifier of the trial"""
+    
+    animal_id: str
+    """Animal identifier"""
+    
+    strategy: str
+    """Classified strategy name (e.g., 'Direct', 'Focal', 'Random')"""
+    
+    score: int
+    """Strategy score (0-3, higher = more efficient)"""
+    
+    # Key metrics for display
+    entropy: Optional[float]
+    """Shannon entropy of spatial distribution"""
+    
+    ipe: float
+    """Ideal Path Error (path efficiency)"""
+    
+    distance: float
+    """Total path distance"""
+    
+    velocity: float
+    """Average swim velocity"""
+    
+    latency: float
+    """Escape latency (time to reach platform)"""
+    
+    # Optional: full metrics object
+    metrics: Optional[TrialMetrics] = None
+    """Complete metrics object (optional)"""
+
+
+@dataclass
 class HeatmapData:
     """
     Aggregated heatmap data ready for visualization.
@@ -271,26 +312,29 @@ class HeatmapData:
     Contains position data aggregated and smoothed from trials, 
     without any plotting/GUI dependencies.
     """
-    x_smoothed: np.ndarray
+    data: Optional[np.ndarray] = None
+    """2D histogram array for display"""
+    
+    x_smoothed: Optional[np.ndarray] = None
     """Gaussian-smoothed X coordinates"""
     
-    y_smoothed: np.ndarray
+    y_smoothed: Optional[np.ndarray] = None
     """Gaussian-smoothed Y coordinates"""
     
-    x_raw: List[float]
+    x_raw: Optional[List[float]] = None
     """Raw X coordinates before smoothing"""
     
-    y_raw: List[float]
+    y_raw: Optional[List[float]] = None
     """Raw Y coordinates before smoothing"""
     
-    extent: Tuple[float, float, float, float]
+    extent: Optional[Tuple[float, float, float, float]] = None
     """Spatial extent (xMin, xMax, yMin, yMax) of the data"""
     
-    gridsize: int
+    gridsize: int = 50
     """Grid size for hexbin/heatmap visualization"""
     
     histogram: Optional[np.ndarray] = None
-    """2D histogram array (optional, can be computed from x/y)"""
+    """2D histogram array (alternative format)"""
     
     xedges: Optional[np.ndarray] = None
     """Histogram bin edges for X axis"""

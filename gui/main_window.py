@@ -584,16 +584,9 @@ class MainWindow(QMainWindow):
     # --- Event Handlers (Menu Actions) ---
     
     def _on_load_experiment(self) -> None:
-        """Handle Load Experiment action."""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Load Experiment File",
-            "",
-            "CSV Files (*.csv);;Excel Files (*.xlsx);;All Files (*)"
-        )
-        
-        if file_path:
-            self._load_experiment_file(file_path)
+        """Handle Load Experiment action - delegated to integration layer."""
+        # This will be handled by the integration layer
+        pass
     
     def _on_load_directory(self) -> None:
         """Handle Load Directory action."""
@@ -626,14 +619,9 @@ class MainWindow(QMainWindow):
             self._save_results_to_file(file_path)
     
     def _on_open_settings(self) -> None:
-        """Handle Settings action."""
-        # TODO: Open SettingsDialog
-        QMessageBox.information(
-            self,
-            "Settings",
-            "Settings dialog will be implemented in the next phase.\n\n"
-            "This will allow you to configure all analysis parameters."
-        )
+        """Handle Settings action - delegated to integration layer."""
+        # This will be handled by the integration layer
+        pass
     
     def _on_open_roi_manager(self) -> None:
         """Handle ROI Manager action."""
@@ -681,32 +669,9 @@ class MainWindow(QMainWindow):
     # --- Event Handlers (Button Actions) ---
     
     def _on_run_analysis(self) -> None:
-        """Handle Analyze button click."""
-        if not self.current_experiment:
-            QMessageBox.warning(
-                self,
-                "No Experiment",
-                "Please load an experiment before running analysis."
-            )
-            return
-        
-        # Emit signal and update UI
-        self.analysis_started.emit()
-        self._update_status("Starting analysis...")
-        self.analyze_button.setEnabled(False)
-        self.progress_bar.setValue(0)
-        
-        # TODO: Create AnalysisWorker thread and run analysis
-        # For now, show placeholder
-        QMessageBox.information(
-            self,
-            "Analysis",
-            "Analysis execution will be implemented in the next phase.\n\n"
-            "This will run in a background thread and show progress updates."
-        )
-        
-        # Re-enable button
-        self.analyze_button.setEnabled(True)
+        """Handle Analyze button click - delegated to integration layer."""
+        # This will be handled by the integration layer
+        pass
     
     # --- Slot Handlers (Custom Signals) ---
     
@@ -775,31 +740,14 @@ class MainWindow(QMainWindow):
         """
         Load an experiment from a single file.
         
+        This method is kept for compatibility but actual loading
+        is handled by the integration layer.
+        
         Args:
             file_path: Path to the experiment file
         """
-        self.experiment_file_path = file_path
-        self._update_status(f"Loading experiment from {Path(file_path).name}...")
-        
-        try:
-            # TODO: Call load_experiment from pathfinder package
-            # experiment = load_experiment(file_path)
-            # self.loaded_experiment.emit(experiment)
-            
-            # Placeholder for development
-            self.experiment_label.setText(f"📁 {Path(file_path).name}")
-            self.trial_count_label.setText("Trials: [Loading...]")
-            
-            # Simulate successful load
-            QMessageBox.information(
-                self,
-                "Load Experiment",
-                f"Experiment file selected:\n{file_path}\n\n"
-                "File loading will be implemented in the next phase."
-            )
-            
-        except Exception as e:
-            self.error.emit(f"Failed to load experiment: {str(e)}")
+        # Deprecated - handled by integration layer
+        pass
     
     def _load_experiment_directory(self, dir_path: str) -> None:
         """
@@ -808,14 +756,13 @@ class MainWindow(QMainWindow):
         Args:
             dir_path: Path to the directory containing experiment files
         """
+        # TODO: Implement directory loading (Phase 2)
         self._update_status(f"Loading experiments from {Path(dir_path).name}...")
-        
-        # TODO: Implement directory loading
         QMessageBox.information(
             self,
-            "Load Directory",
-            f"Directory selected:\n{dir_path}\n\n"
-            "Directory loading will be implemented in the next phase."
+            "Directory Loading",
+            "Directory loading will be implemented in Phase 2.\n\n"
+            "For now, please load individual files."
         )
     
     def _save_results_to_file(self, file_path: str) -> None:
@@ -829,19 +776,52 @@ class MainWindow(QMainWindow):
             return
         
         try:
-            # TODO: Implement CSV export
+            import csv
+            
             self._update_status(f"Saving results to {Path(file_path).name}...")
             
-            # Placeholder
+            # Get trials from results dict
+            trials = self.current_results.get('trials', [])
+            
+            if not trials:
+                QMessageBox.warning(self, "No Results", "No trial results to save")
+                return
+            
+            # Write to CSV
+            with open(file_path, 'w', newline='') as f:
+                writer = csv.writer(f)
+                
+                # Header
+                writer.writerow([
+                    'Trial', 'Strategy', 'Latency (s)', 
+                    'Distance (cm)', 'Efficiency', 'Score'
+                ])
+                
+                # Data rows
+                for trial in trials:
+                    writer.writerow([
+                        trial.get('trial_id', ''),
+                        trial.get('strategy', ''),
+                        f"{trial.get('latency', 0.0):.2f}",
+                        f"{trial.get('distance', 0.0):.2f}",
+                        f"{trial.get('efficiency', 0.0):.3f}",
+                        f"{trial.get('score', 0.0):.1f}",
+                    ])
+            
+            self._update_status(f"Results saved to {Path(file_path).name}")
             QMessageBox.information(
                 self,
-                "Save Results",
-                f"Results will be saved to:\n{file_path}\n\n"
-                "CSV export will be implemented in the next phase."
+                "Saved",
+                f"Results successfully saved to:\n{file_path}"
             )
             
         except Exception as e:
             self.error.emit(f"Failed to save results: {str(e)}")
+            QMessageBox.critical(
+                self,
+                "Save Error",
+                f"Failed to save results:\n{str(e)}"
+            )
     
     def _populate_results_table(self, results: Dict[str, Any]) -> None:
         """
