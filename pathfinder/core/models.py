@@ -19,6 +19,7 @@ class SearchStrategy(str, Enum):
     SCANNING = "scanning"
     THIGMOTAXIS = "thigmotaxis"
     RANDOM_SEARCH = "random_search"
+    NOT_RECOGNIZED = "not_recognized"
 
 
 class Datapoint(BaseModel):
@@ -60,13 +61,40 @@ class Parameters(BaseModel):
     # Semi-focal parameters
     semi_focal_min_distance: float = Field(0, description="Semi-focal minimum distance")
     semi_focal_max_distance: float = Field(500, description="Semi-focal maximum distance")
-    
-    # Other parameters
+
+    # Indirect Search parameters
+    ipe_indirect_max_val: float = Field(300, description="Maximum IPE for Indirect Search")
+    heading_indirect_max_val: float = Field(70, description="Maximum heading error for Indirect Search")
+
+    # Chaining parameters
     annulus_counter_max_val: float = Field(90, description="Annulus counter maximum")
     quadrant_total_max_val: float = Field(4, description="Quadrant total maximum")
     chaining_max_coverage: float = Field(40, description="Chaining max coverage")
-    percent_traversed_max_val: float = Field(20, description="Percent traversed maximum")
-    
+
+    # Scanning parameters
+    percent_traversed_min_val: float = Field(5, description="Minimum percent traversed for Scanning")
+    percent_traversed_max_val: float = Field(20, description="Maximum percent traversed for Scanning")
+    distance_to_centre_max_val: float = Field(60, description="Maximum distance to centre (% of radius) for Scanning")
+
+    # Thigmotaxis parameters
+    full_thigmo_min_val: float = Field(65, description="Minimum full thigmotaxis percentage")
+    small_thigmo_min_val: float = Field(35, description="Minimum small thigmotaxis percentage")
+    thigmo_min_distance: float = Field(400, description="Minimum total distance for Thigmotaxis")
+
+    # Random Search parameters
+    percent_traversed_random_max_val: float = Field(10, description="Minimum percent traversed for Random Search")
+
+    # Strategy enable/disable flags
+    use_direct: bool = Field(True, description="Enable Direct Path classification")
+    use_focal: bool = Field(True, description="Enable Focal Search classification")
+    use_directed: bool = Field(True, description="Enable Directed Search classification")
+    use_indirect: bool = Field(True, description="Enable Indirect Search classification")
+    use_semi_focal: bool = Field(False, description="Enable Semi-Focal Search classification")
+    use_chaining: bool = Field(True, description="Enable Chaining classification")
+    use_scanning: bool = Field(True, description="Enable Scanning classification")
+    use_thigmotaxis: bool = Field(True, description="Enable Thigmotaxis classification")
+    use_random: bool = Field(True, description="Enable Random Search classification")
+
     # Advanced parameters
     scale_values: bool = Field(True, description="Auto-scale values based on pool size")
     pixels_per_cm: float = Field(1.0, description="Conversion factor: pixels per cm")

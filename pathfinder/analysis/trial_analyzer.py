@@ -203,48 +203,16 @@ class TrialAnalyzer:
         """
         Detect search strategy based on metrics.
         Uses rule-based classification.
-        
+
+        NOTE: This is a simplified version. For production use, integrate with
+        pathfinder.analysis.classify_strategy which has the full proper logic.
+
         Args:
             metrics: Calculated trajectory metrics
-            
+
         Returns:
             Tuple of (strategy, confidence)
         """
-        # Direct Swim: low IPE, high efficiency, straight to platform
-        if (metrics.get('initial_path_error', 999) < self.params.ipe_max_val and
-            metrics.get('path_efficiency', 0) > 50 and
-            metrics.get('initial_distance_to_platform', 0) < self.params.distance_to_swim_max_val):
-            return SearchStrategy.DIRECT_SWIM, 0.9
-        
-        # Directed Search: reasonable heading, focused on platform area
-        if (metrics.get('percent_in_platform_zone', 0) > 30 and
-            metrics.get('path_efficiency', 0) > 30):
-            return SearchStrategy.DIRECTED_SEARCH, 0.8
-        
-        # Focal Search: concentrated search in platform region
-        if (metrics.get('percent_in_platform_zone', 0) > 40 and
-            metrics.get('quadrant_coverage', 0) <= 2):
-            return SearchStrategy.FOCAL_SEARCH, 0.85
-        
-        # Thigmotaxis: hugging the wall
-        if metrics.get('percent_near_wall', 0) > self.params.percent_traversed_max_val:
-            return SearchStrategy.THIGMOTAXIS, 0.9
-        
-        # Scanning: systematic coverage of pool
-        if (metrics.get('quadrant_coverage', 0) >= 3 and
-            metrics.get('percent_near_wall', 0) < 30):
-            return SearchStrategy.SCANNING, 0.7
-        
-        # Chaining: repeated similar path (would need trial-to-trial comparison)
-        # Simplified detection based on moderate efficiency
-        if (metrics.get('path_efficiency', 0) > 20 and
-            metrics.get('path_efficiency', 0) < 40):
-            return SearchStrategy.CHAINING, 0.6
-        
-        # Spatial Indirect: some spatial knowledge but indirect approach
-        if (metrics.get('percent_in_platform_zone', 0) > 15 and
-            metrics.get('quadrant_coverage', 0) >= 2):
-            return SearchStrategy.SPATIAL_INDIRECT, 0.7
-        
-        # Default: Random Search
-        return SearchStrategy.RANDOM_SEARCH, 0.5
+        # Placeholder that returns NOT_RECOGNIZED
+        # The AnalysisWorker should be updated to use pathfinder.analysis functions instead
+        return SearchStrategy.NOT_RECOGNIZED, 0.0

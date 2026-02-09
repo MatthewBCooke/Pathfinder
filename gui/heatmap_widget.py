@@ -62,7 +62,7 @@ class HeatmapWidget(QWidget):
         """Create control panel"""
         group = QGroupBox("Visualization Controls")
         layout = QHBoxLayout()
-        
+
         # Visualization type
         layout.addWidget(QLabel("Type:"))
         self.viz_type_combo = QComboBox()
@@ -74,54 +74,98 @@ class HeatmapWidget(QWidget):
         ])
         self.viz_type_combo.currentIndexChanged.connect(self._on_viz_type_changed)
         layout.addWidget(self.viz_type_combo)
-        
+
         # Day filter
         layout.addWidget(QLabel("Day:"))
         self.day_combo = QComboBox()
         self.day_combo.addItem("All Days", None)
         self.day_combo.currentIndexChanged.connect(self._on_filter_changed)
         layout.addWidget(self.day_combo)
-        
+
+        # Trial selector (for Individual Paths mode)
+        self.trial_label = QLabel("Trial:")
+        layout.addWidget(self.trial_label)
+        self.trial_combo = QComboBox()
+        self.trial_combo.addItem("All Trials (max 10)", None)
+        self.trial_combo.currentIndexChanged.connect(self._on_trial_changed)
+        layout.addWidget(self.trial_combo)
+
+        # Initially hide trial selector
+        self.trial_label.setVisible(False)
+        self.trial_combo.setVisible(False)
+
         layout.addStretch()
-        
+
         # Generate button
         self.generate_btn = QPushButton("🔄 Regenerate")
         self.generate_btn.clicked.connect(self._generate_plot)
         layout.addWidget(self.generate_btn)
-        
+
         # Export button
         self.export_btn = QPushButton("💾 Export Image")
         self.export_btn.clicked.connect(self.export_requested.emit)
         layout.addWidget(self.export_btn)
-        
+
         group.setLayout(layout)
         return group
     
     def set_experiment(self, experiment: Experiment):
         """Load experiment data for visualization"""
         self._experiment = experiment
-        
+
         if not experiment:
             self._plot_empty()
             return
-        
+
         # Update day filter
         self.day_combo.clear()
         self.day_combo.addItem("All Days", None)
-        
+
         days = sorted(set(t.day for t in experiment.trials))
         for day in days:
             self.day_combo.addItem(f"Day {day}", day)
-        
+
+        # Update trial selector
+        self._update_trial_selector()
+
         # Generate initial plot
         self._generate_plot()
+
+    def _update_trial_selector(self):
+        """Update trial selector with current trials using row indices"""
+        self.trial_combo.clear()
+        self.trial_combo.addItem("All Trials (max 10)", -1)  # -1 = show multiple
+
+        if not self._experiment:
+            return
+
+        trials = self._get_filtered_trials()
+        for idx, trial in enumerate(trials):
+            strategy_text = trial.search_strategy.value if trial.search_strategy else "Unclassified"
+            # Show row number (1-based for user display) along with day/trial/strategy
+            label = f"Row {idx + 1}: Day {trial.day} Trial {trial.trial_number} - {strategy_text}"
+            self.trial_combo.addItem(label, idx)  # Store 0-based index
     
     def _on_viz_type_changed(self, index: int):
         """Handle visualization type change"""
+        # Show/hide trial selector based on visualization type
+        is_individual = "Individual Paths" in self.viz_type_combo.currentText()
+        self.trial_label.setVisible(is_individual)
+        self.trial_combo.setVisible(is_individual)
+
+        if is_individual:
+            self._update_trial_selector()
+
         self._generate_plot()
-    
+
     def _on_filter_changed(self, index: int):
         """Handle filter change"""
+        if "Individual Paths" in self.viz_type_combo.currentText():
+            self._update_trial_selector()
+        self._generate_plot()
+
+    def _on_trial_changed(self, index: int):
+        """Handle trial selection change"""
         self._generate_plot()
     
     def _generate_plot(self):
@@ -232,50 +276,87 @@ class HeatmapWidget(QWidget):
         self.canvas.draw()
     
     def _plot_individual_paths(self):
-        """Plot individual trial trajectories"""
+        """Plot individual trial trajectories using row indices"""
         self.ax.clear()
-        
+
         trials = self._get_filtered_trials()
         if not trials:
             self._plot_empty()
             return
-        
+
+        # Check if specific trial is selected (by row index)
+        selected_index = self.trial_combo.currentData()
+
+        if selected_index is not None and selected_index >= 0:
+            # Show single selected trial by index
+            if selected_index < len(trials):
+                trials_to_plot = [trials[selected_index]]
+            else:
+                self._plot_empty()
+                return
+        else:
+            # Show multiple trials (max 10)
+            trials_to_plot = trials[:10]
+
         # Get pool geometry
-        trial = trials[0]
+        trial = trials_to_plot[0]
         pool_center = trial.pool_center
         pool_radius = trial.pool_diameter / 2
-        
+
         # Plot pool boundary
-        circle = plt.Circle(pool_center, pool_radius, color='black', 
+        circle = plt.Circle(pool_center, pool_radius, color='black',
                            fill=False, linewidth=2)
         self.ax.add_patch(circle)
-        
+
         # Plot platform
         platform = plt.Circle(trial.platform_position, trial.platform_diameter / 2,
                              color='red', fill=True, alpha=0.5, label='Platform')
         self.ax.add_patch(platform)
-        
+
         # Plot each trial path
-        for i, trial in enumerate(trials[:10]):  # Limit to first 10 for clarity
-            x = [p.x for p in trial.trajectory]
-            y = [p.y for p in trial.trajectory]
-            
-            # Color by trial number
-            color = plt.cm.viridis(i / len(trials[:10]))
-            self.ax.plot(x, y, color=color, alpha=0.6, linewidth=1, 
-                        label=f'Trial {trial.trial_number}')
-            
-            # Mark start point
-            if x and y:
-                self.ax.plot(x[0], y[0], 'go', markersize=6, alpha=0.7)
-        
+        for i, trial in enumerate(trials_to_plot):
+            x = [p.x for p in trial.trajectory if p.x is not None and not np.isnan(p.x)]
+            y = [p.y for p in trial.trajectory if p.y is not None and not np.isnan(p.y)]
+
+            if not x or not y:
+                continue
+
+            # Color by trial number (or single color if one trial)
+            if len(trials_to_plot) == 1:
+                color = 'blue'
+                linewidth = 2
+                alpha = 0.9
+            else:
+                color = plt.cm.viridis(i / len(trials_to_plot))
+                linewidth = 1
+                alpha = 0.6
+
+            strategy_text = trial.search_strategy.value if trial.search_strategy else "Unclassified"
+            label = f'Trial {trial.trial_number} - {strategy_text}'
+
+            self.ax.plot(x, y, color=color, alpha=alpha, linewidth=linewidth,
+                        label=label)
+
+            # Mark start and end points
+            self.ax.plot(x[0], y[0], 'go', markersize=10, alpha=0.9,
+                        markeredgecolor='darkgreen', markeredgewidth=2,
+                        label='Start' if i == 0 else '')
+            self.ax.plot(x[-1], y[-1], 'rs', markersize=10, alpha=0.9,
+                        markeredgecolor='darkred', markeredgewidth=2,
+                        label='End' if i == 0 else '')
+
         self.ax.set_aspect('equal')
-        self.ax.set_title(f'Individual Trajectories (showing {min(len(trials), 10)} trials)', 
-                         fontsize=12, fontweight='bold')
+
+        if selected_index is not None and selected_index >= 0:
+            title = f'Trial {trials_to_plot[0].trial_number} Trajectory (Day {trials_to_plot[0].day})'
+        else:
+            title = f'Individual Trajectories (showing {len(trials_to_plot)} of {len(trials)} trials)'
+
+        self.ax.set_title(title, fontsize=12, fontweight='bold')
         self.ax.set_xlabel('X Position')
         self.ax.set_ylabel('Y Position')
         self.ax.legend(loc='upper right', fontsize=8)
-        
+
         self.canvas.draw()
     
     def _plot_strategy_comparison(self):
@@ -354,9 +435,52 @@ class HeatmapWidget(QWidget):
         """Export current plot to file"""
         self.figure.savefig(filename, dpi=300, bbox_inches='tight')
     
+    def show_trial_by_index(self, row_index: int):
+        """
+        Show a specific trial's path by row index in Individual Paths mode.
+        Called when user clicks a trial in results table.
+
+        Args:
+            row_index: 0-based row index from results table
+        """
+        if not self._experiment:
+            return
+
+        # Switch to Individual Paths mode
+        self.viz_type_combo.setCurrentText("Individual Paths")
+
+        # The trial_combo stores indices as data, find matching one
+        # Note: trial_combo indices might differ if filtered by day
+        trials = self._get_filtered_trials()
+
+        # Find the trial in the filtered list
+        if row_index < len(self._experiment.trials):
+            target_trial = self._experiment.trials[row_index]
+
+            # Find this trial in the filtered trials list
+            for filtered_idx, trial in enumerate(trials):
+                if trial.trial_id == target_trial.trial_id:
+                    # Find the combo box item with this filtered index
+                    for combo_idx in range(self.trial_combo.count()):
+                        if self.trial_combo.itemData(combo_idx) == filtered_idx:
+                            self.trial_combo.setCurrentIndex(combo_idx)
+                            return
+
+        # If not found in filtered list, show all trials and then select
+        self.day_combo.setCurrentIndex(0)  # "All Days"
+        self._update_trial_selector()
+
+        # Now find it in the full list
+        for combo_idx in range(self.trial_combo.count()):
+            if self.trial_combo.itemData(combo_idx) == row_index:
+                self.trial_combo.setCurrentIndex(combo_idx)
+                break
+
     def clear(self):
         """Clear visualization"""
         self._experiment = None
         self.day_combo.clear()
         self.day_combo.addItem("All Days", None)
+        self.trial_combo.clear()
+        self.trial_combo.addItem("All Trials (max 10)", -1)
         self._plot_empty()

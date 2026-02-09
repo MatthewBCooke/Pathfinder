@@ -204,6 +204,12 @@ class SettingsDialogV2(QDialog):
             "Minimum time in angular corridor for directed search."
         )
 
+        widget.add_parameter(
+            "corridor_width", "Corridor Angular Width:",
+            5, 45, 15, "degrees",
+            "Angular width of directed search corridor on each side of platform direction (for visualization and analysis)."
+        )
+
         self.strategy_widgets['directed_search'] = widget
         tabs.addTab(widget, "🔍 Directed Search")
 
@@ -338,21 +344,27 @@ class SettingsDialogV2(QDialog):
         )
 
         widget.add_parameter(
-            "thigmo_zone_size", "Thigmotaxis Zone Width:",
+            "thigmo_zone_size", "Thigmotaxis Zone Width (Visual):",
             5, 50, 20, "% of radius",
-            "Width of wall zone for thigmotaxis detection."
+            "Width of wall zone for visualization (affects thigmotaxis_zone_percent)."
         )
 
         widget.add_parameter(
             "full_thigmo_min", "Minimum Time in Full Zone:",
-            0, 100, 70, "%",
-            "Minimum time in outer thigmotaxis zone."
+            0, 100, 65, "%",
+            "Minimum time in outer/full thigmotaxis zone for classification."
         )
 
         widget.add_parameter(
             "small_thigmo_min", "Minimum Time in Small Zone:",
-            0, 100, 50, "%",
-            "Minimum time in inner thigmotaxis zone."
+            0, 100, 35, "%",
+            "Minimum time in inner/small thigmotaxis zone for classification."
+        )
+
+        widget.add_parameter(
+            "thigmo_min_distance", "Minimum Path Distance:",
+            0, 1000, 400, "cm",
+            "Minimum total distance traveled for thigmotaxis classification."
         )
 
         self.strategy_widgets['thigmotaxis'] = widget
@@ -430,6 +442,7 @@ class SettingsDialogV2(QDialog):
             w.set_parameter_value('directed_max_distance', self.current_parameters.directed_search_max_distance)
             w.set_parameter_value('corridor_ipe_max', self.current_parameters.corridor_ipe_max_val)
             w.set_parameter_value('corridor_min_directed', self.current_parameters.corridor_average_min_val)
+            w.set_parameter_value('corridor_width', self.current_parameters.corridor_width_degrees)
 
         # Focal Search
         if 'focal_search' in self.strategy_widgets:
@@ -445,7 +458,14 @@ class SettingsDialogV2(QDialog):
             w.set_parameter_value('chaining_max_coverage', self.current_parameters.chaining_max_coverage)
             w.set_parameter_value('chaining_radius', self.current_parameters.chaining_radius)
 
-        # Add more as needed...
+        # Thigmotaxis
+        if 'thigmotaxis' in self.strategy_widgets:
+            w = self.strategy_widgets['thigmotaxis']
+            w.set_parameter_value('percent_traversed_max', self.current_parameters.percent_traversed_max_val)
+            w.set_parameter_value('thigmo_zone_size', self.current_parameters.thigmotaxis_zone_percent)
+            w.set_parameter_value('full_thigmo_min', self.current_parameters.full_thigmo_min_val)
+            w.set_parameter_value('small_thigmo_min', self.current_parameters.small_thigmo_min_val)
+            w.set_parameter_value('thigmo_min_distance', self.current_parameters.thigmo_min_distance)
 
     def _on_accept(self):
         """Save changes and close"""
@@ -467,6 +487,7 @@ class SettingsDialogV2(QDialog):
             w = self.strategy_widgets['directed_search']
             self.edited_parameters.directed_search_max_distance = w.get_parameter_value('directed_max_distance')
             self.edited_parameters.corridor_ipe_max_val = w.get_parameter_value('corridor_ipe_max')
+            self.edited_parameters.corridor_width_degrees = w.get_parameter_value('corridor_width')
 
         # Focal Search
         if 'focal_search' in self.strategy_widgets:
@@ -481,6 +502,15 @@ class SettingsDialogV2(QDialog):
             w = self.strategy_widgets['chaining']
             self.edited_parameters.chaining_max_coverage = w.get_parameter_value('chaining_max_coverage')
             self.edited_parameters.chaining_radius = w.get_parameter_value('chaining_radius')
+
+        # Thigmotaxis
+        if 'thigmotaxis' in self.strategy_widgets:
+            w = self.strategy_widgets['thigmotaxis']
+            self.edited_parameters.percent_traversed_max_val = w.get_parameter_value('percent_traversed_max')
+            self.edited_parameters.thigmotaxis_zone_percent = w.get_parameter_value('thigmo_zone_size')
+            self.edited_parameters.full_thigmo_min_val = w.get_parameter_value('full_thigmo_min')
+            self.edited_parameters.small_thigmo_min_val = w.get_parameter_value('small_thigmo_min')
+            self.edited_parameters.thigmo_min_distance = w.get_parameter_value('thigmo_min_distance')
 
         # Store enable/disable state (would need to add these to Parameters model)
         # For now, just log them

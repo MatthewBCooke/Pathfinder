@@ -285,6 +285,7 @@ class SummaryWidget(QWidget):
             SearchStrategy.SCANNING: "#FF5722",
             SearchStrategy.THIGMOTAXIS: "#F44336",
             SearchStrategy.RANDOM_SEARCH: "#9E9E9E",
+            SearchStrategy.NOT_RECOGNIZED: "#757575",
         }
         return colors.get(strategy, "#CCCCCC")
     

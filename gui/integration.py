@@ -16,7 +16,8 @@ from pathfinder.core.models import (
 )
 from pathfinder.io.loaders import load_experiment, detect_software_format
 from pathfinder.io.writers import export_to_csv, export_to_excel, export_trajectory_data
-from pathfinder.analysis.trial_analyzer import TrialAnalyzer
+from pathfinder.analysis import calculate_trial_metrics, classify_strategy
+from pathfinder.types import Parameters as LegacyParameters
 from pathfinder.core.geometry import MazeGeometry
 
 from .main_window import PathfinderMainWindow
@@ -98,66 +99,135 @@ class AnalysisWorker(QThread):
         self._is_cancelled = False
     
     def run(self):
-        """Run analysis in background thread"""
+        """Run analysis in background thread using proper classification logic"""
         try:
             total_trials = len(self.experiment.trials)
-            
-            self.progress.emit(0, "Initializing analyzer...")
-            
-            # Create analyzer
-            # Note: MazeGeometry would come from first trial or parameters
+
+            self.progress.emit(0, "Initializing analysis...")
+
+            # Get pool geometry from first trial
             first_trial = self.experiment.trials[0]
-            geometry = MazeGeometry(
-                center_x=first_trial.pool_center[0],
-                center_y=first_trial.pool_center[1],
-                pool_diameter=first_trial.pool_diameter,
-                platform_x=first_trial.platform_position[0],
-                platform_y=first_trial.platform_position[1],
-                platform_diameter=first_trial.platform_diameter
+            pool_radius = first_trial.pool_diameter / 2
+
+            # Convert Pydantic Parameters to legacy Parameters format for analysis functions
+            legacy_params = LegacyParameters(
+                name=self.parameters.name,
+                ipeMaxVal=self.parameters.ipe_max_val,
+                headingMaxVal=self.parameters.heading_max_val,
+                distanceToSwimMaxVal=self.parameters.distance_to_swim_max_val,
+                distanceToPlatMaxVal=self.parameters.distance_to_plat_max_val,
+                distanceToSwimMaxVal2=self.parameters.distance_to_swim_max_val2,
+                distanceToPlatMaxVal2=self.parameters.distance_to_plat_max_val2,
+                focalMinDistance=self.parameters.focal_min_distance,
+                focalMaxDistance=self.parameters.focal_max_distance,
+                semiFocalMinDistance=self.parameters.semi_focal_min_distance,
+                semiFocalMaxDistance=self.parameters.semi_focal_max_distance,
+                corridorAverageMinVal=self.parameters.corridor_average_min_val,
+                corridoripeMaxVal=self.parameters.corridor_ipe_max_val,
+                directedSearchMaxDistance=self.parameters.directed_search_max_distance,
+                ipeIndirectMaxVal=self.parameters.ipe_indirect_max_val,
+                headingIndirectMaxVal=self.parameters.heading_indirect_max_val,
+                annulusCounterMaxVal=self.parameters.annulus_counter_max_val,
+                quadrantTotalMaxVal=int(self.parameters.quadrant_total_max_val),
+                chainingMaxCoverage=self.parameters.chaining_max_coverage,
+                percentTraversedMinVal=self.parameters.percent_traversed_min_val,
+                percentTraversedMaxVal=self.parameters.percent_traversed_max_val,
+                distanceToCentreMaxVal=self.parameters.distance_to_centre_max_val,
+                fullThigmoMinVal=self.parameters.full_thigmo_min_val,
+                smallThigmoMinVal=self.parameters.small_thigmo_min_val,
+                thigmoMinDistance=self.parameters.thigmo_min_distance,
+                percentTraversedRandomMaxVal=self.parameters.percent_traversed_random_max_val,
+                useDirect=self.parameters.use_direct,
+                useFocal=self.parameters.use_focal,
+                useDirected=self.parameters.use_directed,
+                useIndirect=self.parameters.use_indirect,
+                useSemiFocal=self.parameters.use_semi_focal,
+                useChaining=self.parameters.use_chaining,
+                useScanning=self.parameters.use_scanning,
+                useThigmotaxis=self.parameters.use_thigmotaxis,
+                useRandom=self.parameters.use_random
             )
-            
-            analyzer = TrialAnalyzer(geometry, self.parameters)
-            
+
             # Process each trial
             for i, trial in enumerate(self.experiment.trials):
                 if self._is_cancelled:
                     return
-                
+
                 # Update progress
-                # Safely compute percent, avoid NaN/Inf
                 try:
-                    if total_trials and not (isinstance(i, float) and (math.isnan(i) or math.isinf(i))):
-                        percent_val = (i / total_trials) * 100
-                        if math.isnan(percent_val) or math.isinf(percent_val):
-                            percent = 0
-                        else:
-                            percent = int(percent_val)
-                    else:
-                        percent = 0
+                    percent = int((i / total_trials) * 100) if total_trials > 0 else 0
                 except Exception:
                     percent = 0
+
                 self.progress.emit(
                     percent,
                     f"Analyzing trial {i+1}/{total_trials} (Day {trial.day}, Trial {trial.trial_number})"
                 )
-                
-                # Run analysis
+
+                # Run analysis using proper functions
                 try:
-                    result = analyzer.analyze(trial)
-                    
-                    # Update trial with results
-                    trial.search_strategy = result.detected_strategy
-                    
-                    # Emit completion
-                    self.trial_completed.emit(trial.trial_id, result)
-                    
+                    # Calculate metrics
+                    metrics = calculate_trial_metrics(
+                        trial=trial,
+                        goal_x=trial.platform_position[0],
+                        goal_y=trial.platform_position[1],
+                        maze_centre_x=trial.pool_center[0],
+                        maze_centre_y=trial.pool_center[1],
+                        corridor_width=self.parameters.corridor_width_degrees,
+                        thigmotaxis_zone_size=self.parameters.thigmotaxis_zone_percent,
+                        chaining_radius=self.parameters.chaining_radius,
+                        full_thigmo_zone=pool_radius * (1 - self.parameters.thigmotaxis_zone_percent / 100),
+                        small_thigmo_zone=pool_radius * 0.8,  # 80% of radius
+                        maze_radius=pool_radius,
+                        day_num=trial.day,
+                        goal_diam=trial.platform_diameter
+                    )
+
+                    # Classify strategy
+                    strategy_name, score = classify_strategy(
+                        metrics=metrics,
+                        parameters=legacy_params,
+                        maze_radius=pool_radius
+                    )
+
+                    # Map strategy name to enum
+                    strategy_map = {
+                        "Direct Path": SearchStrategy.DIRECT_SWIM,
+                        "Directed Search": SearchStrategy.DIRECTED_SEARCH,
+                        "Focal Search": SearchStrategy.FOCAL_SEARCH,
+                        "Indirect Search": SearchStrategy.SPATIAL_INDIRECT,
+                        "Semi-focal Search": SearchStrategy.SPATIAL_INDIRECT,  # Map to spatial indirect
+                        "Chaining": SearchStrategy.CHAINING,
+                        "Scanning": SearchStrategy.SCANNING,
+                        "Thigmotaxis": SearchStrategy.THIGMOTAXIS,
+                        "Random Search": SearchStrategy.RANDOM_SEARCH,
+                        "Not Recognized": SearchStrategy.NOT_RECOGNIZED
+                    }
+
+                    strategy = strategy_map.get(strategy_name, SearchStrategy.NOT_RECOGNIZED)
+
+                    # Update trial
+                    trial.search_strategy = strategy
+                    trial.path_length = metrics.total_distance
+                    trial.escape_latency = metrics.latency
+                    trial.swim_speed = metrics.velocity
+
+                    # Store metrics in trial for display (will add this field)
+                    if not hasattr(trial, '_metrics'):
+                        trial._metrics = metrics
+                    else:
+                        trial._metrics = metrics
+
+                    self.trial_completed.emit(trial.trial_id, None)
+
                 except Exception as e:
                     logger.error(f"Error analyzing trial {trial.trial_id}: {e}")
+                    logger.exception(e)
                     # Continue with other trials
-            
+
             self.progress.emit(100, "Analysis complete!")
             self.finished.emit(self.experiment)
-            
+
         except Exception as e:
             logger.exception("Error during analysis")
             self.error.emit(f"Analysis failed: {str(e)}")
@@ -765,11 +835,15 @@ class PathfinderIntegration(QObject):
             
             self.window.set_status_message(f"Trial {trial.trial_number} classified as {new_strategy.value}")
     
-    @pyqtSlot(str)
-    def on_trial_selected(self, trial_id: str):
-        """Handle trial selection in results table"""
-        # Could show trial details, update heatmap, etc.
-        pass
+    @pyqtSlot(int)
+    def on_trial_selected(self, row_index: int):
+        """Handle trial selection in results table - show trial path in heatmap by row index"""
+        if row_index < 0:
+            return
+
+        # Show the selected trial's path in the heatmap (using row index)
+        hm = self.window.get_heatmap_widget()
+        hm.show_trial_by_index(row_index)
     
     # Settings
     

@@ -46,7 +46,7 @@ class MazeVisualizationWidget(QWidget):
         legend = QLabel(
             "🔵 Pool  |  🔴 Platform  |  "
             "⚫ Thigmotaxis  |  🟡 Chaining  |  "
-            "🟣 Focal Search  |  🟢 Direct Corridor"
+            "🟣 Focal Search  |  🟢 Directed Search Corridor"
         )
         legend.setAlignment(Qt.AlignCenter)
         legend.setStyleSheet("font-size: 10pt; padding: 5px;")
@@ -206,7 +206,7 @@ class MazeVisualizationWidget(QWidget):
             chaining_outer_radius_widget
         )
 
-        # 3. Draw direct swim corridor (wedge from pool center toward platform)
+        # 3. Draw directed search corridor (wedge from pool center toward platform)
         # Drawn AFTER annulus zones so it's not obscured by white inner circles
         corridor_width_degrees = zone_params['corridor_degrees']  # degrees on each side
 
@@ -319,9 +319,9 @@ class MazeVisualizationWidget(QWidget):
         label_x = pool_center_widget_x + label_distance * math.cos(angle_to_platform_rad)
         label_y = pool_center_widget_y + label_distance * math.sin(angle_to_platform_rad)
         painter.drawText(
-            int(label_x - 30),
+            int(label_x - 40),
             int(label_y),
-            "Direct\nCorridor"
+            "Directed Search\nCorridor"
         )
 
         # Focal search label
