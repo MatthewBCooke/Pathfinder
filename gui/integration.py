@@ -167,6 +167,11 @@ class AnalysisWorker(QThread):
                 # Run analysis using proper functions
                 try:
                     # Calculate metrics
+                    # Thigmotaxis zones: Full zone is the entire band, Small zone is the thinner outer portion
+                    thigmo_band_width = self.parameters.thigmotaxis_zone_percent / 100
+                    full_thigmo_zone = pool_radius * (1 - thigmo_band_width)  # Entire band (80% radius)
+                    small_thigmo_zone = pool_radius * (1 - thigmo_band_width / 2)  # Outer half (90% radius)
+
                     metrics = calculate_trial_metrics(
                         trial=trial,
                         goal_x=trial.platform_position[0],
@@ -176,8 +181,8 @@ class AnalysisWorker(QThread):
                         corridor_width=self.parameters.corridor_width_degrees,
                         thigmotaxis_zone_size=self.parameters.thigmotaxis_zone_percent,
                         chaining_radius=self.parameters.chaining_radius,
-                        full_thigmo_zone=pool_radius * (1 - self.parameters.thigmotaxis_zone_percent / 100),
-                        small_thigmo_zone=pool_radius * 0.8,  # 80% of radius
+                        full_thigmo_zone=full_thigmo_zone,
+                        small_thigmo_zone=small_thigmo_zone,
                         maze_radius=pool_radius,
                         day_num=trial.day,
                         goal_diam=trial.platform_diameter
