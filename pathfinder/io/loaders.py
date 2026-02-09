@@ -42,14 +42,23 @@ def detect_software_format(file_path: Path) -> SoftwareType:
     if suffix in ['.xlsx', '.xls']:
         # Try to detect Ethovision format
         try:
-            df = pd.read_excel(file_path, nrows=10)
-            
+            # Try with openpyxl engine for .xlsx files
+            engine = 'openpyxl' if suffix == '.xlsx' else None
+            df = pd.read_excel(file_path, nrows=10, engine=engine)
+
             # Ethovision has specific column patterns
             if 'Trial time' in df.columns or 'Recording time' in df.columns:
                 return SoftwareType.ETHOVISION
-            
+
         except Exception as e:
-            logger.warning(f"Error reading Excel file: {e}")
+            logger.warning(f"Error reading Excel file with primary method: {e}")
+            # Try alternative method for older Excel files
+            try:
+                df = pd.read_excel(file_path, nrows=10, engine='xlrd')
+                if 'Trial time' in df.columns or 'Recording time' in df.columns:
+                    return SoftwareType.ETHOVISION
+            except Exception as e2:
+                logger.warning(f"Error reading Excel file with alternative method: {e2}")
     
     elif suffix == '.csv':
         # Try to detect CSV format
@@ -102,9 +111,16 @@ def load_experiment(
 
 def _load_ethovision(file_path: Path, parameters: Parameters = None) -> Experiment:
     """Load Ethovision Excel file"""
-    
-    # Read Excel file
-    df = pd.read_excel(file_path)
+
+    # Read Excel file - try multiple engines for compatibility
+    try:
+        # Try with openpyxl for .xlsx files
+        engine = 'openpyxl' if file_path.suffix.lower() == '.xlsx' else None
+        df = pd.read_excel(file_path, engine=engine)
+    except Exception as e:
+        logger.warning(f"Error with primary Excel reader: {e}, trying alternative...")
+        # Try with xlrd for older .xls files
+        df = pd.read_excel(file_path, engine='xlrd')
     
     # Parse trials
     trials = []
