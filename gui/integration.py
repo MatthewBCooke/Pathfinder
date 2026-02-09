@@ -23,6 +23,7 @@ from pathfinder.core.geometry import MazeGeometry
 from .main_window import PathfinderMainWindow
 from .defaults import DEFAULT_PARAMETERS, get_default_parameters
 from .settings_dialog_v2 import SettingsDialogV2
+from .settings_persistence import save_parameters, load_parameters
 
 
 # Configure logging
@@ -118,13 +119,13 @@ class AnalysisWorker(QThread):
                 distanceToPlatMaxVal=self.parameters.distance_to_plat_max_val,
                 distanceToSwimMaxVal2=self.parameters.distance_to_swim_max_val2,
                 distanceToPlatMaxVal2=self.parameters.distance_to_plat_max_val2,
-                focalMinDistance=self.parameters.focal_min_distance,
-                focalMaxDistance=self.parameters.focal_max_distance,
-                semiFocalMinDistance=self.parameters.semi_focal_min_distance,
-                semiFocalMaxDistance=self.parameters.semi_focal_max_distance,
+                focalMinDistanceMultiplier=self.parameters.focal_min_distance_multiplier,
+                focalMaxDistanceMultiplier=self.parameters.focal_max_distance_multiplier,
+                semiFocalMinDistanceMultiplier=self.parameters.semi_focal_min_distance_multiplier,
+                semiFocalMaxDistanceMultiplier=self.parameters.semi_focal_max_distance_multiplier,
                 corridorAverageMinVal=self.parameters.corridor_average_min_val,
                 corridoripeMaxVal=self.parameters.corridor_ipe_max_val,
-                directedSearchMaxDistance=self.parameters.directed_search_max_distance,
+                directedSearchMaxDistanceMultiplier=self.parameters.directed_search_max_distance_multiplier,
                 ipeIndirectMaxVal=self.parameters.ipe_indirect_max_val,
                 headingIndirectMaxVal=self.parameters.heading_indirect_max_val,
                 annulusCounterMaxVal=self.parameters.annulus_counter_max_val,
@@ -135,7 +136,7 @@ class AnalysisWorker(QThread):
                 distanceToCentreMaxVal=self.parameters.distance_to_centre_max_val,
                 fullThigmoMinVal=self.parameters.full_thigmo_min_val,
                 smallThigmoMinVal=self.parameters.small_thigmo_min_val,
-                thigmoMinDistance=self.parameters.thigmo_min_distance,
+                thigmoMinDistanceMultiplier=self.parameters.thigmo_min_distance_multiplier,
                 percentTraversedRandomMaxVal=self.parameters.percent_traversed_random_max_val,
                 useDirect=self.parameters.use_direct,
                 useFocal=self.parameters.use_focal,
@@ -172,6 +173,10 @@ class AnalysisWorker(QThread):
                     full_thigmo_zone = pool_radius * (1 - thigmo_band_width)  # Entire band (80% radius)
                     small_thigmo_zone = pool_radius * (1 - thigmo_band_width / 2)  # Outer half (90% radius)
 
+                    # Convert chaining radius from % of diameter to absolute
+                    pool_diameter = pool_radius * 2
+                    chaining_radius = pool_diameter * (self.parameters.chaining_radius_percent / 100)
+
                     metrics = calculate_trial_metrics(
                         trial=trial,
                         goal_x=trial.platform_position[0],
@@ -180,7 +185,7 @@ class AnalysisWorker(QThread):
                         maze_centre_y=trial.pool_center[1],
                         corridor_width=self.parameters.corridor_width_degrees,
                         thigmotaxis_zone_size=self.parameters.thigmotaxis_zone_percent,
-                        chaining_radius=self.parameters.chaining_radius,
+                        chaining_radius=chaining_radius,
                         full_thigmo_zone=full_thigmo_zone,
                         small_thigmo_zone=small_thigmo_zone,
                         maze_radius=pool_radius,
@@ -503,7 +508,15 @@ class PathfinderIntegration(QObject):
         # State
         self.current_file: Optional[Path] = None
         self.current_experiment: Optional[Experiment] = None
-        self.current_parameters: Parameters = get_default_parameters()
+
+        # Load saved parameters if available, otherwise use defaults
+        saved_params = load_parameters()
+        if saved_params:
+            self.current_parameters: Parameters = saved_params
+            logger.info(f"Loaded saved settings: {saved_params.name}")
+        else:
+            self.current_parameters: Parameters = get_default_parameters()
+            logger.info("Using default settings (no saved settings found)")
 
         # Spatial parameters for maze geometry
         self.spatial_params = {
@@ -856,14 +869,20 @@ class PathfinderIntegration(QObject):
     def on_settings(self):
         """Show settings dialog"""
         dialog = SettingsDialogV2(self.current_parameters, self.window)
-        
+
         if dialog.exec_() == QDialog.Accepted:
             # Update parameters
             new_params = dialog.get_parameters()
             self.current_parameters = new_params
-            
+
             logger.info(f"Parameters updated: {new_params.name}")
-            
+
+            # Save parameters to disk
+            if save_parameters(new_params):
+                logger.info("Settings saved successfully")
+            else:
+                logger.warning("Failed to save settings")
+
             # Update UI
             cp = self.window.get_control_panel()
             cp.set_parameters_summary(f"Using: {new_params.name}")

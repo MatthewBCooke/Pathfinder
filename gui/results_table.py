@@ -52,14 +52,13 @@ class ResultsTableWidget(QWidget):
 
         # Table widget
         self.table = QTableWidget()
-        self.table.setColumnCount(16)
+        self.table.setColumnCount(15)
         self.table.setHorizontalHeaderLabels([
             "Day",
             "Trial #",
             "Strategy",
             "Latency (s)",
-            "Path (cm)",
-            "Speed (cm/s)",
+            "Path (× diam)",
             "IPE",
             "Heading Avg (°)",
             "Heading Max (°)",
@@ -84,24 +83,23 @@ class ResultsTableWidget(QWidget):
         header.setSectionResizeMode(0, QHeaderView.Fixed)   # Day
         header.setSectionResizeMode(1, QHeaderView.Fixed)   # Trial #
         header.setSectionResizeMode(2, QHeaderView.Stretch) # Strategy
-        for i in range(3, 16):
+        for i in range(3, 15):
             header.setSectionResizeMode(i, QHeaderView.Fixed)
 
         self.table.setColumnWidth(0, 50)    # Day
         self.table.setColumnWidth(1, 60)    # Trial #
         self.table.setColumnWidth(3, 90)    # Latency
-        self.table.setColumnWidth(4, 90)    # Path
-        self.table.setColumnWidth(5, 90)    # Speed
-        self.table.setColumnWidth(6, 80)    # IPE
-        self.table.setColumnWidth(7, 110)   # Heading Avg
-        self.table.setColumnWidth(8, 110)   # Heading Max
-        self.table.setColumnWidth(9, 90)    # Corridor
-        self.table.setColumnWidth(10, 90)   # Coverage
-        self.table.setColumnWidth(11, 90)   # Chaining
-        self.table.setColumnWidth(12, 80)   # Quadrants
-        self.table.setColumnWidth(13, 110)  # Thigmo Full
-        self.table.setColumnWidth(14, 110)  # Thigmo Small
-        self.table.setColumnWidth(15, 60)   # Manual
+        self.table.setColumnWidth(4, 100)   # Path (× diam)
+        self.table.setColumnWidth(5, 80)    # IPE
+        self.table.setColumnWidth(6, 110)   # Heading Avg
+        self.table.setColumnWidth(7, 110)   # Heading Max
+        self.table.setColumnWidth(8, 90)    # Corridor
+        self.table.setColumnWidth(9, 90)    # Coverage
+        self.table.setColumnWidth(10, 90)   # Chaining
+        self.table.setColumnWidth(11, 80)   # Quadrants
+        self.table.setColumnWidth(12, 110)  # Thigmo Full
+        self.table.setColumnWidth(13, 110)  # Thigmo Small
+        self.table.setColumnWidth(14, 60)   # Manual
         
         # Connect signals
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
@@ -224,38 +222,38 @@ class ResultsTableWidget(QWidget):
         # Escape latency
         self.table.setItem(row, 3, make_numeric_item(trial.escape_latency, ".2f"))
 
-        # Path length
-        self.table.setItem(row, 4, make_numeric_item(trial.path_length, ".1f"))
-
-        # Swim speed
-        self.table.setItem(row, 5, make_numeric_item(trial.swim_speed, ".1f"))
+        # Path length (as multiple of pool diameter)
+        path_multiplier = None
+        if trial.path_length is not None and trial.pool_diameter > 0:
+            path_multiplier = trial.path_length / trial.pool_diameter
+        self.table.setItem(row, 4, make_numeric_item(path_multiplier, ".2f"))
 
         # IPE (Ideal Path Error)
         ipe = metrics.ipe if metrics else None
-        self.table.setItem(row, 6, make_numeric_item(ipe, ".1f"))
+        self.table.setItem(row, 5, make_numeric_item(ipe, ".1f"))
 
         # Heading Error Average
         heading_avg = metrics.average_heading_error if metrics else None
-        self.table.setItem(row, 7, make_numeric_item(heading_avg, ".1f"))
+        self.table.setItem(row, 6, make_numeric_item(heading_avg, ".1f"))
 
         # Heading Error Max (use initial heading error as proxy for max)
         heading_max = metrics.average_initial_heading_error if metrics else None
-        self.table.setItem(row, 8, make_numeric_item(heading_max, ".1f"))
+        self.table.setItem(row, 7, make_numeric_item(heading_max, ".1f"))
 
         # Time in Corridor (%)
         corridor_pct = (metrics.corridor_average * 100) if metrics else None
-        self.table.setItem(row, 9, make_numeric_item(corridor_pct, ".1f"))
+        self.table.setItem(row, 8, make_numeric_item(corridor_pct, ".1f"))
 
         # Pool Coverage (%)
         coverage = metrics.percent_traversed if metrics else None
-        self.table.setItem(row, 10, make_numeric_item(coverage, ".1f"))
+        self.table.setItem(row, 9, make_numeric_item(coverage, ".1f"))
 
         # Time in Chaining Zone (%)
         if metrics:
             chaining_pct = (metrics.annulus_counter / metrics.sample_count * 100) if metrics.sample_count > 0 else None
         else:
             chaining_pct = None
-        self.table.setItem(row, 11, make_numeric_item(chaining_pct, ".1f"))
+        self.table.setItem(row, 10, make_numeric_item(chaining_pct, ".1f"))
 
         # Quadrants Visited
         quadrants = metrics.quadrant_total if metrics else None
@@ -265,28 +263,28 @@ class ResultsTableWidget(QWidget):
         else:
             quadrants_item.setData(Qt.DisplayRole, "—")
         quadrants_item.setTextAlignment(Qt.AlignCenter)
-        self.table.setItem(row, 12, quadrants_item)
+        self.table.setItem(row, 11, quadrants_item)
 
         # Thigmotaxis Full Zone (%)
         if metrics:
             thigmo_full_pct = (metrics.full_thigmo_counter / metrics.sample_count * 100) if metrics.sample_count > 0 else None
         else:
             thigmo_full_pct = None
-        self.table.setItem(row, 13, make_numeric_item(thigmo_full_pct, ".1f"))
+        self.table.setItem(row, 12, make_numeric_item(thigmo_full_pct, ".1f"))
 
         # Thigmotaxis Small Zone (%)
         if metrics:
             thigmo_small_pct = (metrics.small_thigmo_counter / metrics.sample_count * 100) if metrics.sample_count > 0 else None
         else:
             thigmo_small_pct = None
-        self.table.setItem(row, 14, make_numeric_item(thigmo_small_pct, ".1f"))
+        self.table.setItem(row, 13, make_numeric_item(thigmo_small_pct, ".1f"))
 
         # Manual classification flag
         manual_item = QTableWidgetItem("✓" if trial.manual_categorization else "")
         manual_item.setTextAlignment(Qt.AlignCenter)
         if trial.manual_categorization:
             manual_item.setForeground(QBrush(QColor("#FF9800")))
-        self.table.setItem(row, 15, manual_item)
+        self.table.setItem(row, 14, manual_item)
 
         # Store trial_id in row data
         day_item.setData(Qt.UserRole, trial.trial_id)
@@ -314,6 +312,11 @@ class ResultsTableWidget(QWidget):
             # Don't emit signal - we'll handle click event instead
             # self.trial_selected.emit(row)  # Disabled - use inline view instead
             self.classify_btn.setEnabled(True)
+
+            # Update path view if different row is selected AND path panel is visible
+            # This handles arrow key navigation while avoiding conflicts with click-to-close
+            if self._expanded_row != row and self.path_panel.isVisible():
+                self._show_trial_path(row)
         else:
             self.classify_btn.setEnabled(False)
 
@@ -467,13 +470,13 @@ class ResultsTableWidget(QWidget):
                 strategy_item = self.table.item(row, 2)
                 strategy_item.setText(strategy.value)
                 strategy_item.setBackground(QBrush(self._get_strategy_color(strategy)))
-                
-                # Update manual flag
-                manual_item = self.table.item(row, 7)
+
+                # Update manual flag (column 14)
+                manual_item = self.table.item(row, 14)
                 manual_item.setText("✓" if manual else "")
                 if manual:
                     manual_item.setForeground(QBrush(QColor("#FF9800")))
-                
+
                 break
     
     def get_selected_trial_id(self) -> Optional[str]:

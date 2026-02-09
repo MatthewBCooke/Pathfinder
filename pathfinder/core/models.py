@@ -52,15 +52,15 @@ class Parameters(BaseModel):
     # Corridor parameters
     corridor_average_min_val: float = Field(70, description="Corridor average minimum")
     corridor_ipe_max_val: float = Field(1500, description="Corridor IPE maximum")
-    directed_search_max_distance: float = Field(400, description="Directed search max distance")
-    
+    directed_search_max_distance_multiplier: float = Field(0.8, description="Directed search max distance (× pool diameter)")
+
     # Focal search parameters
-    focal_min_distance: float = Field(100, description="Focal search minimum distance")
-    focal_max_distance: float = Field(400, description="Focal search maximum distance")
-    
+    focal_min_distance_multiplier: float = Field(0.2, description="Focal search minimum distance (× pool diameter)")
+    focal_max_distance_multiplier: float = Field(0.8, description="Focal search maximum distance (× pool diameter)")
+
     # Semi-focal parameters
-    semi_focal_min_distance: float = Field(0, description="Semi-focal minimum distance")
-    semi_focal_max_distance: float = Field(500, description="Semi-focal maximum distance")
+    semi_focal_min_distance_multiplier: float = Field(0.0, description="Semi-focal minimum distance (× pool diameter)")
+    semi_focal_max_distance_multiplier: float = Field(1.0, description="Semi-focal maximum distance (× pool diameter)")
 
     # Indirect Search parameters
     ipe_indirect_max_val: float = Field(300, description="Maximum IPE for Indirect Search")
@@ -79,7 +79,7 @@ class Parameters(BaseModel):
     # Thigmotaxis parameters
     full_thigmo_min_val: float = Field(65, description="Minimum full thigmotaxis percentage")
     small_thigmo_min_val: float = Field(35, description="Minimum small thigmotaxis percentage")
-    thigmo_min_distance: float = Field(400, description="Minimum total distance for Thigmotaxis")
+    thigmo_min_distance_multiplier: float = Field(0.8, description="Minimum total distance for Thigmotaxis (× pool diameter)")
 
     # Random Search parameters
     percent_traversed_random_max_val: float = Field(10, description="Minimum percent traversed for Random Search")
@@ -100,7 +100,7 @@ class Parameters(BaseModel):
     pixels_per_cm: float = Field(1.0, description="Conversion factor: pixels per cm")
 
     # Visualization zone parameters
-    chaining_radius: float = Field(30, description="Chaining zone radius in cm")
+    chaining_radius_percent: float = Field(6, description="Chaining zone radius as % of pool diameter")
     thigmotaxis_zone_percent: float = Field(20, description="Thigmotaxis zone width as % of pool radius")
     focal_search_radius_multiplier: float = Field(1.5, description="Focal search radius as multiple of platform diameter")
     directed_search_radius_multiplier: float = Field(3.5, description="Directed search radius as multiple of platform diameter")

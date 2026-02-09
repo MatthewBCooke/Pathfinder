@@ -187,9 +187,9 @@ class SettingsDialogV2(QDialog):
         )
 
         widget.add_parameter(
-            "directed_max_distance", "Maximum Path Length:",
-            0, 1000, 400, "cm",
-            "Maximum total distance traveled for directed search."
+            "directed_max_distance_multiplier", "Maximum Path Length:",
+            0.0, 3.0, 0.8, "× pool diameter",
+            "Maximum total distance traveled for directed search (as multiple of pool diameter)."
         )
 
         widget.add_parameter(
@@ -222,14 +222,14 @@ class SettingsDialogV2(QDialog):
         )
 
         widget.add_parameter(
-            "focal_min_distance", "Minimum Path Length:",
-            0, 500, 100, "cm",
+            "focal_min_distance_multiplier", "Minimum Path Length:",
+            0.0, 2.0, 0.2, "× pool diameter",
             "Minimum distance for focal search (to distinguish from direct)."
         )
 
         widget.add_parameter(
-            "focal_max_distance", "Maximum Path Length:",
-            100, 1000, 400, "cm",
+            "focal_max_distance_multiplier", "Maximum Path Length:",
+            0.1, 3.0, 0.8, "× pool diameter",
             "Maximum distance for focal search."
         )
 
@@ -257,14 +257,14 @@ class SettingsDialogV2(QDialog):
         )
 
         widget.add_parameter(
-            "semi_focal_min_distance", "Minimum Path Length:",
-            0, 500, 0, "cm",
+            "semi_focal_min_distance_multiplier", "Minimum Path Length:",
+            0.0, 2.0, 0.0, "× pool diameter",
             "Minimum distance for spatial indirect."
         )
 
         widget.add_parameter(
-            "semi_focal_max_distance", "Maximum Path Length:",
-            0, 1500, 500, "cm",
+            "semi_focal_max_distance_multiplier", "Maximum Path Length:",
+            0.0, 5.0, 1.0, "× pool diameter",
             "Maximum distance for spatial indirect."
         )
 
@@ -292,15 +292,27 @@ class SettingsDialogV2(QDialog):
         )
 
         widget.add_parameter(
+            "annulus_counter_max_val", "Minimum Time in Zone:",
+            0, 100, 90, "%",
+            "Minimum percentage of time spent in the chaining zone (annulus around platform)."
+        )
+
+        widget.add_parameter(
+            "quadrant_total_max_val", "Minimum Quadrants Visited:",
+            1, 4, 4, "quadrants",
+            "Minimum number of pool quadrants that must be visited."
+        )
+
+        widget.add_parameter(
             "chaining_max_coverage", "Maximum Pool Coverage:",
             0, 100, 40, "% traversed",
             "Maximum percentage of pool visited (low = repeated path)."
         )
 
         widget.add_parameter(
-            "chaining_radius", "Chaining Zone Radius:",
-            10, 200, 30, "cm",
-            "Radius of zone around platform for chaining detection."
+            "chaining_radius_percent", "Chaining Zone Radius:",
+            1, 20, 6, "% of diameter",
+            "Radius of annulus zone around platform for chaining detection (as % of pool diameter)."
         )
 
         self.strategy_widgets['chaining'] = widget
@@ -362,9 +374,9 @@ class SettingsDialogV2(QDialog):
         )
 
         widget.add_parameter(
-            "thigmo_min_distance", "Minimum Path Distance:",
-            0, 1000, 400, "cm",
-            "Minimum total distance traveled for thigmotaxis classification."
+            "thigmo_min_distance_multiplier", "Minimum Path Distance:",
+            0.0, 3.0, 0.8, "× pool diameter",
+            "Minimum total distance traveled for thigmotaxis classification (as multiple of pool diameter)."
         )
 
         self.strategy_widgets['thigmotaxis'] = widget
@@ -439,7 +451,7 @@ class SettingsDialogV2(QDialog):
         # Directed Search
         if 'directed_search' in self.strategy_widgets:
             w = self.strategy_widgets['directed_search']
-            w.set_parameter_value('directed_max_distance', self.current_parameters.directed_search_max_distance)
+            w.set_parameter_value('directed_max_distance_multiplier', self.current_parameters.directed_search_max_distance_multiplier)
             w.set_parameter_value('corridor_ipe_max', self.current_parameters.corridor_ipe_max_val)
             w.set_parameter_value('corridor_min_directed', self.current_parameters.corridor_average_min_val)
             w.set_parameter_value('corridor_width', self.current_parameters.corridor_width_degrees)
@@ -447,16 +459,18 @@ class SettingsDialogV2(QDialog):
         # Focal Search
         if 'focal_search' in self.strategy_widgets:
             w = self.strategy_widgets['focal_search']
-            w.set_parameter_value('focal_min_distance', self.current_parameters.focal_min_distance)
-            w.set_parameter_value('focal_max_distance', self.current_parameters.focal_max_distance)
+            w.set_parameter_value('focal_min_distance_multiplier', self.current_parameters.focal_min_distance_multiplier)
+            w.set_parameter_value('focal_max_distance_multiplier', self.current_parameters.focal_max_distance_multiplier)
             w.set_parameter_value('distance_to_plat_max', self.current_parameters.distance_to_plat_max_val)
             w.set_parameter_value('distance_to_swim_max', self.current_parameters.distance_to_swim_max_val)
 
         # Chaining
         if 'chaining' in self.strategy_widgets:
             w = self.strategy_widgets['chaining']
+            w.set_parameter_value('annulus_counter_max_val', self.current_parameters.annulus_counter_max_val)
+            w.set_parameter_value('quadrant_total_max_val', self.current_parameters.quadrant_total_max_val)
             w.set_parameter_value('chaining_max_coverage', self.current_parameters.chaining_max_coverage)
-            w.set_parameter_value('chaining_radius', self.current_parameters.chaining_radius)
+            w.set_parameter_value('chaining_radius_percent', self.current_parameters.chaining_radius_percent)
 
         # Thigmotaxis
         if 'thigmotaxis' in self.strategy_widgets:
@@ -465,7 +479,7 @@ class SettingsDialogV2(QDialog):
             w.set_parameter_value('thigmo_zone_size', self.current_parameters.thigmotaxis_zone_percent)
             w.set_parameter_value('full_thigmo_min', self.current_parameters.full_thigmo_min_val)
             w.set_parameter_value('small_thigmo_min', self.current_parameters.small_thigmo_min_val)
-            w.set_parameter_value('thigmo_min_distance', self.current_parameters.thigmo_min_distance)
+            w.set_parameter_value('thigmo_min_distance_multiplier', self.current_parameters.thigmo_min_distance_multiplier)
 
     def _on_accept(self):
         """Save changes and close"""
@@ -485,23 +499,25 @@ class SettingsDialogV2(QDialog):
         # Directed Search
         if 'directed_search' in self.strategy_widgets:
             w = self.strategy_widgets['directed_search']
-            self.edited_parameters.directed_search_max_distance = w.get_parameter_value('directed_max_distance')
+            self.edited_parameters.directed_search_max_distance_multiplier = w.get_parameter_value('directed_max_distance_multiplier')
             self.edited_parameters.corridor_ipe_max_val = w.get_parameter_value('corridor_ipe_max')
             self.edited_parameters.corridor_width_degrees = w.get_parameter_value('corridor_width')
 
         # Focal Search
         if 'focal_search' in self.strategy_widgets:
             w = self.strategy_widgets['focal_search']
-            self.edited_parameters.focal_min_distance = w.get_parameter_value('focal_min_distance')
-            self.edited_parameters.focal_max_distance = w.get_parameter_value('focal_max_distance')
+            self.edited_parameters.focal_min_distance_multiplier = w.get_parameter_value('focal_min_distance_multiplier')
+            self.edited_parameters.focal_max_distance_multiplier = w.get_parameter_value('focal_max_distance_multiplier')
             self.edited_parameters.distance_to_plat_max_val = w.get_parameter_value('distance_to_plat_max')
             self.edited_parameters.distance_to_swim_max_val = w.get_parameter_value('distance_to_swim_max')
 
         # Chaining
         if 'chaining' in self.strategy_widgets:
             w = self.strategy_widgets['chaining']
+            self.edited_parameters.annulus_counter_max_val = w.get_parameter_value('annulus_counter_max_val')
+            self.edited_parameters.quadrant_total_max_val = int(w.get_parameter_value('quadrant_total_max_val'))
             self.edited_parameters.chaining_max_coverage = w.get_parameter_value('chaining_max_coverage')
-            self.edited_parameters.chaining_radius = w.get_parameter_value('chaining_radius')
+            self.edited_parameters.chaining_radius_percent = w.get_parameter_value('chaining_radius_percent')
 
         # Thigmotaxis
         if 'thigmotaxis' in self.strategy_widgets:
@@ -510,7 +526,7 @@ class SettingsDialogV2(QDialog):
             self.edited_parameters.thigmotaxis_zone_percent = w.get_parameter_value('thigmo_zone_size')
             self.edited_parameters.full_thigmo_min_val = w.get_parameter_value('full_thigmo_min')
             self.edited_parameters.small_thigmo_min_val = w.get_parameter_value('small_thigmo_min')
-            self.edited_parameters.thigmo_min_distance = w.get_parameter_value('thigmo_min_distance')
+            self.edited_parameters.thigmo_min_distance_multiplier = w.get_parameter_value('thigmo_min_distance_multiplier')
 
         # Store enable/disable state (would need to add these to Parameters model)
         # For now, just log them

@@ -25,15 +25,15 @@ DEFAULT_PARAMETERS = Parameters(
     # Corridor (Direct Swim) parameters
     corridor_average_min_val=70.0,
     corridor_ipe_max_val=1500.0,
-    directed_search_max_distance=400.0,
-    
+    directed_search_max_distance_multiplier=0.8,
+
     # Focal search parameters
-    focal_min_distance=100.0,
-    focal_max_distance=400.0,
-    
+    focal_min_distance_multiplier=0.2,
+    focal_max_distance_multiplier=0.8,
+
     # Semi-focal (Spatial Indirect) parameters
-    semi_focal_min_distance=0.0,
-    semi_focal_max_distance=500.0,
+    semi_focal_min_distance_multiplier=0.0,
+    semi_focal_max_distance_multiplier=1.0,
     
     # Annulus parameters
     annulus_counter_max_val=90.0,

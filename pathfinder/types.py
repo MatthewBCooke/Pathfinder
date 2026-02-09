@@ -129,34 +129,34 @@ class Parameters:
     distanceToPlatMaxVal: float = 30
     """Distance to platform threshold (% of maze radius)"""
     
-    focalMinDistance: float = 100
-    """Minimum total distance for Focal Search"""
-    
-    focalMaxDistance: float = 400
-    """Maximum total distance for Focal Search"""
-    
+    focalMinDistanceMultiplier: float = 0.2
+    """Minimum total distance for Focal Search (× pool diameter)"""
+
+    focalMaxDistanceMultiplier: float = 0.8
+    """Maximum total distance for Focal Search (× pool diameter)"""
+
     # Semi-Focal Search thresholds
     distanceToSwimMaxVal2: float = 50
     """Distance to swim path centroid for Semi-Focal (% of maze radius)"""
-    
+
     distanceToPlatMaxVal2: float = 50
     """Distance to platform for Semi-Focal (% of maze radius)"""
-    
-    semiFocalMinDistance: float = 0
-    """Minimum total distance for Semi-Focal Search"""
-    
-    semiFocalMaxDistance: float = 500
-    """Maximum total distance for Semi-Focal Search"""
-    
+
+    semiFocalMinDistanceMultiplier: float = 0.0
+    """Minimum total distance for Semi-Focal Search (× pool diameter)"""
+
+    semiFocalMaxDistanceMultiplier: float = 1.0
+    """Maximum total distance for Semi-Focal Search (× pool diameter)"""
+
     # Directed Search thresholds
     corridorAverageMinVal: float = 70
     """Minimum corridor percentage for Directed Search"""
-    
+
     corridoripeMaxVal: float = 1500
     """Maximum IPE for Directed Search"""
-    
-    directedSearchMaxDistance: float = 400
-    """Maximum total distance for Directed Search"""
+
+    directedSearchMaxDistanceMultiplier: float = 0.8
+    """Maximum total distance for Directed Search (× pool diameter)"""
     
     # Indirect Search thresholds
     ipeIndirectMaxVal: float = 300
@@ -188,12 +188,12 @@ class Parameters:
     # Thigmotaxis thresholds
     fullThigmoMinVal: float = 65
     """Minimum full thigmotaxis percentage"""
-    
+
     smallThigmoMinVal: float = 35
     """Minimum small thigmotaxis percentage"""
-    
-    thigmoMinDistance: float = 400
-    """Minimum total distance for Thigmotaxis"""
+
+    thigmoMinDistanceMultiplier: float = 0.8
+    """Minimum total distance for Thigmotaxis (× pool diameter)"""
     
     # Random Search thresholds
     percentTraversedRandomMaxVal: float = 10

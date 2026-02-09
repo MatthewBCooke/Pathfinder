@@ -488,12 +488,12 @@ def classify_strategy(
 ) -> Tuple[str, int]:
     """
     Classify a trial's search strategy based on its metrics and thresholds.
-    
+
     This is a pure decision tree that classifies Morris Water Maze trials into
     one of 9 search strategy types based on spatial, kinematic, and coverage metrics.
-    
+
     Extracted from SearchStrategyAnalysis/Pathfinder.py lines 2420-2475 (mainCalculate method).
-    
+
     Strategy Types (in order of evaluation):
     1. Direct Path (score=3) - Most efficient, straight to platform
     2. Focal Search (score=2) - Focused searching near platform
@@ -505,15 +505,15 @@ def classify_strategy(
     8. Thigmotaxis (score=0) - Wall-hugging behavior
     9. Random Search (score=0) - High coverage, no spatial strategy
     10. Not Recognized (score=0) - Doesn't fit any category
-    
+
     Args:
         metrics: TrialMetrics object containing all 19 calculated metrics
         parameters: Parameters object with classification thresholds
         maze_radius: Radius of the maze/pool (needed for percentage calculations)
-        
+
     Returns:
         Tuple of (strategy_name: str, score: int) where score is 0-3 (higher = better)
-        
+
     Example:
         >>> metrics = calculate_trial_metrics(trial, ...)
         >>> params = Parameters()  # Use defaults
@@ -535,6 +535,15 @@ def classify_strategy(
     full_thigmo_counter = metrics.full_thigmo_counter
     small_thigmo_counter = metrics.small_thigmo_counter
     sample_count = metrics.sample_count
+
+    # Convert relative distance thresholds to absolute based on pool diameter
+    maze_diameter = maze_radius * 2
+    focal_min_distance = parameters.focalMinDistanceMultiplier * maze_diameter
+    focal_max_distance = parameters.focalMaxDistanceMultiplier * maze_diameter
+    semi_focal_min_distance = parameters.semiFocalMinDistanceMultiplier * maze_diameter
+    semi_focal_max_distance = parameters.semiFocalMaxDistanceMultiplier * maze_diameter
+    directed_search_max_distance = parameters.directedSearchMaxDistanceMultiplier * maze_diameter
+    thigmo_min_distance = parameters.thigmoMinDistanceMultiplier * maze_diameter
     
     # DIRECT PATH
     if (ipe <= parameters.ipeMaxVal and 
@@ -543,17 +552,17 @@ def classify_strategy(
         return ("Direct Path", 3)
     
     # FOCAL SEARCH
-    elif (average_distance_to_swim_path_centroid < (maze_radius * parameters.distanceToSwimMaxVal / 100) and 
-          distance_average < (parameters.distanceToPlatMaxVal / 100 * maze_radius) and 
-          total_distance < parameters.focalMaxDistance and 
-          total_distance > parameters.focalMinDistance and 
+    elif (average_distance_to_swim_path_centroid < (maze_radius * parameters.distanceToSwimMaxVal / 100) and
+          distance_average < (parameters.distanceToPlatMaxVal / 100 * maze_radius) and
+          total_distance < focal_max_distance and
+          total_distance > focal_min_distance and
           parameters.useFocal):
         return ("Focal Search", 2)
-    
+
     # DIRECTED SEARCH
-    elif (corridor_average >= parameters.corridorAverageMinVal / 100 and 
-          ipe <= parameters.corridoripeMaxVal and 
-          total_distance < parameters.directedSearchMaxDistance and 
+    elif (corridor_average >= parameters.corridorAverageMinVal / 100 and
+          ipe <= parameters.corridoripeMaxVal and
+          total_distance < directed_search_max_distance and
           parameters.useDirected):
         return ("Directed Search", 2)
     
@@ -564,10 +573,10 @@ def classify_strategy(
         return ("Indirect Search", 2)
     
     # SEMI-FOCAL SEARCH
-    elif (average_distance_to_swim_path_centroid < (maze_radius * parameters.distanceToSwimMaxVal2 / 100) and 
-          distance_average < (parameters.distanceToPlatMaxVal2 / 100 * maze_radius) and 
-          total_distance < parameters.semiFocalMaxDistance and 
-          total_distance > parameters.semiFocalMinDistance and 
+    elif (average_distance_to_swim_path_centroid < (maze_radius * parameters.distanceToSwimMaxVal2 / 100) and
+          distance_average < (parameters.distanceToPlatMaxVal2 / 100 * maze_radius) and
+          total_distance < semi_focal_max_distance and
+          total_distance > semi_focal_min_distance and
           parameters.useSemiFocal):
         return ("Semi-focal Search", 2)
     
@@ -586,9 +595,9 @@ def classify_strategy(
         return ("Scanning", 1)
     
     # THIGMOTAXIS
-    elif (full_thigmo_counter / sample_count >= parameters.fullThigmoMinVal / 100 and 
-          small_thigmo_counter / sample_count >= parameters.smallThigmoMinVal / 100 and 
-          total_distance > parameters.thigmoMinDistance and 
+    elif (full_thigmo_counter / sample_count >= parameters.fullThigmoMinVal / 100 and
+          small_thigmo_counter / sample_count >= parameters.smallThigmoMinVal / 100 and
+          total_distance > thigmo_min_distance and
           parameters.useThigmotaxis):
         return ("Thigmotaxis", 0)
     

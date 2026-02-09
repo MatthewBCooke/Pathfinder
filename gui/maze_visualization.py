@@ -46,7 +46,7 @@ class MazeVisualizationWidget(QWidget):
         legend = QLabel(
             "🔵 Pool  |  🔴 Platform  |  "
             "⚫ Thigmotaxis  |  🟡 Chaining  |  "
-            "🟣 Focal Search  |  🟢 Directed Search Corridor"
+            "🟣 Focal Search  |  🟢 Search Corridor"
         )
         legend.setAlignment(Qt.AlignCenter)
         legend.setStyleSheet("font-size: 10pt; padding: 5px;")
@@ -76,7 +76,7 @@ class MazeVisualizationWidget(QWidget):
             # Defaults when no parameters object
             return {
                 'thigmotaxis_percent': 20.0,
-                'chaining_width_cm': 30.0,
+                'chaining_width_percent': 6.0,
                 'focal_multiplier': 1.5,
                 'directed_multiplier': 3.5,
                 'corridor_degrees': 15.0,
@@ -85,7 +85,7 @@ class MazeVisualizationWidget(QWidget):
         else:
             return {
                 'thigmotaxis_percent': self.parameters.thigmotaxis_zone_percent,
-                'chaining_width_cm': self.parameters.chaining_radius,
+                'chaining_width_percent': self.parameters.chaining_radius_percent,
                 'focal_multiplier': self.parameters.focal_search_radius_multiplier,
                 'directed_multiplier': self.parameters.directed_search_radius_multiplier,
                 'corridor_degrees': self.parameters.corridor_width_degrees,
@@ -160,8 +160,8 @@ class MazeVisualizationWidget(QWidget):
         dy_plat = self.platform_y - self.pool_center_y
         dist_to_platform = math.sqrt(dx_plat**2 + dy_plat**2)
 
-        # Annulus width (convert from cm to pixels)
-        annulus_width = zone_params['chaining_width_cm'] * zone_params['pixels_per_cm']
+        # Annulus width (convert from % of diameter to absolute units)
+        annulus_width = (self.pool_diameter * zone_params['chaining_width_percent'] / 100)
 
         # Inner and outer radii: midpoint of annulus is at platform distance
         chaining_inner_radius = dist_to_platform - (annulus_width / 2)
@@ -206,7 +206,7 @@ class MazeVisualizationWidget(QWidget):
             chaining_outer_radius_widget
         )
 
-        # 3. Draw directed search corridor (wedge from pool center toward platform)
+        # 3. Draw directed search corridor (triangular from opposite wall toward platform)
         # Drawn AFTER annulus zones so it's not obscured by white inner circles
         corridor_width_degrees = zone_params['corridor_degrees']  # degrees on each side
 
@@ -214,33 +214,42 @@ class MazeVisualizationWidget(QWidget):
         dx = self.platform_x - self.pool_center_x
         dy = self.platform_y - self.pool_center_y
         angle_to_platform_rad = math.atan2(dy, dx)
-        angle_to_platform_deg = math.degrees(angle_to_platform_rad)
 
-        # Draw corridor as a polygon (wedge shape)
+        # Draw corridor as a triangular polygon from opposite wall to platform
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(QColor(100, 255, 100, 80)))  # Light green, transparent
 
-        # Create wedge path
-        from PyQt5.QtGui import QPainterPath
-        path = QPainterPath()
-        path.moveTo(pool_center_widget_x, pool_center_widget_y)
+        # Starting point: opposite wall (single point - narrow end of corridor)
+        opposite_angle_rad = angle_to_platform_rad + math.pi
+        start_x = self.pool_center_x + pool_radius * math.cos(opposite_angle_rad)
+        start_y = self.pool_center_y + pool_radius * math.sin(opposite_angle_rad)
+        start_x_widget = pool_center_widget_x + (start_x - self.pool_center_x) * scale
+        start_y_widget = pool_center_widget_y + (start_y - self.pool_center_y) * scale
 
-        # Calculate arc start and span
-        # Qt uses angles starting from 3 o'clock, Y increases downward
-        start_angle_qt = -(angle_to_platform_deg + corridor_width_degrees)  # Negative for clockwise
-        span_angle_qt = corridor_width_degrees * 2
+        # Two edge points at platform side (wide end of corridor)
+        # These define the angular width of the corridor
+        left_plat_angle_rad = angle_to_platform_rad - math.radians(corridor_width_degrees)
+        right_plat_angle_rad = angle_to_platform_rad + math.radians(corridor_width_degrees)
 
-        rect = QRectF(
-            pool_center_widget_x - pool_radius_widget,
-            pool_center_widget_y - pool_radius_widget,
-            pool_radius_widget * 2,
-            pool_radius_widget * 2
-        )
+        # Extend to pool edge on platform side
+        left_end_x = self.pool_center_x + pool_radius * math.cos(left_plat_angle_rad)
+        left_end_y = self.pool_center_y + pool_radius * math.sin(left_plat_angle_rad)
+        right_end_x = self.pool_center_x + pool_radius * math.cos(right_plat_angle_rad)
+        right_end_y = self.pool_center_y + pool_radius * math.sin(right_plat_angle_rad)
 
-        # Draw the wedge
-        path.arcTo(rect, start_angle_qt, span_angle_qt)
-        path.closeSubpath()
-        painter.drawPath(path)
+        left_end_x_widget = pool_center_widget_x + (left_end_x - self.pool_center_x) * scale
+        left_end_y_widget = pool_center_widget_y + (left_end_y - self.pool_center_y) * scale
+        right_end_x_widget = pool_center_widget_x + (right_end_x - self.pool_center_x) * scale
+        right_end_y_widget = pool_center_widget_y + (right_end_y - self.pool_center_y) * scale
+
+        # Draw triangular corridor: single point at far wall, two points at platform side
+        from PyQt5.QtGui import QPolygonF
+        corridor_polygon = QPolygonF([
+            QPointF(start_x_widget, start_y_widget),         # Narrow end at far wall
+            QPointF(left_end_x_widget, left_end_y_widget),   # Left edge at platform side
+            QPointF(right_end_x_widget, right_end_y_widget), # Right edge at platform side
+        ])
+        painter.drawPolygon(corridor_polygon)
 
         # 4. Draw focal search zone (small, tight search around platform)
         focal_search_radius = self.platform_diameter * zone_params['focal_multiplier']
@@ -280,58 +289,10 @@ class MazeVisualizationWidget(QWidget):
             3, 3
         )
 
-        # 7. Draw labels
+        # 7. Draw coordinate info at bottom
         painter.setPen(QPen(Qt.black))
         font = QFont("Arial", 10)
         painter.setFont(font)
-
-        # Pool label
-        painter.drawText(
-            int(pool_center_widget_x - 30),
-            int(pool_center_widget_y - pool_radius_widget - 10),
-            f"Pool: {self.pool_diameter:.0f}"
-        )
-
-        # Platform label
-        painter.drawText(
-            int(platform_center_widget_x + platform_radius_widget + 5),
-            int(platform_center_widget_y),
-            f"Platform: {self.platform_diameter:.0f}"
-        )
-
-        # Thigmotaxis zone label
-        painter.drawText(
-            int(pool_center_widget_x + thigmo_inner_radius + 5),
-            int(pool_center_widget_y),
-            f"Thigmo Zone ({zone_params['thigmotaxis_percent']:.0f}%)"
-        )
-
-        # Chaining zone label
-        chaining_mid_radius = (chaining_inner_radius_widget + chaining_outer_radius_widget) / 2
-        painter.drawText(
-            int(pool_center_widget_x - chaining_mid_radius - 60),
-            int(pool_center_widget_y),
-            f"Chaining Zone ({zone_params['chaining_width_cm']:.0f}cm width)"
-        )
-
-        # Corridor label
-        label_distance = pool_radius_widget * 0.6
-        label_x = pool_center_widget_x + label_distance * math.cos(angle_to_platform_rad)
-        label_y = pool_center_widget_y + label_distance * math.sin(angle_to_platform_rad)
-        painter.drawText(
-            int(label_x - 40),
-            int(label_y),
-            "Directed Search\nCorridor"
-        )
-
-        # Focal search label
-        painter.drawText(
-            int(platform_center_widget_x + focal_search_radius_widget + 5),
-            int(platform_center_widget_y + 15),
-            "Focal Search"
-        )
-
-        # 8. Draw coordinate info at bottom
         painter.drawText(
             margin,
             height - margin + 30,

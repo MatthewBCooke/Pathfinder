@@ -28,6 +28,11 @@ def export_to_csv(experiment: Experiment, output_path: Union[str, Path]) -> None
     # Build data rows
     rows = []
     for trial in experiment.trials:
+        # Calculate path length as multiple of pool diameter
+        path_multiplier = None
+        if trial.path_length is not None and trial.pool_diameter > 0:
+            path_multiplier = trial.path_length / trial.pool_diameter
+
         row = {
             'experiment_id': experiment.experiment_id,
             'experiment_name': experiment.experiment_name,
@@ -36,8 +41,7 @@ def export_to_csv(experiment: Experiment, output_path: Union[str, Path]) -> None
             'trial_number': trial.trial_number,
             'search_strategy': trial.search_strategy.value if trial.search_strategy else 'Not analyzed',
             'escape_latency_s': trial.escape_latency,
-            'path_length_cm': trial.path_length,
-            'swim_speed_cm_s': trial.swim_speed,
+            'path_length_x_diameter': path_multiplier,
             'manual_classification': trial.manual_categorization,
             'platform_x': trial.platform_position[0],
             'platform_y': trial.platform_position[1],
@@ -73,6 +77,11 @@ def export_to_excel(experiment: Experiment, output_path: Union[str, Path]) -> No
     # Build data rows
     rows = []
     for trial in experiment.trials:
+        # Calculate path length as multiple of pool diameter
+        path_multiplier = None
+        if trial.path_length is not None and trial.pool_diameter > 0:
+            path_multiplier = trial.path_length / trial.pool_diameter
+
         row = {
             'Experiment ID': experiment.experiment_id,
             'Experiment Name': experiment.experiment_name,
@@ -81,8 +90,7 @@ def export_to_excel(experiment: Experiment, output_path: Union[str, Path]) -> No
             'Trial Number': trial.trial_number,
             'Search Strategy': trial.search_strategy.value if trial.search_strategy else 'Not analyzed',
             'Escape Latency (s)': trial.escape_latency,
-            'Path Length (cm)': trial.path_length,
-            'Swim Speed (cm/s)': trial.swim_speed,
+            'Path Length (× diameter)': path_multiplier,
             'Manual Classification': 'Yes' if trial.manual_categorization else 'No',
             'Platform X': trial.platform_position[0],
             'Platform Y': trial.platform_position[1],
@@ -106,8 +114,7 @@ def export_to_excel(experiment: Experiment, output_path: Union[str, Path]) -> No
         summary_by_day = df.groupby('Day').agg({
             'Trial Number': 'count',
             'Escape Latency (s)': ['mean', 'std'],
-            'Path Length (cm)': ['mean', 'std'],
-            'Swim Speed (cm/s)': ['mean', 'std'],
+            'Path Length (× diameter)': ['mean', 'std'],
         })
         summary_by_day.columns = ['_'.join(col).strip() for col in summary_by_day.columns.values]
         summary_by_day.to_excel(writer, sheet_name='Summary by Day')
