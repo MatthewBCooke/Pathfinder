@@ -40,40 +40,69 @@ def detect_software_format(file_path: Path) -> SoftwareType:
     suffix = file_path.suffix.lower()
     
     if suffix in ['.xlsx', '.xls']:
-        # Try to detect Ethovision format
+        # Try to detect Ethovision by scanning the worksheet rows (handles metadata header rows)
         try:
-            # Try with openpyxl engine for .xlsx files
             engine = 'openpyxl' if suffix == '.xlsx' else None
-            df = pd.read_excel(file_path, nrows=10, engine=engine)
-
-            # Ethovision has specific column patterns
-            if 'Trial time' in df.columns or 'Recording time' in df.columns:
+            preview = pd.read_excel(file_path, header=None, nrows=200, engine=engine)
+            header_line_count = None
+            header_row_index = None
+            for idx, row in preview.iterrows():
+                row_strs = [str(val).lower() for val in row.values if pd.notna(val)]
+                for c in row_strs:
+                    if 'number of header lines' in c:
+                        parts = c.split(',')
+                        if len(parts) > 1:
+                            try:
+                                header_line_count = int(parts[1].strip())
+                            except Exception:
+                                pass
+                if any('trial time' in c or 'recording time' in c for c in row_strs):
+                    header_row_index = idx
+                    break
+            if header_line_count is not None:
                 return SoftwareType.ETHOVISION
-
-        except Exception as e:
-            logger.warning(f"Error reading Excel file with primary method: {e}")
-            # Try alternative method for older Excel files
-            try:
-                df = pd.read_excel(file_path, nrows=10, engine='xlrd')
-                if 'Trial time' in df.columns or 'Recording time' in df.columns:
+            if header_row_index is not None:
+                # Confirm by reading with header located at found index
+                df = pd.read_excel(file_path, header=header_row_index, nrows=5, engine=engine)
+                if any(h in df.columns for h in ['Trial time', 'Recording time', 'X center', 'Y center']):
                     return SoftwareType.ETHOVISION
-            except Exception as e2:
-                logger.warning(f"Error reading Excel file with alternative method: {e2}")
-    
+        except Exception as e:
+            logger.warning(f"Error reading Excel file for Ethovision markers: {e}")
+        # Not recognized as Ethovision; treat as generic Excel data
+        return SoftwareType.GENERIC_CSV
     elif suffix == '.csv':
-        # Try to detect CSV format
+        # Try to detect CSV format by scanning lines for Ethovision header markers
+        try:
+            header_line_count = None
+            header_row_index = None
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                for i in range(0, 200):
+                    line = f.readline()
+                    if not line:
+                        break
+                    low = line.lower()
+                    if low.startswith('number of header lines'):
+                        try:
+                            header_line_count = int(line.split(',')[1].strip())
+                        except Exception:
+                            pass
+                    if any(h in low for h in ['trial time', 'recording time', 'x center', 'y center']):
+                        header_row_index = i
+                        break
+            if header_line_count is not None or header_row_index is not None:
+                return SoftwareType.ETHOVISION
+        except Exception as e:
+            logger.warning(f"Error scanning CSV for Ethovision markers: {e}")
+
+        # Fallback to quick CSV sniffing for AnyMaze/Generic
         try:
             df = pd.read_csv(file_path, nrows=10)
-            
-            # AnyMaze detection
             if 'Time' in df.columns and 'X' in df.columns:
                 return SoftwareType.ANYMAZE
-            
-            # Generic CSV
             return SoftwareType.GENERIC_CSV
-            
         except Exception as e:
             logger.warning(f"Error reading CSV file: {e}")
+        return SoftwareType.GENERIC_CSV
     
     # Default fallback
     return SoftwareType.GENERIC_CSV
@@ -104,43 +133,113 @@ def load_experiment(
     elif software == SoftwareType.ANYMAZE:
         return _load_anymaze(file_path, parameters)
     elif software == SoftwareType.GENERIC_CSV:
+        # If file is Excel but not identified as Ethovision, try Ethovision loader first
+        if Path(file_path).suffix.lower() in ['.xlsx', '.xls']:
+            logger.info(f"Excel file with unknown format: {file_path}, attempting Ethovision loader")
+            try:
+                return _load_ethovision(file_path, parameters)
+            except Exception as e:
+                logger.exception("Failed to load Excel file as Ethovision")
+                raise ValueError(f"Attempted to load Excel file as CSV: {file_path}") from e
         return _load_generic_csv(file_path, parameters)
     else:
         raise ValueError(f"Unsupported software type: {software}")
 
 
 def _load_ethovision(file_path: Path, parameters: Parameters = None) -> Experiment:
-    """Load Ethovision Excel file"""
+    """Load Ethovision Excel or CSV file with metadata header rows"""
+    header_line_count = None
+    header_row_index = None
+    if file_path.suffix.lower() in ['.xlsx', '.xls']:
+        # Inspect Excel rows to find header row / header line count
+        try:
+            engine = 'openpyxl' if file_path.suffix.lower() == '.xlsx' else None
+            preview = pd.read_excel(file_path, header=None, nrows=200, engine=engine)
+            for idx, row in preview.iterrows():
+                row_strs = [str(val).lower() for val in row.values if pd.notna(val)]
+                for c in row_strs:
+                    if 'number of header lines' in c:
+                        parts = c.split(',')
+                        if len(parts) > 1:
+                            try:
+                                header_line_count = int(parts[1].strip())
+                            except Exception:
+                                pass
+                if any('trial time' in c or 'recording time' in c for c in row_strs):
+                    header_row_index = idx
+                    break
+        except Exception as e:
+            logger.warning(f"Error inspecting Excel for header rows: {e}")
 
-    # Read Excel file - try multiple engines for compatibility
-    try:
-        # Try with openpyxl for .xlsx files
+        # Determine header parameter priority: header_line_count > header_row_index > 0
+        header_param = None
+        if header_line_count is not None:
+            header_param = header_line_count
+        elif header_row_index is not None:
+            header_param = header_row_index
+        else:
+            header_param = 0
+
         engine = 'openpyxl' if file_path.suffix.lower() == '.xlsx' else None
-        df = pd.read_excel(file_path, engine=engine)
-    except Exception as e:
-        logger.warning(f"Error with primary Excel reader: {e}, trying alternative...")
-        # Try with xlrd for older .xls files
-        df = pd.read_excel(file_path, engine='xlrd')
-    
+        df = pd.read_excel(file_path, header=header_param, engine=engine)
+    else:
+        # CSV: scan first 200 lines for Number of header lines or header row
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                for i in range(0, 200):
+                    line = f.readline()
+                    if not line:
+                        break
+                    low = line.lower()
+                    if low.startswith('number of header lines'):
+                        try:
+                            header_line_count = int(line.split(',')[1].strip())
+                        except Exception:
+                            pass
+                    if any(h in low for h in ['trial time', 'recording time', 'x center', 'y center']):
+                        header_row_index = i
+                        break
+        except Exception as e:
+            logger.warning(f"Error scanning CSV for header rows: {e}")
+
+        header_param = header_line_count if header_line_count is not None else (header_row_index if header_row_index is not None else 0)
+        df = pd.read_csv(file_path, header=header_param)
+
     # Parse trials
     trials = []
+    # More flexible column detection for EthoVision files
+    time_col = None
+    x_col = None
+    y_col = None
     
-    # Simplified parsing - assumes standard Ethovision format
-    # Column mapping (adjust based on actual file)
-    time_col = 'Trial time' if 'Trial time' in df.columns else 'Recording time'
-    x_col = 'X center' if 'X center' in df.columns else 'X'
-    y_col = 'Y center' if 'Y center' in df.columns else 'Y'
+    # Priority order for time columns
+    for col in ['Trial time', 'Recording time', 'Time']:
+        if col in df.columns:
+            time_col = col
+            break
     
-    # Group by trial (assumes 'Trial' column exists)
+    # Priority order for position columns
+    for col in ['X center', 'X', 'Centre posn X']:
+        if col in df.columns:
+            x_col = col
+            break
+            
+    for col in ['Y center', 'Y', 'Centre posn Y']:
+        if col in df.columns:
+            y_col = col
+            break
+    
+    if not all([time_col, x_col, y_col]):
+        raise ValueError(f"Could not find required columns in EthoVision file. Found columns: {list(df.columns)}")
+
     if 'Trial' in df.columns:
         for trial_num, trial_df in df.groupby('Trial'):
             trial = _parse_trial_dataframe(
-                trial_df, trial_num, 
+                trial_df, trial_num,
                 time_col, x_col, y_col
             )
             trials.append(trial)
     else:
-        # Single trial file
         trial = _parse_trial_dataframe(df, 1, time_col, x_col, y_col)
         trials.append(trial)
     
@@ -199,7 +298,12 @@ def _load_anymaze(file_path: Path, parameters: Parameters = None) -> Experiment:
 def _load_generic_csv(file_path: Path, parameters: Parameters = None) -> Experiment:
     """Load generic CSV file with X, Y, Time columns"""
     
-    df = pd.read_csv(file_path)
+    # Try to read as CSV, fallback to latin1 encoding if utf-8 fails
+    try:
+        df = pd.read_csv(file_path)
+    except UnicodeDecodeError:
+        logger.warning(f"UTF-8 decode failed for {file_path}, trying latin1 encoding.")
+        df = pd.read_csv(file_path, encoding='latin1')
     
     # Try to auto-detect column names (order matters - specific to general)
     time_col = _find_column(df, ['time', 't', 'timestamp', 'trial time', 'recording time'])
